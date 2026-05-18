@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Contact - ARCHITECT.IO</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-fixed": "#ffdcc4",
+                      "surface-container": "#e6eeff",
+                      "inverse-primary": "#b9c3ff",
+                      "secondary": "#635c61",
+                      "surface-container-lowest": "#ffffff",
+                      "on-surface-variant": "#45464f",
+                      "surface-variant": "#d5e3fd",
+                      "on-tertiary": "#ffffff",
+                      "surface-bright": "#f8f9ff",
+                      "error-container": "#ffdad6",
+                      "surface": "#f8f9ff",
+                      "error": "#ba1a1a",
+                      "on-primary-container": "#8793cd",
+                      "surface-tint": "#505b92",
+                      "background": "#f8f9ff",
+                      "primary-fixed-dim": "#b9c3ff",
+                      "surface-container-high": "#dde9ff",
+                      "on-primary-fixed": "#08164b",
+                      "surface-container-highest": "#d5e3fd",
+                      "tertiary-fixed-dim": "#fbb887",
+                      "secondary-container": "#e7dde3",
+                      "tertiary-container": "#4b2400",
+                      "outline": "#767680",
+                      "surface-container-low": "#eff4ff",
+                      "secondary-fixed": "#eae0e6",
+                      "on-surface": "#0d1c2f",
+                      "tertiary": "#2c1300",
+                      "outline-variant": "#c6c5d1",
+                      "on-primary-fixed-variant": "#384378",
+                      "on-error": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "surface-dim": "#ccdbf4",
+                      "on-secondary-container": "#686066",
+                      "primary-fixed": "#dde1ff",
+                      "secondary-fixed-dim": "#cec4ca",
+                      "primary-container": "#1e2a5e",
+                      "primary": "#061449",
+                      "on-secondary-fixed-variant": "#4b454a",
+                      "inverse-on-surface": "#ebf1ff",
+                      "on-tertiary-fixed-variant": "#693c14",
+                      "inverse-surface": "#233144",
+                      "on-secondary-fixed": "#1f1a1e",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed": "#2f1400",
+                      "on-primary": "#ffffff",
+                      "on-tertiary-container": "#c4895b",
+                      "on-background": "#0d1c2f"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "sm": "1rem",
+                      "xl": "4rem",
+                      "container-max": "1200px",
+                      "xs": "0.5rem",
+                      "md": "1.5rem",
+                      "unit": "4px",
+                      "gutter": "24px",
+                      "lg": "2.5rem"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Geist"
+                      ],
+                      "label-caps": [
+                              "Geist"
+                      ],
+                      "body-lg": [
+                              "Geist"
+                      ],
+                      "headline-md": [
+                              "Geist"
+                      ],
+                      "code-sm": [
+                              "Geist"
+                      ],
+                      "headline-lg": [
+                              "Geist"
+                      ],
+                      "display-lg": [
+                              "Geist"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.0",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "code-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.04em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Geist', sans-serif;
+            background-color: theme('colors.secondary-fixed');
+            background-image: linear-gradient(theme('colors.primary') 1px, transparent 1px),
+            linear-gradient(90deg, theme('colors.primary') 1px, transparent 1px);
+            background-size: 24px 24px;
+            background-position: center top;
+            background-attachment: fixed;
+        }
+        .grid-bg::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: theme('colors.secondary-fixed');
+            opacity: 0.95;
+            z-index: -1;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-bottom-color: theme('colors.primary');
+            background-color: theme('colors.surface-container-low');
+        }
+    </style>
+</head>
+<body class="text-on-background min-h-screen flex flex-col grid-bg font-body-md">
+<!-- TopNavBar -->
+<header class="bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md full-width top-0 sticky border-b border-outline-variant/20 z-50">
+<div class="flex justify-between items-center px-xl py-md w-full max-w-container-max mx-auto">
+<div class="font-headline-md text-headline-md tracking-tighter text-primary dark:text-inverse-primary">
+                ARCHITECT.IO
+            </div>
+<nav class="hidden md:flex gap-lg">
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors duration-200 font-body-md text-body-md" href="#">Home</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors duration-200 font-body-md text-body-md" href="#">Experience</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors duration-200 font-body-md text-body-md" href="#">Projects</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors duration-200 font-body-md text-body-md" href="#">Stack</a>
+</nav>
+<button class="bg-primary text-on-primary px-lg py-xs rounded hover:bg-primary-container transition-colors font-body-md text-body-md scale-95 active:opacity-80 transition-transform">
+                Contact
+            </button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-xl py-xl md:py-xl grid grid-cols-1 md:grid-cols-12 gap-gutter items-start">
+<!-- Header Section -->
+<div class="col-span-1 md:col-span-12 mb-lg">
+<h1 class="font-display-lg text-display-lg text-primary mb-sm">Let's build something efficient.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+                Ready to architect robust backend systems or integrate AI models into your stack? Initialize a connection.
+            </p>
+</div>
+<!-- Contact Form (Code Editor Style) -->
+<div class="col-span-1 md:col-span-8 bg-surface-container-lowest border border-primary/20 rounded p-md relative group hover:border-primary/50 transition-colors">
+<div class="absolute top-0 left-0 w-full h-8 border-b border-primary/10 flex items-center px-sm gap-2">
+<div class="w-3 h-3 rounded-full bg-error/50"></div>
+<div class="w-3 h-3 rounded-full bg-tertiary-container/50"></div>
+<div class="w-3 h-3 rounded-full bg-primary/50"></div>
+<span class="font-code-sm text-code-sm text-on-surface-variant/50 ml-sm">POST /api/v1/contact</span>
+</div>
+<form class="mt-xl font-code-sm text-code-sm text-primary flex flex-col gap-sm">
+<div class="flex items-start">
+<span class="text-on-surface-variant/40 w-8 select-none">1</span>
+<span class="text-primary mr-2">{</span>
+</div>
+<div class="flex flex-col gap-sm ml-lg border-l border-primary/10 pl-sm">
+<div class="flex items-center">
+<span class="text-on-surface-variant/40 w-8 -ml-[calc(1rem+1px)] absolute select-none">2</span>
+<label class="w-24 shrink-0" for="name">"name":</label>
+<input class="bg-transparent border-0 border-b border-primary/20 text-on-surface w-full py-1 focus:ring-0 px-2 transition-colors" id="name" placeholder='"Enter your name"' type="text"/>
+<span class="ml-1">,</span>
+</div>
+<div class="flex items-center">
+<span class="text-on-surface-variant/40 w-8 -ml-[calc(1rem+1px)] absolute select-none">3</span>
+<label class="w-24 shrink-0" for="email">"email":</label>
+<input class="bg-transparent border-0 border-b border-primary/20 text-on-surface w-full py-1 focus:ring-0 px-2 transition-colors" id="email" placeholder='"Enter your email"' type="email"/>
+<span class="ml-1">,</span>
+</div>
+<div class="flex items-start mt-xs">
+<span class="text-on-surface-variant/40 w-8 -ml-[calc(1rem+1px)] absolute select-none">4</span>
+<label class="w-24 shrink-0 pt-1" for="message">"payload":</label>
+<textarea class="bg-transparent border-0 border-b border-primary/20 text-on-surface w-full py-1 focus:ring-0 px-2 transition-colors resize-none" id="message" placeholder='"Describe the project or architectural challenge..."' rows="4"></textarea>
+</div>
+</div>
+<div class="flex items-center">
+<span class="text-on-surface-variant/40 w-8 select-none">5</span>
+<span class="text-primary">}</span>
+</div>
+<div class="flex items-center justify-end mt-sm">
+<span class="text-on-surface-variant/40 w-8 absolute left-0 select-none hidden md:block">6</span>
+<button class="bg-primary text-on-primary font-body-md text-body-md px-xl py-xs rounded hover:bg-primary-container transition-colors flex items-center gap-xs" type="submit">
+<span class="material-symbols-outlined text-sm">send</span>
+                        Execute Request
+                    </button>
+</div>
+</form>
+</div>
+<!-- Social Nodes -->
+<div class="col-span-1 md:col-span-4 flex flex-col gap-md">
+<a class="block bg-surface-container-low border border-primary/10 rounded p-md hover:border-primary/40 hover:bg-surface-container transition-all group" href="#">
+<div class="flex items-center justify-between mb-sm">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary">terminal</span>
+<h3 class="font-headline-md text-body-lg text-primary">GitHub</h3>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/50 group-hover:text-primary transition-colors">arrow_forward</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Review open-source contributions and system architectures.</p>
+<div class="mt-sm flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<span class="font-code-sm text-label-caps text-on-surface-variant">Active Commits</span>
+</div>
+</a>
+<a class="block bg-surface-container-low border border-primary/10 rounded p-md hover:border-primary/40 hover:bg-surface-container transition-all group" href="#">
+<div class="flex items-center justify-between mb-sm">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary">work</span>
+<h3 class="font-headline-md text-body-lg text-primary">LinkedIn</h3>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/50 group-hover:text-primary transition-colors">arrow_forward</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Connect for professional inquiries and architectural consulting.</p>
+</a>
+<div class="bg-secondary-container/50 border border-primary/10 rounded p-md mt-auto">
+<h4 class="font-label-caps text-label-caps text-primary mb-xs">Availability</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Currently accepting freelance consulting roles for Q4 2024. Response time typically &lt; 24h.</p>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low dark:bg-surface-dim full-width bottom-0 border-t border-outline-variant/10 mt-xl">
+<div class="flex flex-col md:flex-row justify-between items-center px-xl py-lg w-full max-w-container-max mx-auto gap-md">
+<div class="font-headline-md text-headline-md text-primary">
+                ARCHITECT.IO
+            </div>
+<div class="font-code-sm text-code-sm text-on-surface-variant dark:text-surface-variant">
+                © 2024 Systems Architect. Built with Logic &amp; Peony.
+            </div>
+<div class="flex gap-md font-code-sm text-code-sm text-primary dark:text-inverse-primary">
+<a class="hover:text-on-tertiary-container dark:hover:text-tertiary-fixed transition-colors opacity-100 hover:opacity-80" href="#">GitHub</a>
+<a class="hover:text-on-tertiary-container dark:hover:text-tertiary-fixed transition-colors opacity-100 hover:opacity-80" href="#">LinkedIn</a>
+<a class="hover:text-on-tertiary-container dark:hover:text-tertiary-fixed transition-colors opacity-100 hover:opacity-80" href="#">Terminal</a>
+</div>
+</div>
+</footer>
+</body></html>

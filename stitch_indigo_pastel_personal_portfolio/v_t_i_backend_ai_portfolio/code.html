@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>About - Backend &amp; AI Specialist</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@600;700&amp;family=Inter:wght@400&amp;family=JetBrains+Mono:wght@450;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-dim": "#d8dadc",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-container": "#8797af",
+                      "inverse-primary": "#b9c3ff",
+                      "secondary-fixed-dim": "#e0bdce",
+                      "surface-container-highest": "#e0e3e5",
+                      "tertiary-fixed": "#d3e4fe",
+                      "on-error-container": "#93000a",
+                      "primary-fixed-dim": "#b9c3ff",
+                      "primary": "#061449",
+                      "primary-container": "#1e2a5e",
+                      "primary-fixed": "#dde1ff",
+                      "on-secondary-fixed": "#2a1521",
+                      "on-secondary-container": "#775b69",
+                      "on-surface": "#191c1e",
+                      "on-primary-container": "#8793cd",
+                      "on-primary-fixed": "#08164b",
+                      "outline": "#767680",
+                      "secondary": "#725765",
+                      "secondary-fixed": "#fdd9ea",
+                      "surface-container": "#eceef0",
+                      "surface-bright": "#f7f9fb",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-tint": "#505b92",
+                      "on-background": "#191c1e",
+                      "error-container": "#ffdad6",
+                      "surface": "#f7f9fb",
+                      "on-secondary-fixed-variant": "#593f4d",
+                      "outline-variant": "#c6c5d1",
+                      "surface-container-high": "#e6e8ea",
+                      "error": "#ba1a1a",
+                      "surface-variant": "#e0e3e5",
+                      "on-primary-fixed-variant": "#384378",
+                      "tertiary-fixed-dim": "#b7c8e1",
+                      "surface-container-low": "#f2f4f6",
+                      "inverse-surface": "#2d3133",
+                      "tertiary-container": "#1f2f43",
+                      "inverse-on-surface": "#eff1f3",
+                      "on-primary": "#ffffff",
+                      "on-tertiary-fixed": "#0b1c30",
+                      "on-surface-variant": "#45464f",
+                      "secondary-container": "#fad6e7",
+                      "on-error": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "background": "#f7f9fb",
+                      "on-tertiary-fixed-variant": "#38485d",
+                      "tertiary": "#091a2d"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "xl": "80px",
+                      "sm": "12px",
+                      "md": "24px",
+                      "base": "8px",
+                      "margin-mobile": "20px",
+                      "lg": "48px",
+                      "gutter": "24px",
+                      "margin-desktop": "64px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Geist"
+                      ],
+                      "headline-lg": [
+                              "Geist"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "code-md": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-md": [
+                              "Geist"
+                      ],
+                      "label-sm": [
+                              "JetBrains Mono"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "40px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "code-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "450"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+            },
+          },
+        }
+      </script>
+<style>
+        .bg-grid-pattern {
+            background-image: radial-gradient(circle, #E2E8F0 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+      </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col antialiased">
+<!-- TopNavBar -->
+<nav class="w-full sticky top-0 z-50 bg-surface dark:bg-background border-b border-outline-variant dark:border-on-primary-container">
+<div class="flex justify-between items-center max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop h-16 transition-all active:scale-95">
+<a class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed" href="#">
+                SYST_ARCH
+            </a>
+<div class="hidden md:flex gap-md">
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-secondary dark:hover:text-secondary-fixed transition-colors duration-200" href="#">Home</a>
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-secondary-fixed-variant pb-1 hover:text-secondary dark:hover:text-secondary-fixed transition-colors duration-200" href="#">Experience</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-secondary dark:hover:text-secondary-fixed transition-colors duration-200" href="#">Projects</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-secondary dark:hover:text-secondary-fixed transition-colors duration-200" href="#">Stack</a>
+</div>
+<button class="bg-primary text-on-primary px-md py-sm rounded hover:opacity-90 transition-opacity">
+                Hire Me
+            </button>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-xl bg-grid-pattern relative">
+<!-- Header Section -->
+<section class="mb-xl">
+<div class="inline-block bg-surface-container-low px-sm py-xs border border-outline-variant rounded-none mb-md">
+<span class="font-label-sm text-label-sm text-primary uppercase">Profile.Architecture</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-md max-w-3xl">
+                Engineering resilient systems and scalable AI architectures.
+            </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+                With over a decade of experience designing distributed systems, I specialize in reducing latency, optimizing resource utilization, and deploying machine learning models at scale.
+            </p>
+</section>
+<!-- Professional Journey Timeline -->
+<section class="mb-xl">
+<h2 class="font-headline-md text-headline-md text-primary border-b border-outline-variant pb-xs mb-lg inline-block">Professional Journey</h2>
+<div class="space-y-lg relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-outline-variant before:to-transparent">
+<!-- Timeline Item 1 -->
+<div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+<div class="flex items-center justify-center w-10 h-10 rounded-full border border-primary bg-surface text-primary shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 transition-colors group-hover:border-secondary">
+<span class="material-symbols-outlined font-variation-settings-'FILL'-1 text-[20px]">terminal</span>
+</div>
+<div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-surface-container-lowest p-md border border-outline-variant transition-colors group-hover:border-secondary">
+<div class="flex justify-between items-start mb-sm">
+<h3 class="font-headline-md text-headline-md text-primary">Senior Staff Engineer</h3>
+<span class="font-code-md text-code-md text-on-surface-variant">2021 — Present</span>
+</div>
+<p class="font-label-sm text-label-sm text-secondary mb-sm uppercase">Global FinTech Corp</p>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">Led the re-architecture of the core transaction processing engine, migrating from a monolithic structure to a microservices architecture.</p>
+<ul class="space-y-xs font-code-md text-code-md text-primary">
+<li class="flex items-center gap-sm before:content-['&gt;'] before:text-secondary">Reduced p99 latency by 40%</li>
+<li class="flex items-center gap-sm before:content-['&gt;'] before:text-secondary">Achieved 99.999% uptime across clusters</li>
+</ul>
+</div>
+</div>
+<!-- Timeline Item 2 -->
+<div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+<div class="flex items-center justify-center w-10 h-10 rounded-full border border-outline-variant bg-surface text-on-surface-variant shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 transition-colors group-hover:border-secondary group-hover:text-secondary">
+<span class="material-symbols-outlined text-[20px]">memory</span>
+</div>
+<div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-surface-container-lowest p-md border border-outline-variant transition-colors group-hover:border-secondary">
+<div class="flex justify-between items-start mb-sm">
+<h3 class="font-headline-md text-headline-md text-primary">AI Infrastructure Lead</h3>
+<span class="font-code-md text-code-md text-on-surface-variant">2018 — 2021</span>
+</div>
+<p class="font-label-sm text-label-sm text-secondary mb-sm uppercase">DataScale Inc.</p>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">Designed and deployed the foundational MLOps pipeline for distributed model training and inference.</p>
+<ul class="space-y-xs font-code-md text-code-md text-primary">
+<li class="flex items-center gap-sm before:content-['&gt;'] before:text-secondary">Decreased model deployment time by 60%</li>
+<li class="flex items-center gap-sm before:content-['&gt;'] before:text-secondary">Optimized GPU cluster utilization</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- Core Competencies Bento Grid -->
+<section class="mb-xl">
+<h2 class="font-headline-md text-headline-md text-primary border-b border-outline-variant pb-xs mb-lg inline-block">Core Competencies</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<!-- Backend Architecture Card -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md hover:border-secondary transition-colors duration-300">
+<div class="flex items-center gap-sm mb-md border-b border-outline-variant pb-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">dns</span>
+<h3 class="font-headline-md text-headline-md text-primary">Backend Architecture</h3>
+</div>
+<div class="space-y-md">
+<div>
+<h4 class="font-label-sm text-label-sm text-on-surface-variant uppercase mb-xs">Distributed Systems</h4>
+<p class="font-body-md text-body-md text-primary">Designing for high availability, fault tolerance, and horizontal scalability using event-driven architectures.</p>
+</div>
+<div>
+<h4 class="font-label-sm text-label-sm text-on-surface-variant uppercase mb-xs">API Design</h4>
+<p class="font-body-md text-body-md text-primary">RESTful and gRPC service definitions prioritizing backward compatibility and performance.</p>
+</div>
+<div>
+<h4 class="font-label-sm text-label-sm text-on-surface-variant uppercase mb-xs">Data Modeling</h4>
+<p class="font-body-md text-body-md text-primary">Optimizing schema design across relational (PostgreSQL) and NoSQL (Cassandra, Redis) datastores.</p>
+</div>
+</div>
+</div>
+<!-- Machine Learning Card -->
+<div class="bg-primary-container border border-primary-container p-md">
+<div class="flex items-center gap-sm mb-md border-b border-on-primary-container pb-sm">
+<span class="material-symbols-outlined text-primary-fixed text-[24px]">model_training</span>
+<h3 class="font-headline-md text-headline-md text-primary-fixed">Machine Learning</h3>
+</div>
+<div class="space-y-md">
+<div>
+<h4 class="font-label-sm text-label-sm text-on-primary-container uppercase mb-xs">MLOps Pipelines</h4>
+<p class="font-body-md text-body-md text-primary-fixed">End-to-end automation of model training, evaluation, and deployment using Kubeflow.</p>
+</div>
+<div>
+<h4 class="font-label-sm text-label-sm text-on-primary-container uppercase mb-xs">Inference Optimization</h4>
+<p class="font-body-md text-body-md text-primary-fixed">Reducing inference latency through model quantization and TensorRT compilation.</p>
+</div>
+<div>
+<h4 class="font-label-sm text-label-sm text-on-primary-container uppercase mb-xs">Data Engineering</h4>
+<p class="font-body-md text-body-md text-primary-fixed">Building robust ETL pipelines to feed large-scale training datasets.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Tech Stack -->
+<section>
+<h2 class="font-headline-md text-headline-md text-primary border-b border-outline-variant pb-xs mb-lg inline-block">Technical Stack</h2>
+<div class="flex flex-wrap gap-sm">
+<span class="font-code-md text-code-md text-primary bg-surface-container-low border border-outline-variant px-sm py-xs rounded-none">Go</span>
+<span class="font-code-md text-code-md text-primary bg-surface-container-low border border-outline-variant px-sm py-xs rounded-none">Python</span>
+<span class="font-code-md text-code-md text-primary bg-surface-container-low border border-outline-variant px-sm py-xs rounded-none">Rust</span>
+<span class="font-code-md text-code-md text-primary bg-surface-container-low border border-outline-variant px-sm py-xs rounded-none">Kubernetes</span>
+<span class="font-code-md text-code-md text-primary bg-surface-container-low border border-outline-variant px-sm py-xs rounded-none">Docker</span>
+<span class="font-code-md text-code-md text-primary bg-surface-container-low border border-outline-variant px-sm py-xs rounded-none">PostgreSQL</span>
+<span class="font-code-md text-code-md text-primary bg-surface-container-low border border-outline-variant px-sm py-xs rounded-none">Redis</span>
+<span class="font-code-md text-code-md text-primary bg-surface-container-low border border-outline-variant px-sm py-xs rounded-none">Kafka</span>
+<span class="font-code-md text-code-md text-primary bg-surface-container-low border border-outline-variant px-sm py-xs rounded-none">PyTorch</span>
+<span class="font-code-md text-code-md text-primary bg-surface-container-low border border-outline-variant px-sm py-xs rounded-none">TensorFlow</span>
+<span class="font-code-md text-code-md text-primary bg-surface-container-low border border-outline-variant px-sm py-xs rounded-none">AWS</span>
+<span class="font-code-md text-code-md text-primary bg-surface-container-low border border-outline-variant px-sm py-xs rounded-none">GCP</span>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full mt-lg bg-surface-container-low dark:bg-primary-container border-t border-outline-variant dark:border-outline">
+<div class="flex flex-col md:flex-row justify-between items-center max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-md transition-opacity hover:opacity-80">
+<div class="font-code-md text-code-md text-primary dark:text-primary-fixed mb-sm md:mb-0">
+                © 2024 Backend &amp; AI Specialist. Built with logical precision.
+            </div>
+<div class="flex gap-md font-body-md text-body-md">
+<a class="text-on-surface-variant dark:text-on-primary-container hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-secondary" href="#">GitHub</a>
+<a class="text-on-surface-variant dark:text-on-primary-container hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-secondary" href="#">LinkedIn</a>
+<a class="text-on-surface-variant dark:text-on-primary-container hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-secondary" href="#">Email</a>
+</div>
+</div>
+</footer>
+</body></html>
