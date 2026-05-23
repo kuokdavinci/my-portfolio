@@ -30,7 +30,26 @@ export const portfolioConfig = {
       codeLink: "https://github.com/kuokdavinci/movie-ticket-app-backend",
       language: "Java",
       stars: 0,
-      forks: 0
+      forks: 0,
+      details: {
+        longDescription: "A high-performance full-stack cinema ticket booking system designed to provide seamless movie ticketing experiences. The backend utilizes Spring Boot to expose RESTful APIs secured with JWT, while the PostgreSQL database stores movies, showtimes, seats, and booking records. The frontend is built as a cross-platform mobile application using Flutter and Dart, supporting interactive seat grids, payment simulators, and real-time showtime updates.",
+        challenges: [
+          "Preventing double-booking of seats during high-traffic movies and peak times.",
+          "Designing a responsive, dynamic seat layout grid that scales across different mobile screen sizes.",
+          "Ensuring secure client-side API authentication persistence and session refresh cycles."
+        ],
+        solutions: [
+          "Implemented optimistic locking at the database level and synchronized transactions in Spring Boot service layers.",
+          "Developed a custom layout builder in Flutter that calculates grid dimensions based on device screen constraints.",
+          "Secured endpoints with stateless JWT authentication and implemented a secure local storage token management system in Flutter."
+        ],
+        systemSpecs: {
+          "Backend": "Spring Boot (Java 17), Spring Security, JWT, JPA/Hibernate",
+          "Frontend": "Flutter (Dart), Provider (State Management), HTTP Client",
+          "Database": "PostgreSQL 15, Spring Data JPA",
+          "Deployment": "Dockerized stack with environment configurations"
+        }
+      }
     },
     {
       id: "attendance-app",
@@ -43,7 +62,26 @@ export const portfolioConfig = {
       codeLink: "https://github.com/kuokdavinci/attendance_app",
       language: "Dart",
       stars: 0,
-      forks: 0
+      forks: 0,
+      details: {
+        longDescription: "A smart attendance tracking application designed to automate check-ins for organizations and schools. It features Firebase authentication for instant access and stores real-time check-in records. The core feature is a dynamic QR code scanning module that validates location and time. It employs an offline-first architecture with Hive for local storage, synchronizing local attendance records with Firebase once internet connection is restored.",
+        challenges: [
+          "Synchronizing offline-recorded check-ins reliably without duplicate entries when connectivity returns.",
+          "Preventing spoofed attendance check-ins using screenshot QR codes or manual coordinate adjustments.",
+          "Minimizing battery drain during continuous location tracking and camera utilization."
+        ],
+        solutions: [
+          "Implemented an idempotent queue syncing mechanism in Flutter using Hive DB and Firebase Firestore listeners.",
+          "Designed a time-bounded dynamic QR code generation pattern paired with geofencing validation.",
+          "Optimized location updates using adaptive distance filters and lazy camera controller initialization."
+        ],
+        systemSpecs: {
+          "Architecture": "Offline-first dynamic queue sync",
+          "Storage": "Hive (Local NoSQL Database), Firebase Firestore",
+          "Authentication": "Firebase Auth (Email, Google Sign-in)",
+          "Scanner Core": "Mobile Scanner Package (Flutter), Geofencing API"
+        }
+      }
     },
     {
       id: "lab-day9",
