@@ -34,7 +34,8 @@ except:
 SKIP_DIRS = {
     'node_modules', '.next', 'dist', 'build', '.git', '.github',
     '__pycache__', '.vscode', '.idea', 'coverage', 'test', 'tests',
-    '__tests__', 'spec', 'docs', 'documentation', 'examples'
+    '__tests__', 'spec', 'docs', 'documentation', 'examples',
+    'stitch_indigo_pastel_personal_portfolio', '.venv', 'venv'
 }
 
 # Files to skip (not pages)

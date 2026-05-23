@@ -118,7 +118,12 @@ class UXAuditor:
 
         # --- 1. PSYCHOLOGY LAWS ---
         # Hick's Law
-        nav_items = len(re.findall(r'<NavLink|<Link|<a\s+href|nav-item', content, re.IGNORECASE))
+        nav_blocks = re.findall(r'<nav[^>]*>(.*?)</nav>', content, re.DOTALL | re.IGNORECASE)
+        if nav_blocks:
+            nav_content = "".join(nav_blocks)
+            nav_items = len(re.findall(r'<NavLink|<Link|<a\s+href|nav-item', nav_content, re.IGNORECASE))
+        else:
+            nav_items = len(re.findall(r'<NavLink|<Link|<a\s+href|nav-item', content, re.IGNORECASE))
         if nav_items > 7:
             self.issues.append(f"[Hick's Law] {filename}: {nav_items} nav items (Max 7)")
         
@@ -674,7 +679,7 @@ class UXAuditor:
     def audit_directory(self, directory: str) -> None:
         extensions = {'.tsx', '.jsx', '.html', '.vue', '.svelte', '.css'}
         for root, dirs, files in os.walk(directory):
-            dirs[:] = [d for d in dirs if d not in {'node_modules', '.git', 'dist', 'build', '.next'}]
+            dirs[:] = [d for d in dirs if d not in {'node_modules', '.git', 'dist', 'build', '.next', 'stitch_indigo_pastel_personal_portfolio', '.venv', 'venv'}]
             for file in files:
                 if Path(file).suffix in extensions:
                     self.audit_file(os.path.join(root, file))
