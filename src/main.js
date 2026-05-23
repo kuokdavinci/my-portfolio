@@ -502,7 +502,12 @@ function addChatMessage(container, role, content, sources = []) {
   message.className = `rag-chat-message ${role === 'user' ? 'is-user' : 'is-bot'}`;
 
   const sourceMarkup = sources.length
-    ? `<div class="rag-chat-sources">${sources.map(source => `<span>${escapeHtml(source)}</span>`).join('')}</div>`
+    ? `<div class="rag-chat-sources">${sources.map(source => {
+        if (typeof source === 'object' && source.link) {
+          return `<a href="${escapeHtml(source.link)}" class="rag-chat-source-link">${escapeHtml(source.title)}</a>`;
+        }
+        return `<span>${escapeHtml(source)}</span>`;
+      }).join('')}</div>`
     : '';
 
   message.innerHTML = `
@@ -576,15 +581,64 @@ function setupPortfolioChatbot() {
     toggle.focus();
   };
 
-  const askQuestion = (question) => {
+  const askQuestion = async (question) => {
     const trimmedQuestion = question.trim();
     if (!trimmedQuestion) return;
 
+    // Track chat query event
+    trackEvent('chat_query', { query: trimmedQuestion });
+
     addChatMessage(messages, 'user', trimmedQuestion);
-    const response = generateChatbotAnswer(trimmedQuestion, knowledgeBase);
-    window.setTimeout(() => {
-      addChatMessage(messages, 'bot', response.answer, response.sources);
-    }, 200);
+
+    // 1. Add temporary thinking indicator bubble
+    const thinkingMessage = document.createElement('div');
+    thinkingMessage.className = 'rag-chat-message is-bot is-thinking';
+    thinkingMessage.innerHTML = `
+      <div class="rag-chat-bubble">
+        <div class="thinking-dots">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    `;
+    messages.appendChild(thinkingMessage);
+    messages.scrollTop = messages.scrollHeight;
+
+    const removeThinking = () => {
+      if (thinkingMessage.parentNode) {
+        thinkingMessage.parentNode.removeChild(thinkingMessage);
+      }
+    };
+
+    try {
+      const sessionId = getSessionId();
+      // 2. Fetch answer from backend gateway chatbot endpoint
+      const response = await fetch(CHAT_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          message: trimmedQuestion
+        })
+      });
+
+      removeThinking();
+
+      if (response.ok) {
+        const data = await response.json();
+        addChatMessage(messages, 'bot', data.answer, data.sources);
+      } else {
+        throw new Error('API server returned error code ' + response.status);
+      }
+    } catch (error) {
+      console.warn('Backend chatbot API failed, falling back to local generation:', error);
+      removeThinking();
+      
+      // 3. Fallback to client-side rule-based response
+      const localResponse = generateChatbotAnswer(trimmedQuestion, knowledgeBase);
+      addChatMessage(messages, 'bot', localResponse.answer, localResponse.sources);
+    }
   };
 
   addChatMessage(
@@ -617,6 +671,243 @@ function setupPortfolioChatbot() {
   });
 }
 
+// JS Tracking SDK Client Implementation
+const TRACKING_API_URL = 'http://localhost:8000/api/v1/track';
+const CHAT_API_URL = 'http://localhost:8000/api/v1/chat';
+let scrolled50 = false;
+let scrolled90 = false;
+
+function getSessionId() {
+  let sessionId = sessionStorage.getItem('portfolio_session_id');
+  if (!sessionId) {
+    // Generate UUIDv4-like session identifier
+    sessionId = 'session_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem('portfolio_session_id', sessionId);
+  }
+  return sessionId;
+}
+
+async function trackEvent(eventType, payload = {}) {
+  const sessionId = getSessionId();
+  const event = {
+    session_id: sessionId,
+    timestamp: new Date().toISOString(),
+    event_type: eventType,
+    payload: payload
+  };
+  
+  try {
+    const response = await fetch(TRACKING_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(event)
+    });
+    if (!response.ok) {
+      console.warn('Failed to send tracking event:', response.statusText);
+    }
+  } catch (error) {
+    // Fail silently in background
+    console.error('Error sending tracking event:', error);
+  }
+}
+
+function handleRoute() {
+  const hash = window.location.hash || '#home';
+  const detailsView = document.getElementById('project-details-view');
+  if (!detailsView) return;
+
+  const projectMatch = hash.match(/^#\/project\/([a-zA-Z0-9_-]+)$/);
+  
+  // Reset scroll flags for the new view/page
+  scrolled50 = false;
+  scrolled90 = false;
+
+  if (projectMatch) {
+    const projectId = projectMatch[1];
+    const project = portfolioConfig.projects.find(p => p.id === projectId);
+    
+    // Hide main sections
+    const mainSections = document.querySelectorAll('main > section:not(#project-details-view)');
+    mainSections.forEach(section => {
+      section.classList.add('hidden');
+    });
+    
+    // Show project details view
+    detailsView.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+
+    // Track Case Study View event
+    trackEvent('page_view', { page: `project_${projectId}` });
+
+    if (project && project.details) {
+      detailsView.innerHTML = `
+        <div class="max-w-7xl mx-auto px-4 md:px-12 opacity-0 transition-opacity duration-300" id="project-details-content">
+          <!-- Back navigation button -->
+          <div class="mb-8">
+            <a href="#projects" class="inline-flex items-center gap-2 font-code text-sm font-bold uppercase tracking-wider text-primary dark:text-primary hover:-translate-x-1 transition-transform">
+              <span class="material-symbols-outlined text-base">arrow_back</span> Back to Projects
+            </a>
+          </div>
+
+          <!-- Massive Typographic Header -->
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b-8 border-primary dark:border-outline-variant pb-6 mb-12 gap-4">
+            <div>
+              <span class="font-code text-sm font-bold uppercase tracking-widest text-secondary dark:text-accent-light mb-2 block">Project Case Study</span>
+              <h1 class="font-headline text-4xl md:text-7xl font-black uppercase text-primary dark:text-on-background leading-none">${escapeHtml(project.title)}</h1>
+            </div>
+            <a href="${escapeHtml(project.codeLink)}" target="_blank" rel="noopener" class="font-code text-sm font-bold bg-primary text-on-primary dark:bg-primary-container dark:text-on-primary-container px-6 py-3 border-2 border-primary dark:border-primary-container hover:bg-transparent hover:text-primary dark:hover:text-on-background transition-all rounded-none inline-flex items-center gap-2 cursor-pointer shadow-[4px_4px_0px_0px_rgba(114,87,101,1)] dark:shadow-[4px_4px_0px_0px_rgba(240,196,220,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(114,87,101,1)] dark:hover:shadow-[6px_6px_0px_0px_rgba(240,196,220,1)] active:translate-x-0 active:translate-y-0 active:shadow-[4px_4px_0px_0px_rgba(114,87,101,1)]">
+              <span class="material-symbols-outlined text-base">code</span> Source Code <span class="material-symbols-outlined text-sm">open_in_new</span>
+            </a>
+          </div>
+
+          <!-- Asymmetric Grid-Shift Layout -->
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-12 items-start">
+            <!-- Left column: Sidebar (1/4 width) -->
+            <div class="lg:col-span-1 border-4 border-primary dark:border-outline-variant p-6 bg-surface-container dark:bg-surface-container-lowest rounded-none flex flex-col gap-6 shadow-[8px_8px_0px_0px_rgba(6,20,73,1)] dark:shadow-[8px_8px_0px_0px_rgba(45,65,95,1)]">
+              <div>
+                <h3 class="font-code text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-on-surface-variant mb-3 border-b-2 border-primary dark:border-outline-variant pb-1">Type</h3>
+                <span class="inline-block px-3 py-1 bg-primary text-on-primary dark:bg-primary-container dark:text-on-primary-container text-xs font-bold uppercase tracking-wider rounded-none">${escapeHtml(project.badge)}</span>
+              </div>
+
+              <div>
+                <h3 class="font-code text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-on-surface-variant mb-3 border-b-2 border-primary dark:border-outline-variant pb-1">Primary Tech</h3>
+                <span class="inline-block px-3 py-1 bg-secondary-container text-on-secondary-fixed-variant text-xs font-bold uppercase tracking-wider rounded-none">${escapeHtml(project.language)}</span>
+              </div>
+
+              <div>
+                <h3 class="font-code text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-on-surface-variant mb-3 border-b-2 border-primary dark:border-outline-variant pb-1">Tech Stack</h3>
+                <div class="flex flex-wrap gap-2">
+                  ${project.tags.map(tag => `<span class="px-2.5 py-1 bg-surface-container-high dark:bg-surface-container-high text-on-surface dark:text-on-background text-xs font-medium border border-outline rounded-none">${escapeHtml(tag)}</span>`).join('')}
+                </div>
+              </div>
+
+              <div>
+                <h3 class="font-code text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-on-surface-variant mb-3 border-b-2 border-primary dark:border-outline-variant pb-1">System Specs</h3>
+                <dl class="flex flex-col gap-3 font-body text-sm">
+                  ${Object.entries(project.details.systemSpecs).map(([key, val]) => `
+                    <div>
+                      <dt class="font-bold text-primary dark:text-primary-fixed">${escapeHtml(key)}</dt>
+                      <dd class="text-on-surface-variant dark:text-on-surface-variant/80">${escapeHtml(val)}</dd>
+                    </div>
+                  `).join('')}
+                </dl>
+              </div>
+            </div>
+
+            <!-- Right column: Content narrative (3/4 width) -->
+            <div class="lg:col-span-3 flex flex-col gap-10 border-t-4 lg:border-t-0 lg:border-l-4 border-primary dark:border-outline-variant pt-8 lg:pt-0 lg:pl-10">
+              <!-- Long Description -->
+              <div class="flex flex-col gap-3">
+                <h2 class="font-headline text-2xl font-black uppercase text-primary dark:text-on-background">Project Overview</h2>
+                <p class="font-body text-lg leading-relaxed text-on-surface-variant dark:text-on-surface-variant/90">${escapeHtml(project.details.longDescription)}</p>
+              </div>
+
+              <!-- Challenges & Solutions side by side -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Challenges -->
+                <div class="border-2 border-primary dark:border-outline-variant p-6 bg-rose-50/50 dark:bg-rose-950/10 rounded-none shadow-[4px_4px_0px_0px_rgba(114,87,101,1)] dark:shadow-[4px_4px_0px_0px_rgba(240,196,220,1)]">
+                  <h3 class="font-headline text-xl font-bold uppercase text-rose-700 dark:text-rose-400 mb-4 inline-flex items-center gap-2">
+                    <span class="material-symbols-outlined">warning</span> Key Challenges
+                  </h3>
+                  <ul class="flex flex-col gap-4 font-body text-base text-on-surface-variant dark:text-on-surface-variant list-disc pl-5">
+                    ${project.details.challenges.map(challenge => `<li>${escapeHtml(challenge)}</li>`).join('')}
+                  </ul>
+                </div>
+
+                <!-- Solutions -->
+                <div class="border-2 border-primary dark:border-outline-variant p-6 bg-emerald-50/50 dark:bg-emerald-950/10 rounded-none shadow-[4px_4px_0px_0px_rgba(6,20,73,1)] dark:shadow-[4px_4px_0px_0px_rgba(165,179,224,1)]">
+                  <h3 class="font-headline text-xl font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-4 inline-flex items-center gap-2">
+                    <span class="material-symbols-outlined">task_alt</span> Solutions & Engineering
+                  </h3>
+                  <ul class="flex flex-col gap-4 font-body text-base text-on-surface-variant dark:text-on-surface-variant list-disc pl-5">
+                    ${project.details.solutions.map(solution => `<li>${escapeHtml(solution)}</li>`).join('')}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Trigger opacity fade-in
+      setTimeout(() => {
+        const content = document.getElementById('project-details-content');
+        if (content) content.classList.remove('opacity-0');
+      }, 50);
+    } else {
+      detailsView.innerHTML = `
+        <div class="max-w-7xl mx-auto px-4 md:px-12 text-center py-20">
+          <h1 class="font-headline text-4xl font-bold text-primary dark:text-on-background mb-4">Project Not Found</h1>
+          <p class="text-on-surface-variant mb-8">The project you are looking for does not exist or has been removed.</p>
+          <a href="#projects" class="btn-primary">Back to Projects</a>
+        </div>
+      `;
+    }
+  } else {
+    // Show main sections
+    const mainSections = document.querySelectorAll('main > section:not(#project-details-view)');
+    mainSections.forEach(section => {
+      section.classList.remove('hidden');
+    });
+    
+    // Hide project details
+    detailsView.classList.add('hidden');
+    
+    // Track Page View Event for standard hash route
+    trackEvent('page_view', { page: hash.substring(1) || 'home' });
+
+    // Scroll to specific section if hash exists, else to top
+    if (window.location.hash) {
+      const targetId = hash.substring(1);
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) {
+        // Wait briefly for display transition to settle, then scroll
+        setTimeout(() => {
+          targetEl.scrollIntoView({ behavior: 'smooth' });
+        }, 50);
+      }
+    }
+  }
+}
+
+function setupRouter() {
+  window.addEventListener('hashchange', handleRoute);
+  // Handle initial page load
+  handleRoute();
+}
+
+function setupTracking() {
+  // 1. Project card click tracking
+  document.querySelectorAll('.project-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const href = card.getAttribute('href');
+      const match = href.match(/#\/project\/([a-zA-Z0-9_-]+)$/);
+      if (match) {
+        trackEvent('project_click', { project_id: match[1] });
+      }
+    });
+  });
+
+  // 2. Scroll depth tracking listener
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    if (docHeight <= 0) return;
+    const scrollPercent = (scrollTop / docHeight) * 100;
+
+    if (scrollPercent >= 50 && !scrolled50) {
+      scrolled50 = true;
+      trackEvent('scroll_depth', { percent: 50 });
+    }
+    if (scrollPercent >= 90 && !scrolled90) {
+      scrolled90 = true;
+      trackEvent('scroll_depth', { percent: 90 });
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   setupThemeToggle();
@@ -626,4 +917,6 @@ document.addEventListener('DOMContentLoaded', () => {
   animateCounters();
   setupProjectFilters();
   setupPortfolioChatbot();
+  setupRouter();
+  setupTracking();
 });
