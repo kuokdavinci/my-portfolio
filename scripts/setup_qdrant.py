@@ -1,5 +1,23 @@
 import sys
 import os
+import re
+from pathlib import Path
+
+# Load environment variables from .env if present
+def load_env():
+    env_path = Path(__file__).resolve().parent.parent / ".env"
+    if env_path.exists():
+        print(f"Loading environment from: {env_path}")
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, val = line.split("=", 1)
+                    # Strip quotes if present
+                    val = val.strip("'\"")
+                    os.environ[key.strip()] = val.strip()
+
+load_env()
 
 # Ensure dependencies are installed
 try:
@@ -12,30 +30,56 @@ except ImportError:
     from qdrant_client.http import models
 
 try:
-    from sentence_transformers import SentenceTransformer
+    from openai import OpenAI
 except ImportError:
-    print("Installing sentence-transformers...")
-    os.system(f"{sys.executable} -m pip install sentence-transformers")
-    from sentence_transformers import SentenceTransformer
+    print("Installing openai...")
+    os.system(f"{sys.executable} -m pip install openai")
+    from openai import OpenAI
 
-# Initialize clients
+# Initialize OpenAI client
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    print("ERROR: OPENAI_API_KEY is not set. Please check your .env file or environment.")
+    sys.exit(1)
+
+print("Initializing OpenAI client...")
+openai_client = OpenAI(api_key=api_key)
+
+# Initialize Qdrant client
 print("Connecting to local Qdrant container at localhost:6333...")
 try:
-    client = QdrantClient(host="localhost", port=6333)
+    qdrant_client = QdrantClient(host="localhost", port=6333)
     # Check connection
-    client.get_collections()
+    qdrant_client.get_collections()
 except Exception as e:
     print(f"Error connecting to Qdrant: {e}")
     print("Please make sure Docker container is running and port 6333 is open.")
     sys.exit(1)
 
-# Initialize local embedding model (free, offline, 384 dimensions)
-print("Loading local sentence-transformer model 'all-MiniLM-L6-v2'...")
-model = SentenceTransformer('all-MiniLM-L6-v2')
-
 COLLECTION_NAME = "portfolio_knowledge"
+EMBEDDING_MODEL = "text-embedding-3-small"
+EMBEDDING_DIM = 1536
 
-# Define data payload representing Quoc's CV and projects
+# Helper to generate OpenAI embeddings
+def get_embedding(text: str) -> list:
+    try:
+        response = openai_client.embeddings.create(
+            input=text,
+            model=EMBEDDING_MODEL
+        )
+        return response.data[0].embedding
+    except Exception as e:
+        print(f"Error generating embedding for text: {text[:30]}... Error: {e}")
+        raise e
+
+# Helper to get project_id from filename
+def get_project_id_from_filename(filename: str) -> str:
+    stem = Path(filename).stem
+    if stem.endswith("_pj"):
+        return stem[:-3].replace("_", "-") + "-app"
+    return stem.replace("_", "-")
+
+# Base knowledge documents representing Quoc's core CV info
 knowledge_documents = [
     {
         "id": 1,
@@ -99,57 +143,63 @@ knowledge_documents = [
     }
 ]
 
-# Dynamically load and chunk attendance_pj.md if it exists
-import re
-attendance_pj_path = os.path.join(os.path.dirname(__file__), "..", "attendance_pj.md")
-if os.path.exists(attendance_pj_path):
-    print(f"Reading advanced project documentation from: {attendance_pj_path}")
-    try:
-        with open(attendance_pj_path, "r", encoding="utf-8") as f:
-            attendance_content = f.read()
-        
-        # Split document by markdown level-3 headings (###) to create semantically distinct chunks
-        sections = attendance_content.split("###")
-        intro = sections[0].strip()
-        if intro:
-            knowledge_documents.append({
-                "id": len(knowledge_documents) + 1,
-                "category": "project_detail",
-                "text": intro,
-                "metadata": {"project_id": "attendance-app", "section": "intro"}
-            })
-        
-        for idx, section in enumerate(sections[1:]):
-            section_text = ("###" + section).strip()
-            # Extract section title for metadata tracking
-            title_match = re.match(r"###\s*(.*)", section_text)
-            section_title = title_match.group(1).strip() if title_match else f"Section {idx+1}"
+# Dynamically scan and load all markdown files in knowledge_base/
+kb_dir = Path(__file__).resolve().parent.parent / "knowledge_base"
+if kb_dir.exists() and kb_dir.is_dir():
+    md_files = list(kb_dir.glob("*.md"))
+    print(f"Found {len(md_files)} markdown document(s) in knowledge_base/")
+    
+    for md_file in md_files:
+        print(f"Processing: {md_file.name}")
+        try:
+            with open(md_file, "r", encoding="utf-8") as f:
+                content = f.read()
             
-            knowledge_documents.append({
-                "id": len(knowledge_documents) + 1,
-                "category": "project_detail",
-                "text": section_text,
-                "metadata": {"project_id": "attendance-app", "section": section_title}
-            })
-        print(f"Loaded {len(sections)} sections from attendance_pj.md successfully.")
-    except Exception as e:
-        print(f"Error parsing attendance_pj.md: {e}")
+            project_id = get_project_id_from_filename(md_file.name)
+            
+            # Split by level-3 markdown headings (###)
+            sections = content.split("###")
+            intro = sections[0].strip()
+            if intro:
+                knowledge_documents.append({
+                    "id": len(knowledge_documents) + 1,
+                    "category": "project_detail",
+                    "text": intro,
+                    "metadata": {"project_id": project_id, "section": "intro"}
+                })
+            
+            for idx, section in enumerate(sections[1:]):
+                section_text = ("###" + section).strip()
+                title_match = re.match(r"###\s*(.*)", section_text)
+                section_title = title_match.group(1).strip() if title_match else f"Section {idx+1}"
+                
+                knowledge_documents.append({
+                    "id": len(knowledge_documents) + 1,
+                    "category": "project_detail",
+                    "text": section_text,
+                    "metadata": {"project_id": project_id, "section": section_title}
+                })
+            print(f"Loaded {len(sections)} sections from {md_file.name} successfully.")
+        except Exception as e:
+            print(f"Error parsing {md_file.name}: {e}")
+else:
+    print("Warning: knowledge_base/ folder not found or is empty.")
 
-# Recreate collection
-print(f"Recreating Qdrant collection '{COLLECTION_NAME}' with 384 vector dimensions...")
-client.recreate_collection(
+# Recreate Qdrant collection with 1536 dimensions
+print(f"Recreating Qdrant collection '{COLLECTION_NAME}' with {EMBEDDING_DIM} vector dimensions...")
+qdrant_client.recreate_collection(
     collection_name=COLLECTION_NAME,
     vectors_config=models.VectorParams(
-        size=384,  # Matching all-MiniLM-L6-v2 embedding dimensions
+        size=EMBEDDING_DIM,
         distance=models.Distance.COSINE
     )
 )
 
-# Insert documents
-print("Generating embeddings and uploading to Qdrant...")
+# Generate embeddings and upload points
+print("Generating embeddings via OpenAI and uploading to Qdrant...")
 points = []
 for doc in knowledge_documents:
-    embedding = model.encode(doc["text"]).tolist()
+    embedding = get_embedding(doc["text"])
     points.append(
         models.PointStruct(
             id=doc["id"],
@@ -162,10 +212,10 @@ for doc in knowledge_documents:
         )
     )
 
-client.upsert(
+qdrant_client.upsert(
     collection_name=COLLECTION_NAME,
     wait=True,
     points=points
 )
 
-print(f"Success! Successfully uploaded {len(points)} documents into '{COLLECTION_NAME}' collection.")
+print(f"Success! Uploaded {len(points)} documents into Qdrant collection '{COLLECTION_NAME}'.")

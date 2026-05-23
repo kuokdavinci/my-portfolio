@@ -7,15 +7,30 @@ import httpx
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, BackgroundTasks, HTTPException, status, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from aiokafka import AIOKafkaProducer
 
-from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
+from openai import AsyncOpenAI
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+
+# Load environment variables from .env
+def load_env():
+    env_path = Path(__file__).resolve().parent.parent / ".env"
+    if env_path.exists():
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, val = line.split("=", 1)
+                    val = val.strip("'\"")
+                    os.environ[key.strip()] = val.strip()
+
+load_env()
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -80,19 +95,21 @@ async def close_kafka_producer():
             kafka_producer = None
             kafka_available = False
 
-# Global AI model & Qdrant client
-embedding_model: Optional[SentenceTransformer] = None
+# Global AI clients
+openai_client: Optional[AsyncOpenAI] = None
 qdrant_client: Optional[QdrantClient] = None
 
 async def init_ai_components():
-    """Initializes SentenceTransformer and QdrantClient on application startup."""
-    global embedding_model, qdrant_client
+    """Initializes AsyncOpenAI and QdrantClient on application startup."""
+    global openai_client, qdrant_client
     try:
-        # Load local sentence-transformer model (free, offline, 384 dimensions)
-        embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-        # Load Qdrant client
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            logger.error("OPENAI_API_KEY environment variable is missing.")
+            return
+        openai_client = AsyncOpenAI(api_key=api_key)
         qdrant_client = QdrantClient(host="localhost", port=6333)
-        logger.info("SentenceTransformer and QdrantClient initialized successfully.")
+        logger.info("AsyncOpenAI client and QdrantClient initialized successfully.")
     except Exception as e:
         logger.error(f"Error initializing AI components: {e}")
 
@@ -304,9 +321,15 @@ async def chat(request: ChatRequest):
     # 2. Retrieve context from Qdrant
     contexts = []
     sources = []
-    if qdrant_client and embedding_model:
+    if qdrant_client and openai_client:
         try:
-            query_vector = embedding_model.encode(request.message).tolist()
+            # Generate query embedding using OpenAI
+            emb_resp = await openai_client.embeddings.create(
+                input=request.message,
+                model="text-embedding-3-small"
+            )
+            query_vector = emb_resp.data[0].embedding
+            
             search_results = qdrant_client.query_points(
                 collection_name="portfolio_knowledge",
                 query=query_vector,
@@ -333,8 +356,8 @@ async def chat(request: ChatRequest):
     if not contexts:
         contexts.append("Lê Trung Anh Quốc is a Software Developer specializing in Java, Spring Boot, Flutter, and AI.")
 
-    # 3. Call LLM (Gemini API via HTTP)
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
+    # 3. Call LLM (OpenAI Chat Completions API)
+    model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
     response_text = ""
     
     system_instruction = f"""You are Lê Trung Anh Quốc's AI Portfolio Assistant, an intelligent, helpful agent representing Quoc.
@@ -355,38 +378,24 @@ ADAPT YOUR TONE AND FOCUS BASED ON USER ENGAGEMENT:
 - Never make up information not supported by the context. If you don't know, say so.
 """
 
-    if gemini_api_key:
+    if openai_client:
         try:
             import time
             start_llm = time.time()
-            async with httpx.AsyncClient() as client:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_api_key}"
-                headers = {"Content-Type": "application/json"}
-                payload = {
-                    "contents": [
-                        {
-                            "role": "user",
-                            "parts": [
-                                {"text": system_instruction},
-                                {"text": f"User query: {request.message}"}
-                            ]
-                        }
-                    ],
-                    "generationConfig": {
-                        "temperature": 0.3
-                    }
-                }
-                
-                resp = await client.post(url, headers=headers, json=payload, timeout=10.0)
-                if resp.status_code == 200:
-                    # Observe latency
-                    LLM_LATENCY.observe(time.time() - start_llm)
-                    result = resp.json()
-                    response_text = result["candidates"][0]["content"]["parts"][0]["text"].strip()
-                else:
-                    logger.error(f"Gemini API returned error code {resp.status_code}: {resp.text}")
+            completion = await openai_client.chat.completions.create(
+                model=model_name,
+                messages=[
+                    {"role": "system", "content": system_instruction},
+                    {"role": "user", "content": request.message}
+                ],
+                temperature=0.3
+            )
+            
+            # Observe latency
+            LLM_LATENCY.observe(time.time() - start_llm)
+            response_text = completion.choices[0].message.content.strip()
         except Exception as e:
-            logger.error(f"Failed to generate answer from Gemini: {e}")
+            logger.error(f"Failed to generate answer from OpenAI: {e}")
             
     if not response_text:
         response_text = generate_mock_answer(request.message, contexts, engagement_score, last_viewed_category)
