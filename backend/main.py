@@ -324,9 +324,10 @@ async def chat(request: ChatRequest):
     if qdrant_client and openai_client:
         try:
             # Generate query embedding using OpenAI
+            embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
             emb_resp = await openai_client.embeddings.create(
                 input=request.message,
-                model="text-embedding-3-small"
+                model=embedding_model
             )
             query_vector = emb_resp.data[0].embedding
             
