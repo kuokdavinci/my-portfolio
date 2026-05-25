@@ -583,9 +583,9 @@
   --color-primary-container: #1e2a5e;
   --color-on-primary-container: #a5b3e0;
   --color-secondary: #e0bdce;
-  --color-secondary-container: #593f4d;
-  --color-on-secondary-fixed: #fad6e7;
-  --color-on-secondary-fixed-variant: #f0c4dc;
+  --color-secondary-container: #fad6e7;
+  --color-on-secondary-fixed: #2a1521;
+  --color-on-secondary-fixed-variant: #593f4d;
   --color-tertiary-container: #1f2f43;
   --color-on-tertiary-container: #a5b3e0;
   --color-accent: #9b6b8a;
@@ -625,58 +625,58 @@
   color: #f0c4dc;
 }
 
-/* Dark mode: secondary uses pink tones */
+/* Dark mode: secondary uses light pink */
 .dark .bg-secondary-container {
-  background-color: #593f4d;
+  background-color: #fad6e7;
 }
 .dark .bg-secondary-container .text-primary {
-  color: #f0c4dc;
+  color: #593f4d;
 }
 .dark .bg-secondary-container .text-on-secondary-fixed-variant {
-  color: #f0c4dc;
+  color: #593f4d;
 }
 .dark .bg-secondary-container .badge-primary {
   background-color: #1e2a5e;
-  color: #f0c4dc;
+  color: #fad6e7;
 }
 .dark .bg-secondary-container .material-symbols-outlined {
-  color: #f0c4dc;
+  color: #593f4d;
 }
 .dark .bg-secondary-container .bg-white\/50 {
-  background-color: rgba(240,196,220,0.12);
-  color: #f0c4dc;
+  background-color: rgba(250,214,231,0.5);
+  color: #593f4d;
 }
 .dark .bg-secondary-container input,
 .dark .bg-secondary-container textarea {
-  background-color: rgba(255,255,255,0.1);
-  color: #f0c4dc;
-  border-color: rgba(240,196,220,0.2);
+  background-color: rgba(255,255,255,0.6);
+  color: #593f4d;
+  border-color: rgba(89,63,77,0.2);
 }
 .dark .bg-secondary-container input::placeholder,
 .dark .bg-secondary-container textarea::placeholder {
-  color: rgba(240,196,220,0.5);
+  color: rgba(89,63,77,0.5);
 }
 .dark .bg-secondary-container input:focus,
 .dark .bg-secondary-container textarea:focus {
-  border-color: #f0c4dc;
+  border-color: #593f4d;
 }
 .dark .bg-secondary-container label {
-  color: #f0c4dc;
+  color: #593f4d;
 }
 .dark .bg-secondary-container .hover\:bg-white\/30:hover {
-  background-color: rgba(255,255,255,0.1);
+  background-color: rgba(255,255,255,0.3);
 }
 
 /* Dark mode: filter buttons */
 .dark .project-filter.bg-secondary-container {
-  background-color: #593f4d;
-  color: #f0c4dc;
+  background-color: #fad6e7;
+  color: #593f4d;
 }
 .dark .project-filter.bg-secondary-container.text-primary {
-  color: #f0c4dc;
+  color: #593f4d;
 }
 .dark .project-filter.bg-primary.text-on-primary {
-  background-color: #f0c4dc;
+  background-color: #fad6e7;
   color: #593f4d;
 }
 
@@ -701,8 +701,8 @@
   color: rgba(255,255,255,0.9);
 }
 .dark .bg-primary .badge.bg-secondary-container {
-  background-color: #593f4d;
-  color: #f0c4dc;
+  background-color: #fad6e7;
+  color: #593f4d;
 }
 .dark .bg-primary .material-symbols-outlined {
   color: rgba(255,255,255,0.8);
