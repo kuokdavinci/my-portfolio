@@ -127,34 +127,41 @@ knowledge_documents = [
     },
     {
         "id": 6,
+        "category": "project",
+        "chunk_level": "parent",
+        "text": "Legal Education RAG System: An intelligent Vietnamese education law retrieval system. Triple-Gated Cascading Flow (Semantic Routing → GraphRAG → Agent Reflection). Uses Qdrant vector search + Neo4j knowledge graph with RRF fusion, temporal fusion, neural reranking. Supports GPT-4o, streaming SSE, mandatory legal citations, Langfuse observability.",
+        "metadata": {"project_id": "legal-edu", "title": "Legal Education RAG System", "tech_stack": "OpenAI, Qdrant, Neo4j, LangChain, Next.js, Redis"}
+    },
+    {
+        "id": 7,
         "category": "competencies",
         "chunk_level": "parent",
         "text": "Backend Development Competencies: Building scalable RESTful APIs with Spring Boot and Java. Database design and optimization with PostgreSQL. Security implementation with Spring Security and JWT.",
         "metadata": {"area": "Backend", "tech": "Spring Boot, Java, PostgreSQL, JWT"}
     },
     {
-        "id": 7,
+        "id": 8,
         "category": "competencies",
         "chunk_level": "parent",
         "text": "Mobile Development Competencies: Cross-platform mobile development with Flutter and Dart. Real-time DB sync and auth with Firebase. Offline-first local caching and sync strategies.",
         "metadata": {"area": "Mobile", "tech": "Flutter, Dart, Firebase, Offline Cache"}
     },
     {
-        "id": 8,
+        "id": 9,
         "category": "competencies",
         "chunk_level": "parent",
         "text": "AI & Machine Learning Competencies: Data cleaning, analysis and preprocessing using Python, pandas, and numpy. Building RAG (Retrieval-Augmented Generation) systems and multi-agent concepts.",
         "metadata": {"area": "AI/ML", "tech": "Python, pandas, numpy, RAG, LangChain"}
     },
     {
-        "id": 9,
+        "id": 10,
         "category": "skills",
         "chunk_level": "parent",
         "text": "Complete Tech Stack: Python, Java, Dart, HTML/CSS, Spring Boot, Flutter, Firebase, PostgreSQL, Qdrant, Neo4j, Git, GitHub, Docker, AWS, GCP, LangChain.",
         "metadata": {"skills_list": "Python, Java, Dart, Spring Boot, Flutter, PostgreSQL, Qdrant, Docker, AWS"}
     },
     {
-        "id": 10,
+        "id": 11,
         "category": "contact",
         "chunk_level": "parent",
         "text": "Contact Lê Trung Anh Quốc via email at kuokdavinci@gmail.com. GitHub Profile: https://github.com/kuokdavinci, LinkedIn Profile: https://linkedin.com/in/kuokdavinci. Phone: 0768040802.",

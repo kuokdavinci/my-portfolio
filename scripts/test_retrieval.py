@@ -138,6 +138,37 @@ test_cases = [
         "query": "Quốc có kinh nghiệm làm việc ở đâu?",
         "expected_keywords": ["Software Engineer", "Intern", "Phu An Phuoc"],
         "expected_category": "experience"
+    },
+    # ── LegalRAG project queries ──
+    {
+        "id": 17,
+        "query": "Hệ thống tra cứu luật giáo dục hoạt động như thế nào?",
+        "expected_keywords": ["Triple-Gated", "Semantic Routing", "GraphRAG"],
+        "expected_category": "project_detail"
+    },
+    {
+        "id": 18,
+        "query": "LegalRAG sử dụng công nghệ gì cho vector search và knowledge graph?",
+        "expected_keywords": ["Qdrant", "Neo4j", "RRF"],
+        "expected_category": "project_detail"
+    },
+    {
+        "id": 19,
+        "query": "Hệ thống có bao nhiêu intent class và cơ chế routing hoạt động ra sao?",
+        "expected_keywords": ["6 intent", "LEGAL_EDU", "FAQ shortcut", "semantic centroid"],
+        "expected_category": "project_detail"
+    },
+    {
+        "id": 20,
+        "query": "Citation trong LegalRAG hoạt động như thế nào?",
+        "expected_keywords": ["trích dẫn", "Điều", "Khoản", "văn bản"],
+        "expected_category": "project_detail"
+    },
+    {
+        "id": 21,
+        "query": "Admin có thể làm gì trong hệ thống LegalRAG?",
+        "expected_keywords": ["quản lý", "API key", "audit log", "Langfuse"],
+        "expected_category": "project_detail"
     }
 ]
 

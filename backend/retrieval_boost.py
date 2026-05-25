@@ -62,6 +62,24 @@ BOOST_RULES: list[BoostRule] = [
         boost_factor=1.2,
     ),
 
+    # ── Project: Legal Education RAG ──
+    BoostRule(
+        name="project:legal_edu",
+        keywords=[
+            "luật", "pháp luật", "văn bản", "pháp lý", "legal",
+            "giáo dục", "education", "thông tư", "nghị định", "quyết định",
+            "tra cứu", "điều khoản", "chương", "mục", "khoản",
+            "RAG", "GraphRAG", "Neo4j", "Qdrant", "reranker",
+            "routing", "intent", "semantic", "LLM", "GPT",
+            "citation", "trích dẫn", "hiệu lực", "văn bản pháp luật",
+            "giảng viên", "cán bộ", "quản lý giáo dục",
+            "Langfuse", "LangChain", "LangGraph", "streaming", "SSE",
+            "guardrail", "toxicity", "audit", "API key",
+        ],
+        filter_condition={"key": "metadata.project_id", "match": {"value": "legal-edu"}},
+        boost_factor=1.2,
+    ),
+
     # ── Category: contact ──
     BoostRule(
         name="category:contact",
@@ -162,6 +180,7 @@ def detect_boost(query: str) -> RetrievalBoost:
     priority = {
         "project:attendance": 10,
         "project:movie_ticket": 10,
+        "project:legal_edu": 10,
         "category:contact": 7,
         "category:education": 7,
         "category:experience": 7,
