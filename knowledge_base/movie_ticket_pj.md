@@ -25,7 +25,10 @@ Giải pháp này giúp giảm tải đáng kể cho hệ thống backend, tăng
 
 ---
 
-## Architecture & Security
+## Architecture & Tech Stack
+
+### Công Nghệ Sử Dụng (Tech Stack) Trong Dự Án Movie Ticket Booking System
+Dự án Movie Ticket Booking System sử dụng các công nghệ chính: Java, Spring Boot, Spring Data JPA, PostgreSQL, Redis Cache, Spring Security, JWT và Flutter.
 
 ### Stateless Authentication với JWT
 Hệ thống áp dụng phương pháp xác thực không trạng thái (stateless authentication) sử dụng **JSON Web Token (JWT)** để tăng tính mở rộng (scalability) của backend.

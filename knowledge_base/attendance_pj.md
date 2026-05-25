@@ -24,6 +24,9 @@ Các hệ thống điểm danh truyền thống (gọi tên, ký giấy, quét m
 
 ## Architecture & Tech Stack
 
+### Công Nghệ Sử Dụng (Tech Stack) Trong Dự Án Attendance Tracking App
+Dự án Attendance Tracking App sử dụng các công nghệ chính: Flutter, Dart, Firebase Suite (Cloud Firestore, Firebase Authentication, Cloud Messaging), Google ML Kit (Face Detection) và Geolocator GPS API.
+
 ### Kiến Trúc Serverless Với Firebase Suite
 Hệ thống sử dụng mô hình Serverless để tối ưu chi phí vận hành và tốc độ triển khai:
 - **Firebase Cloud Firestore:** Cơ sở dữ liệu NoSQL lưu trữ phi tập trung, hỗ trợ đồng bộ dữ liệu thời gian thực (Real-time synchronization) giữa thiết bị của sinh viên và giảng viên.
