@@ -1,0 +1,159 @@
+import os
+import sys
+from pathlib import Path
+
+# Load env variables
+def load_env():
+    env_path = Path(__file__).resolve().parent.parent / ".env"
+    if env_path.exists():
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, val = line.split("=", 1)
+                    os.environ[key.strip()] = val.strip().strip("'\"")
+
+load_env()
+
+try:
+    from qdrant_client import QdrantClient
+    from openai import OpenAI
+except ImportError as e:
+    print(f"Error: Required library missing. {e}")
+    sys.exit(1)
+
+# Configuration
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    print("Error: OPENAI_API_KEY is not set in env.")
+    sys.exit(1)
+
+openai_client = OpenAI(api_key=api_key)
+qdrant_client = QdrantClient(host="localhost", port=6333)
+
+COLLECTION_NAME = "portfolio_knowledge"
+EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+
+# Define retrieval test cases evaluated via Recall@3
+# (Query, Expected keywords, Expected metadata properties)
+test_cases = [
+    {
+        "id": 1,
+        "query": "Làm thế nào để chống gian lận điểm danh trong app attendance?",
+        "expected_keywords": ["ML Kit", "GPS", "gian lận"],
+        "expected_category": "project_detail"
+    },
+    {
+        "id": 2,
+        "query": "Làm thế nào hệ thống tránh việc đặt trùng ghế (double-booking)?",
+        "expected_keywords": ["Pessimistic", "Locking", "@Lock"],
+        "expected_category": "project_detail"
+    },
+    {
+        "id": 3,
+        "query": "Redis cache giúp cải thiện hiệu năng và giảm độ trễ bao nhiêu phần trăm?",
+        "expected_keywords": ["Redis", "15%"],
+        "expected_category": "project_detail"
+    },
+    {
+        "id": 4,
+        "query": "Cơ chế phân trang trong API đặt vé movie ticket hoạt động như thế nào?",
+        "expected_keywords": ["phân trang", "pageable", "tải"],
+        "expected_category": "project_detail"
+    },
+    {
+        "id": 5,
+        "query": "Cách liên hệ với Lê Trung Anh Quốc?",
+        "expected_keywords": ["email", "kuokdavinci@gmail.com", "phone"],
+        "expected_category": "contact"
+    },
+    {
+        "id": 6,
+        "query": "Thông tin về trường đại học và năm tốt nghiệp của Quốc?",
+        "expected_keywords": ["HCMUS", "2025", "VinUni"],
+        "expected_category": "education"
+    }
+]
+
+def get_embedding(text: str) -> list:
+    resp = openai_client.embeddings.create(
+        input=text,
+        model=EMBEDDING_MODEL
+    )
+    return resp.data[0].embedding
+
+def run_retrieval_tests():
+    print("=" * 80)
+    print(f"RUNNING RAG RETRIEVAL ACCURACY TESTS (Recall@3)")
+    print(f"Collection: {COLLECTION_NAME} | Model: {EMBEDDING_MODEL}")
+    print("=" * 80)
+    
+    passed_count = 0
+    total_count = len(test_cases)
+    
+    for case in test_cases:
+        print(f"\nTest Case #{case['id']}: '{case['query']}'")
+        try:
+            # Generate query embedding
+            query_vector = get_embedding(case['query'])
+            
+            # Query Qdrant with limit=3 (Recall@3)
+            search_results = qdrant_client.query_points(
+                collection_name=COLLECTION_NAME,
+                query=query_vector,
+                limit=3
+            ).points
+            
+            if not search_results:
+                print("  ❌ FAIL: No results returned from Qdrant.")
+                continue
+                
+            # Check if any of the top-3 hits contain all expected keywords
+            match_found = False
+            best_snippet = ""
+            best_score = 0.0
+            best_category = ""
+            best_metadata = {}
+            
+            for idx, hit in enumerate(search_results):
+                text = hit.payload.get("text", "")
+                category = hit.payload.get("category", "")
+                metadata = hit.payload.get("metadata", {})
+                
+                keywords_found = [kw.lower() in text.lower() for kw in case['expected_keywords']]
+                if all(keywords_found):
+                    match_found = True
+                    best_snippet = text
+                    best_score = hit.score
+                    best_category = category
+                    best_metadata = metadata
+                    break
+            
+            if match_found:
+                print(f"  ✅ PASS (Recall Rank: {idx+1}, Score: {best_score:.4f})")
+                print(f"    - Match Snippet: \"{best_snippet[:120].strip().replace('\n', ' ')}...\"")
+                print(f"    - Metadata: category={best_category}, section={best_metadata.get('section') or 'N/A'}")
+                passed_count += 1
+            else:
+                # If no match in top-3, print the details of the first hit
+                top_hit = search_results[0]
+                top_text = top_hit.payload.get("text", "")
+                print(f"  ❌ FAIL (No top-3 chunk contains all keywords: {case['expected_keywords']})")
+                print(f"    - Top hit section: {top_hit.payload.get('metadata', {}).get('section')}")
+                print(f"    - Top hit snippet: \"{top_text[:120].strip().replace('\n', ' ')}...\"")
+                
+        except Exception as e:
+            print(f"  ❌ ERROR: {e}")
+            
+    print("\n" + "=" * 80)
+    accuracy = (passed_count / total_count) * 100
+    print(f"RETRIEVAL TEST SUMMARY: {passed_count}/{total_count} PASSED ({accuracy:.1f}% Accuracy)")
+    print("=" * 80)
+    
+    if passed_count == total_count:
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+if __name__ == "__main__":
+    run_retrieval_tests()
