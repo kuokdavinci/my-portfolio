@@ -1,50 +1,75 @@
-# Tài liệu Hệ thống: Ứng dụng Điểm danh Thông minh (attendance_app)
-## Tài liệu Tri thức Nâng cao dành cho RAG Chatbot
+# Project: Attendance Tracking App
 
-Tài liệu này mô tả chi tiết kiến trúc, phân quyền, luồng nghiệp vụ và cấu trúc mã nguồn của dự án **attendance_app** do tác giả **kuokdavinci** phát triển. Dữ liệu được tổ chức theo các phân đoạn logic nhằm tối ưu hóa khả năng truy xuất (retrieval) cho chatbot khi trả lời các câu hỏi về dự án, giải pháp kỹ thuật và tư duy kiến trúc của tác giả.
+> Attendance Tracking App là một ứng dụng di động đa nền tảng thông minh hỗ trợ tự động hóa và minh bạch hóa quy trình điểm danh trong các tổ chức giáo dục và doanh nghiệp.
+> Ứng dụng được phát triển trên nền tảng Flutter và Dart theo mô hình Serverless sử dụng hệ sinh thái Firebase, tích hợp trí tuệ nhân tạo (Google ML Kit Face Detection) và hệ thống định vị GPS để chống gian lận điểm danh.
+> Tài liệu này mô tả chi tiết kiến trúc, cấu trúc mã nguồn, cơ chế phân quyền, và giải pháp kỹ thuật của dự án.
 
 ---
 
-### 1. Tổng quan Dự án & Bài toán Giải quyết (Project Overview)
-* **Tên dự án:** `attendance_app`
-* **Tác giả:** kuokdavinci
-* **Mục tiêu:** Ứng dụng di động đa nền tảng hỗ trợ quản lý khóa học, phân quyền giảng viên/sinh viên và thực hiện điểm danh thông minh.
-* **Bài toán cốt lõi & Giải pháp:** 
-  * *Hạn chế của hệ thống cũ:* Tình trạng điểm danh hộ, thiếu minh bạch và không xác thực được sự hiện diện thực tế của sinh viên.
-  * *Giải pháp cải tiến:* Tích hợp công nghệ nhận diện khuôn mặt ngoại tuyến (**Google ML Kit**) kết hợp đối chiếu tọa độ địa lý (**GPS Verification**) tại thời điểm điểm danh để đảm bảo tính minh bạch tuyệt đối.
+## Project Overview & Objectives
 
-### 2. Kiến trúc Hệ thống & Tech Stack
-* **Mô hình:** Serverless Architecture.
-* **Frontend:** Flutter & Dart.
-* **Kiến trúc mã nguồn (Architecture Pattern):** **CVMM (Clean Architecture + MVVM / Feature-First)**. Chia hệ thống thành các lớp độc lập: Data (Nguồn dữ liệu, Model, Repository triển khai) -> Domain (Entity, Nghiệp vụ thuần túy, UseCases) -> Presentation (Giao diện và ViewModel/State Management).
-* **Backend-as-a-Service:** **Firebase Suite** toàn diện:
-  * *Firebase Cloud Firestore:* Cơ sở dữ liệu NoSQL lưu trữ thời gian thực (Real-time DB).
-  * *Firebase Authentication:* Quản lý định danh và phân quyền người dùng.
-  * *Firebase Cloud Messaging (FCM):* Hệ thống gửi và nhận thông báo đẩy (Push Notifications).
-* **AI & Hardware Integration:** **Google ML Kit Face Detection** (Xử lý nhận diện khuôn mặt ngay trên thiết bị) và **Geolocator API** (Thu thập vị trí GPS).
+### Mục Tiêu Dự Án Và Đối Tượng Sử Dụng
+Mục tiêu chính của `attendance_app` là tối ưu hóa việc quản lý các khóa học, lớp học và tự động hóa hoạt động điểm danh hàng ngày. 
+Đối tượng sử dụng chính của hệ thống bao gồm:
+- **Giảng viên (Admin):** Cần một công cụ nhanh chóng, trực quan để mở các buổi điểm danh, giám sát trạng thái điểm danh theo thời gian thực và quản lý lớp học.
+- **Sinh viên (User):** Cần một phương thức điểm danh nhanh chóng, tự phục vụ ngay trên thiết bị di động cá nhân nhưng vẫn đảm bảo tính chính xác và bảo mật.
 
-### 3. Hệ thống Phân quyền & Tính năng Chính (Role-Based Access Control)
+### Bài Toán Gian Lận & Giải Pháp Điểm Danh Minh Bạch
+Các hệ thống điểm danh truyền thống (gọi tên, ký giấy, quét mã QR tĩnh) gặp lỗ hổng lớn về tình trạng điểm danh hộ và gian lận vị trí địa lý.
+Để giải quyết triệt để bài toán này, `attendance_app` tích hợp giải pháp xác thực kép:
+1. **Nhận diện khuôn mặt ngoại tuyến (Offline Face Detection):** Sử dụng Google ML Kit chạy trực tiếp trên thiết bị để đối khớp khuôn mặt sinh viên với dữ liệu đăng ký gốc.
+2. **Xác thực vị trí GPS (GPS Verification):** Sử dụng API phần cứng di động để xác minh sinh viên đang thực sự có mặt trong bán kính lớp học được cấu hình bởi giảng viên.
 
-#### A. Quyền Admin (Giảng viên / Giáo viên)
-* **Quản lý Khóa học (Course Management):** Thực hiện đầy đủ các thao tác CRUD (Tạo mới, Xem, Cập nhật, Xóa) thông tin các khóa học, lớp học do mình phụ trách.
-* **Gửi Thông báo (Broadcast Notifications):** Tạo và gửi thông báo đẩy qua FCM đến toàn bộ sinh viên trong lớp học/khóa học được chỉ định.
-* **Giám sát Điểm danh (Attendance Monitoring):** Kiểm tra, kết xuất và quản lý danh sách dữ liệu điểm danh của sinh viên theo thời gian thực.
+---
 
-#### B. Quyền User (Sinh viên)
-* **Quản lý Hồ sơ (Profile Management):** Kiểm tra và tự cập nhật thông tin cá nhân (Thông tin liên hệ, ảnh đại diện, dữ liệu khuôn mặt gốc).
-* **Tra cứu Lớp học:** Xem danh sách các lớp học kèm theo trạng thái trực quan (Lớp đang Đóng hoặc Mở).
-* **Kiểm tra Trạng thái Điểm danh:** Xem lịch sử và trạng thái điểm danh của bản thân tại từng buổi học (Đã điểm danh / Vắng mặt).
-* **Nhận Thông báo:** Tiếp nhận các thông báo nhắc nhở lịch học hoặc thông báo khẩn từ giảng viên qua hệ thống Notification trực tuyến.
+## Architecture & Tech Stack
 
-### 4. Luồng Nghiệp vụ Điểm danh Minh bạch (Anti-Fraud Attendance Workflow)
-Hệ thống giải quyết triệt để bài toán gian lận thông qua luồng xử lý nghiêm ngặt sau:
-1. **Kích hoạt:** Sinh viên nhấn điểm danh tại một lớp học đang ở trạng thái "Mở".
-2. **Quét khuôn mặt (Face Detection):** Ứng dụng bật camera, sử dụng gói **Google ML Kit** để nhận diện và trích xuất các điểm đặc trưng trên khuôn mặt (Face Features), đối chiếu trực tiếp với dữ liệu khuôn mặt gốc đã đăng ký để xác nhận chính chủ.
-3. **Xác thực Vị trí (GPS Verification):** Đồng thời, ứng dụng truy cập phần cứng GPS của thiết bị để lấy tọa độ (Kinh độ/Vĩ độ) hiện tại. Hệ thống đối chiếu khoảng cách giữa sinh viên và tọa độ của phòng học được thiết lập bởi Giảng viên.
-4. **Đồng bộ hóa Real-time:** Nếu cả 2 điều kiện (Khuôn mặt hợp lệ + Vị trí nằm trong bán kính cho phép) đều thỏa mãn, một bản ghi (Document) chứa `timestamp`, `face_status: verified` và `location` sẽ được ghi thẳng vào Firebase Firestore. Giảng viên ngay lập tức nhìn thấy trạng thái "Đã điểm danh" trên màn hình quản lý nhờ cơ chế lắng nghe Real-time.
+### Kiến Trúc Serverless Với Firebase Suite
+Hệ thống sử dụng mô hình Serverless để tối ưu chi phí vận hành và tốc độ triển khai:
+- **Firebase Cloud Firestore:** Cơ sở dữ liệu NoSQL lưu trữ phi tập trung, hỗ trợ đồng bộ dữ liệu thời gian thực (Real-time synchronization) giữa thiết bị của sinh viên và giảng viên.
+- **Firebase Authentication:** Quản lý quy trình đăng nhập, đăng ký và bảo mật phiên truy cập của người dùng.
+- **Firebase Cloud Messaging (FCM):** Kênh truyền tin cậy hỗ trợ giảng viên gửi thông báo đẩy (Push Notifications) tức thời đến sinh viên.
 
-### 5. Cấu trúc Thư mục chuẩn Kiến trúc CVMM (Project Directory Structure)
-Mã nguồn thư mục `lib/` được tổ chức chặt chẽ giúp Chatbot dễ dàng điều hướng cấu trúc dự án:
+### Mô Hình Thiết Kế CVMM (Clean Architecture + MVVM)
+Mã nguồn Flutter được thiết kế theo cấu trúc Feature-First kết hợp mẫu thiết kế CVMM, chia nhỏ dự án thành các lớp độc lập:
+- **Tầng Data:** Chứa các Models (ánh xạ dữ liệu JSON/Firestore) và các Data Sources (giao tiếp trực tiếp với Firestore API, thiết bị GPS).
+- **Tầng Domain:** Chứa các thực thể cốt lõi (Entities) và các nghiệp vụ thuần túy (Use Cases), hoàn toàn độc lập với các thư viện bên ngoài.
+- **Tầng Presentation:** Chứa các ViewModels quản lý trạng thái giao diện và các Views (Widget UI) hiển thị cho người dùng.
+
+### Tích Hợp Phần Cứng Và Trí Tuệ Nhân Tạo
+Ứng dụng tương tác trực tiếp với các API phần cứng thông qua các gói thư viện di động:
+- **Google ML Kit Face Detection:** Thư viện chạy trực tiếp trên thiết bị (on-device Machine Learning) để phát hiện khuôn mặt và trích xuất đặc trưng sinh trắc học mà không cần gửi ảnh về server.
+- **Geolocator API:** Lấy tọa độ kinh độ và vĩ độ chính xác của thiết bị di động tại thời điểm điểm danh để phục vụ tính năng geofencing.
+
+---
+
+## Role-Based Access Control (RBAC)
+
+### Chức Năng Của Giảng Viên (Admin Role)
+Người dùng có vai trò giảng viên được phân quyền thực hiện các nghiệp vụ quản trị:
+- **Quản lý khóa học (Course Management):** Thực hiện đầy đủ các thao tác CRUD (Thêm, Xem, Sửa, Xóa) thông tin khóa học, lớp học và danh sách sinh viên trực thuộc lớp học đó.
+- **Gửi thông báo khẩn (Broadcast Notifications):** Tạo nội dung và kích hoạt gửi thông báo đẩy qua FCM đến toàn bộ thiết bị của sinh viên trong lớp học chỉ định.
+- **Giám sát điểm danh thời gian thực (Attendance Monitoring):** Theo dõi danh sách sinh viên đã điểm danh thành công dưới dạng live feed cập nhật tự động từ Firestore.
+
+### Chức Năng Của Sinh Viên (User Role)
+Người dùng có vai trò sinh viên được phân quyền thực hiện các nghiệp vụ tự phục vụ:
+- **Quản lý hồ sơ (Profile Management):** Tự cập nhật thông tin cá nhân và chụp ảnh đăng ký khuôn mặt gốc phục vụ việc đối sánh sau này.
+- **Tra cứu trạng thái lớp học:** Xem danh sách các lớp học mình tham gia và xem lớp nào đang mở phiên điểm danh.
+- **Lịch sử điểm danh cá nhân:** Xem thống kê chi tiết số buổi học đã tham gia (Verified) hoặc vắng mặt (Absent) trong kỳ học.
+
+---
+
+## Core Workflows & Project Structure
+
+### Luồng Nghiệp Vụ Điểm Danh Chống Gian Lận (Anti-Fraud Workflow)
+Quy trình điểm danh được kiểm soát nghiêm ngặt qua 4 bước:
+1. **Bắt đầu:** Sinh viên chọn lớp đang "Mở điểm danh" trên ứng dụng.
+2. **Nhận diện khuôn mặt:** Camera trước kích hoạt, **Google ML Kit** quét và trích xuất đặc trưng khuôn mặt của sinh viên tại chỗ, đối chiếu trực tiếp với đặc trưng khuôn mặt gốc đã lưu trong máy/Firestore.
+3. **Xác thực vị trí:** Ứng dụng lấy vị trí GPS hiện tại của sinh viên và tính toán khoảng cách (distance) tới tọa độ rạp/phòng học của giảng viên.
+4. **Cập nhật dữ liệu:** Nếu khuôn mặt khớp và vị trí hợp lệ (nằm trong bán kính cho phép), bản ghi điểm danh chứa tọa độ GPS và thời gian điểm danh được đồng bộ trực tiếp lên Firebase Firestore để giảng viên phê duyệt.
+
+### Cấu Trúc Thư Mục Chuẩn Hóa Của Dự Án (lib/)
+Cấu trúc mã nguồn của ứng dụng được tổ chức chặt chẽ theo từng tính năng độc lập (Feature-First):
 ```text
 lib/
 ├── app/                        # Cấu hình toàn cục (App Routes, Global Themes, DI/Service Locator)
@@ -54,13 +79,14 @@ lib/
 │   ├── course_management/      # Tính năng CRUD Khóa học (Dành cho Admin)
 │   ├── notification/           # Tính năng Gửi/Nhận thông báo qua FCM
 │   └── attendance/             # Tính năng Điểm danh (ML Kit + GPS)
-│       ├── data/               # Tầng Data: Gồm Models (Data Mapping) & DataSources (Firestore Remote, GPS Service)
+│       ├── data/               # Tầng Data: Gồm Models & DataSources
 │       │   ├── datasources/attendance_remote_datasource.dart
 │       │   └── models/attendance_log_model.dart
-│       ├── domain/             # Tầng Domain: Bản thể nghiệp vụ (Entities) & Luồng xử lý (UseCases)
+│       ├── domain/             # Tầng Domain: Entities & UseCases
 │       │   ├── entities/attendance_entity.dart
 │       │   └── usecases/submit_attendance_usecase.dart
-│       └── presentation/       # Tầng Presentation: MVVM / Controllers & UI Widgets
+│       └── presentation/       # Tầng Presentation: ViewModels & Views
 │           ├── viewmodels/attendance_viewmodel.dart
 │           └── views/attendance_scan_view.dart
 └── main.dart                   # Điểm khởi chạy hệ thống
+```
