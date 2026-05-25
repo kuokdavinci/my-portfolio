@@ -18,6 +18,8 @@ from qdrant_client import QdrantClient
 from openai import AsyncOpenAI
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
+from retrieval_boost import detect_boost, build_qdrant_filter, merge_parent_child
+
 # Load environment variables from .env
 def load_env():
     env_path = Path(__file__).resolve().parent.parent / ".env"
@@ -331,11 +333,33 @@ async def chat(request: ChatRequest):
             )
             query_vector = emb_resp.data[0].embedding
             
-            search_results = qdrant_client.query_points(
+            # Rule-based intent detection → build filter
+            boost = detect_boost(request.message)
+            qdrant_filter = build_qdrant_filter(boost)
+            
+            # General vector search (fetch more for parent-child merge)
+            general_results = qdrant_client.query_points(
                 collection_name="portfolio_knowledge",
                 query=query_vector,
-                limit=3
+                limit=8,
             ).points
+            
+            # Filtered search if rule matched
+            filtered_results = []
+            if qdrant_filter:
+                filtered_results = qdrant_client.query_points(
+                    collection_name="portfolio_knowledge",
+                    query=query_vector,
+                    query_filter=qdrant_filter,
+                    limit=5,
+                ).points
+            
+            # Merge with parent-child awareness
+            search_results = merge_parent_child(
+                general_results, filtered_results,
+                boost=boost,
+                top_k=3,
+            )
             
             for hit in search_results:
                 contexts.append(hit.payload.get("text", ""))

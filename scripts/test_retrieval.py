@@ -22,6 +22,10 @@ except ImportError as e:
     print(f"Error: Required library missing. {e}")
     sys.exit(1)
 
+# Add parent dir to path for retrieval_boost import
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend"))
+from retrieval_boost import detect_boost, build_qdrant_filter, merge_parent_child
+
 # Configuration
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
@@ -102,6 +106,38 @@ test_cases = [
         "query": "Attendance app dùng database và kiến trúc gì?",
         "expected_keywords": ["Firebase", "Cloud Firestore", "Serverless"],
         "expected_category": "project_detail"
+    },
+    # ── General queries (previously would fail without boosting) ──
+    {
+        "id": 12,
+        "query": "Quốc là ai và làm gì?",
+        "expected_keywords": ["AI", "Software Developer", "Ho Chi Minh"],
+        "expected_category": "personal_info"
+    },
+    {
+        "id": 13,
+        "query": "Tech stack của Quốc có những gì?",
+        "expected_keywords": ["Python", "Java", "Spring Boot", "Flutter"],
+        "expected_category": "skills"
+    },
+    {
+        "id": 14,
+        "query": "Quốc đã làm những dự án nào?",
+        # Each project summary chunk describes ONE project, so check for either
+        "expected_keywords": ["Attendance", "Flutter"],
+        "expected_category": "project"
+    },
+    {
+        "id": 15,
+        "query": "Làm sao để liên hệ hoặc gặp Quốc?",
+        "expected_keywords": ["email", "kuokdavinci@gmail.com", "GitHub"],
+        "expected_category": "contact"
+    },
+    {
+        "id": 16,
+        "query": "Quốc có kinh nghiệm làm việc ở đâu?",
+        "expected_keywords": ["Software Engineer", "Intern", "Phu An Phuoc"],
+        "expected_category": "experience"
     }
 ]
 
@@ -116,6 +152,7 @@ def run_retrieval_tests():
     print("=" * 80)
     print(f"RUNNING RAG RETRIEVAL ACCURACY TESTS (Recall@3)")
     print(f"Collection: {COLLECTION_NAME} | Model: {EMBEDDING_MODEL}")
+    print(f"Mode: Parent-Child Hybrid Retrieval")
     print("=" * 80)
     
     passed_count = 0
@@ -127,12 +164,36 @@ def run_retrieval_tests():
             # Generate query embedding
             query_vector = get_embedding(case['query'])
             
-            # Query Qdrant with limit=3 (Recall@3)
-            search_results = qdrant_client.query_points(
+            # Rule-based intent detection
+            boost = detect_boost(case['query'])
+            qdrant_filter = build_qdrant_filter(boost)
+            
+            # General vector search (fetch more to allow parent-child merge)
+            general_results = qdrant_client.query_points(
                 collection_name=COLLECTION_NAME,
                 query=query_vector,
-                limit=3
+                limit=8,
             ).points
+            
+            # Filtered search if rule matched
+            filtered_results = []
+            if qdrant_filter:
+                filtered_results = qdrant_client.query_points(
+                    collection_name=COLLECTION_NAME,
+                    query=query_vector,
+                    query_filter=qdrant_filter,
+                    limit=5,
+                ).points
+            
+            # Merge with parent-child awareness
+            search_results = merge_parent_child(
+                general_results, filtered_results,
+                boost=boost,
+                top_k=3,
+            )
+            
+            if boost.best_rule:
+                print(f"  🎯 Rule: {boost.best_rule.name}")
             
             if not search_results:
                 print("  ❌ FAIL: No results returned from Qdrant.")
