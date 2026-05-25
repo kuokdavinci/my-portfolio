@@ -72,6 +72,36 @@ test_cases = [
         "query": "Thông tin về trường đại học và năm tốt nghiệp của Quốc?",
         "expected_keywords": ["HCMUS", "2025", "VinUni"],
         "expected_category": "education"
+    },
+    {
+        "id": 7,
+        "query": "Ứng dụng attendance sử dụng cơ chế nào để lưu dữ liệu khi offline?",
+        "expected_keywords": ["Hive", "offline", "sync"],
+        "expected_category": "project_detail"
+    },
+    {
+        "id": 8,
+        "query": "Movie ticket booking system sử dụng công nghệ gì cho backend và authentication?",
+        "expected_keywords": ["Spring Boot", "JWT", "Java"],
+        "expected_category": "project_detail"
+    },
+    {
+        "id": 9,
+        "query": "Quốc có những kỹ năng nào về AI và Machine Learning?",
+        "expected_keywords": ["Data Analysis", "Model Development", "pandas"],
+        "expected_category": "competency"
+    },
+    {
+        "id": 10,
+        "query": "QR code trong app attendance được bảo mật như thế nào để chống giả mạo?",
+        "expected_keywords": ["dynamic QR", "geofencing", "time-bounded"],
+        "expected_category": "project_detail"
+    },
+    {
+        "id": 11,
+        "query": "Tech stack của Quốc bao gồm những công nghệ cloud và database nào?",
+        "expected_keywords": ["AWS", "GCP", "PostgreSQL", "Qdrant"],
+        "expected_category": "tech_stack"
     }
 ]
 
