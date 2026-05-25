@@ -57,8 +57,8 @@ except Exception as e:
     sys.exit(1)
 
 COLLECTION_NAME = "portfolio_knowledge"
-EMBEDDING_MODEL = "text-embedding-3-small"
-EMBEDDING_DIM = 1536
+EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+EMBEDDING_DIM = int(os.getenv("QDRANT_VECTOR_DIM", "1536"))
 
 # Helper to generate OpenAI embeddings
 def get_embedding(text: str) -> list:
@@ -143,11 +143,84 @@ knowledge_documents = [
     }
 ]
 
+def parse_markdown_hierarchical(content: str, project_id: str):
+    lines = content.splitlines()
+    doc_title = ""
+    current_section = "Tổng quan"
+    chunks = []
+    
+    # First, find the document title
+    for line in lines:
+        if line.startswith("# ") and not line.startswith("##") and not line.startswith("###"):
+            doc_title = line[2:].strip()
+            break
+    if not doc_title:
+        doc_title = project_id.replace("-", " ").title()
+        
+    # Now parse sections and chunks
+    current_chunk_title = ""
+    current_chunk_lines = []
+    intro_lines = []
+    in_intro = True
+    
+    for line in lines:
+        # Skip document title line to avoid duplication
+        if line.startswith("# ") and not line.startswith("##") and not line.startswith("###"):
+            continue
+            
+        if line.startswith("## "):
+            current_section = line[3:].strip()
+            continue
+            
+        if line.startswith("### "):
+            # Save previous chunk if exists
+            if current_chunk_title and current_chunk_lines:
+                chunk_body = "\n".join(current_chunk_lines).strip()
+                full_text = f"### {current_chunk_title}\n{chunk_body}"
+                contextual_text = f"[{doc_title} > {current_section}]\n\n{full_text}"
+                chunks.append({
+                    "text": contextual_text,
+                    "section": current_section,
+                    "title": current_chunk_title
+                })
+            elif in_intro and intro_lines:
+                # Save intro chunk
+                intro_body = "\n".join(intro_lines).strip()
+                contextual_text = f"[{doc_title} > Tổng quan]\n\n{intro_body}"
+                chunks.append({
+                    "text": contextual_text,
+                    "section": "Tổng quan",
+                    "title": "Introduction"
+                })
+                in_intro = False
+                
+            current_chunk_title = line[4:].strip()
+            current_chunk_lines = []
+            continue
+            
+        if in_intro:
+            intro_lines.append(line)
+        else:
+            current_chunk_lines.append(line)
+            
+    # Save the last chunk
+    if current_chunk_title and current_chunk_lines:
+        chunk_body = "\n".join(current_chunk_lines).strip()
+        full_text = f"### {current_chunk_title}\n{chunk_body}"
+        contextual_text = f"[{doc_title} > {current_section}]\n\n{full_text}"
+        chunks.append({
+            "text": contextual_text,
+            "section": current_section,
+            "title": current_chunk_title
+        })
+        
+    return doc_title, chunks
+
 # Dynamically scan and load all markdown files in knowledge_base/
 kb_dir = Path(__file__).resolve().parent.parent / "knowledge_base"
 if kb_dir.exists() and kb_dir.is_dir():
-    md_files = list(kb_dir.glob("*.md"))
-    print(f"Found {len(md_files)} markdown document(s) in knowledge_base/")
+    md_files = [f for f in kb_dir.glob("*.md") if f.name != "template.md"]
+    print(f"Found {len(md_files)} markdown document(s) in knowledge_base/ (excluding template.md)")
     
     for md_file in md_files:
         print(f"Processing: {md_file.name}")
@@ -156,30 +229,17 @@ if kb_dir.exists() and kb_dir.is_dir():
                 content = f.read()
             
             project_id = get_project_id_from_filename(md_file.name)
+            doc_title, chunks = parse_markdown_hierarchical(content, project_id)
             
-            # Split by level-3 markdown headings (###)
-            sections = content.split("###")
-            intro = sections[0].strip()
-            if intro:
+            for chunk in chunks:
                 knowledge_documents.append({
                     "id": len(knowledge_documents) + 1,
                     "category": "project_detail",
-                    "text": intro,
-                    "metadata": {"project_id": project_id, "section": "intro"}
+                    "text": chunk["text"],
+                    "metadata": {"project_id": project_id, "section": chunk["title"]}
                 })
-            
-            for idx, section in enumerate(sections[1:]):
-                section_text = ("###" + section).strip()
-                title_match = re.match(r"###\s*(.*)", section_text)
-                section_title = title_match.group(1).strip() if title_match else f"Section {idx+1}"
                 
-                knowledge_documents.append({
-                    "id": len(knowledge_documents) + 1,
-                    "category": "project_detail",
-                    "text": section_text,
-                    "metadata": {"project_id": project_id, "section": section_title}
-                })
-            print(f"Loaded {len(sections)} sections from {md_file.name} successfully.")
+            print(f"Loaded {len(chunks)} sections from {md_file.name} successfully.")
         except Exception as e:
             print(f"Error parsing {md_file.name}: {e}")
 else:
