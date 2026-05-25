@@ -31,6 +31,13 @@ export const portfolioConfig = {
       language: "Java",
       stars: 0,
       forks: 0,
+      duration: "Jan 2026 — Mar 2026",
+      featureHighlights: [
+        { icon: "lock", label: "Optimistic Locking", desc: "Prevents double-booking" },
+        { icon: "grid_on", label: "Dynamic Seat Grid", desc: "Auto-scales to screen size" },
+        { icon: "security", label: "JWT Auth", desc: "Stateless session management" },
+        { icon: "cached", label: "Redis Cache", desc: "15% latency reduction" },
+      ],
       details: {
         longDescription: "Full-stack cinema ticket booking system. Spring Boot backend exposes RESTful APIs secured with JWT, while PostgreSQL stores movies, showtimes, seats, and bookings. Flutter mobile frontend provides interactive seat grids, payment simulation, and real-time showtime updates.",
         challenges: [
@@ -63,6 +70,13 @@ export const portfolioConfig = {
       language: "Dart",
       stars: 0,
       forks: 0,
+      duration: "Feb 2026 — Apr 2026",
+      featureHighlights: [
+        { icon: "face", label: "Face Detection", desc: "ML Kit on-device" },
+        { icon: "location_on", label: "GPS Verification", desc: "Geofencing validation" },
+        { icon: "cloud_off", label: "Offline-First", desc: "Hive + queue sync" },
+        { icon: "notifications", label: "FCM Push", desc: "Real-time alerts" },
+      ],
       details: {
         longDescription: "Smart attendance app with automated check-ins. Firebase authentication, real-time record sync, and offline-first architecture using Hive. Core feature: dynamic QR code scanning with location and time validation.",
         challenges: [

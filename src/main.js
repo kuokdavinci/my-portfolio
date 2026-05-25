@@ -756,11 +756,25 @@ function handleRoute() {
             <div>
               <span class="font-code text-sm font-bold uppercase tracking-widest text-secondary dark:text-accent-light mb-2 block">Project Case Study</span>
               <h1 class="font-headline text-4xl md:text-7xl font-black uppercase text-primary dark:text-on-background leading-none">${escapeHtml(project.title)}</h1>
+              ${project.duration ? `<p class="font-code text-xs font-medium text-on-surface-variant/60 mt-2 inline-flex items-center gap-1"><span class="material-symbols-outlined text-sm">event</span> ${escapeHtml(project.duration)}</p>` : ''}
             </div>
             <a href="${escapeHtml(project.codeLink)}" target="_blank" rel="noopener" class="font-code text-sm font-bold bg-primary text-on-primary dark:bg-primary-container dark:text-on-primary-container px-6 py-3 border-2 border-primary dark:border-primary-container hover:bg-transparent hover:text-primary dark:hover:text-on-background transition-all rounded-none inline-flex items-center gap-2 cursor-pointer shadow-[4px_4px_0px_0px_rgba(114,87,101,1)] dark:shadow-[4px_4px_0px_0px_rgba(240,196,220,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(114,87,101,1)] dark:hover:shadow-[6px_6px_0px_0px_rgba(240,196,220,1)] active:translate-x-0 active:translate-y-0 active:shadow-[4px_4px_0px_0px_rgba(114,87,101,1)]">
               <span class="material-symbols-outlined text-base">code</span> Source Code <span class="material-symbols-outlined text-sm">open_in_new</span>
             </a>
           </div>
+
+          <!-- Feature Highlights (icon + short label grid) -->
+          ${project.featureHighlights && project.featureHighlights.length > 0 ? `
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+            ${project.featureHighlights.map(f => `
+              <div class="border-2 border-primary dark:border-outline-variant p-4 bg-surface-container dark:bg-surface-container-low rounded-none flex flex-col items-center text-center gap-2 shadow-[4px_4px_0px_0px_rgba(6,20,73,1)] dark:shadow-[4px_4px_0px_0px_rgba(45,65,95,1)]">
+                <span class="material-symbols-outlined text-3xl text-primary dark:text-primary-fixed">${f.icon}</span>
+                <span class="font-code text-xs font-bold uppercase tracking-wider text-on-surface">${escapeHtml(f.label)}</span>
+                <span class="font-body text-xs text-on-surface-variant/70">${escapeHtml(f.desc)}</span>
+              </div>
+            `).join('')}
+          </div>
+          ` : ''}
 
           <!-- Asymmetric Grid-Shift Layout -->
           <div class="grid grid-cols-1 lg:grid-cols-4 gap-12 items-start">
