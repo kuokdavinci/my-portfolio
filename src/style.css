@@ -582,8 +582,10 @@
   --color-on-primary: #091a2d;
   --color-primary-container: #1e2a5e;
   --color-on-primary-container: #a5b3e0;
-  --color-secondary-container: #a5b3e0;
-  --color-on-secondary-fixed-variant: #061449;
+  --color-secondary: #e0bdce;
+  --color-secondary-container: #593f4d;
+  --color-on-secondary-fixed: #fad6e7;
+  --color-on-secondary-fixed-variant: #f0c4dc;
   --color-tertiary-container: #1f2f43;
   --color-on-tertiary-container: #a5b3e0;
   --color-accent: #9b6b8a;
@@ -623,55 +625,55 @@
   color: #f0c4dc;
 }
 
-/* Dark mode: pink boxes become light blue, text stays dark */
+/* Dark mode: secondary uses pink tones */
 .dark .bg-secondary-container {
-  background-color: #a5b3e0;
+  background-color: #593f4d;
 }
 .dark .bg-secondary-container .text-primary {
-  color: #061449;
+  color: #f0c4dc;
 }
 .dark .bg-secondary-container .text-on-secondary-fixed-variant {
-  color: #061449;
+  color: #f0c4dc;
 }
 .dark .bg-secondary-container .badge-primary {
   background-color: #1e2a5e;
-  color: #a5b3e0;
+  color: #f0c4dc;
 }
 .dark .bg-secondary-container .material-symbols-outlined {
-  color: #061449;
+  color: #f0c4dc;
 }
 .dark .bg-secondary-container .bg-white\/50 {
-  background-color: rgba(6,20,73,0.12);
-  color: #061449;
+  background-color: rgba(240,196,220,0.12);
+  color: #f0c4dc;
 }
 .dark .bg-secondary-container input,
 .dark .bg-secondary-container textarea {
-  background-color: rgba(255,255,255,0.3);
-  color: #061449;
-  border-color: rgba(6,20,73,0.2);
+  background-color: rgba(255,255,255,0.1);
+  color: #f0c4dc;
+  border-color: rgba(240,196,220,0.2);
 }
 .dark .bg-secondary-container input::placeholder,
 .dark .bg-secondary-container textarea::placeholder {
-  color: rgba(6,20,73,0.5);
+  color: rgba(240,196,220,0.5);
 }
 .dark .bg-secondary-container input:focus,
 .dark .bg-secondary-container textarea:focus {
-  border-color: #061449;
+  border-color: #f0c4dc;
 }
 .dark .bg-secondary-container label {
-  color: #061449;
+  color: #f0c4dc;
 }
 .dark .bg-secondary-container .hover\:bg-white\/30:hover {
-  background-color: rgba(255,255,255,0.2);
+  background-color: rgba(255,255,255,0.1);
 }
 
 /* Dark mode: filter buttons */
 .dark .project-filter.bg-secondary-container {
-  background-color: #a5b3e0;
-  color: #061449;
+  background-color: #593f4d;
+  color: #f0c4dc;
 }
 .dark .project-filter.bg-secondary-container.text-primary {
-  color: #061449;
+  color: #f0c4dc;
 }
 .dark .project-filter.bg-primary.text-on-primary {
   background-color: #f0c4dc;
@@ -699,8 +701,8 @@
   color: rgba(255,255,255,0.9);
 }
 .dark .bg-primary .badge.bg-secondary-container {
-  background-color: #a5b3e0;
-  color: #061449;
+  background-color: #593f4d;
+  color: #f0c4dc;
 }
 .dark .bg-primary .material-symbols-outlined {
   color: rgba(255,255,255,0.8);
