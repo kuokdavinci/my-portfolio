@@ -75,8 +75,8 @@ test_cases = [
     },
     {
         "id": 7,
-        "query": "Ứng dụng attendance sử dụng cơ chế nào để lưu dữ liệu khi offline?",
-        "expected_keywords": ["Hive", "offline", "sync"],
+        "query": "Attendance app dùng công nghệ gì và kiến trúc Firebase như thế nào?",
+        "expected_keywords": ["Flutter", "Firebase", "Serverless"],
         "expected_category": "project_detail"
     },
     {
@@ -88,20 +88,20 @@ test_cases = [
     {
         "id": 9,
         "query": "Quốc có những kỹ năng nào về AI và Machine Learning?",
-        "expected_keywords": ["Data Analysis", "Model Development", "pandas"],
-        "expected_category": "competency"
+        "expected_keywords": ["pandas", "RAG", "numpy"],
+        "expected_category": "competencies"
     },
     {
         "id": 10,
-        "query": "QR code trong app attendance được bảo mật như thế nào để chống giả mạo?",
-        "expected_keywords": ["dynamic QR", "geofencing", "time-bounded"],
+        "query": "App attendance chống gian lận điểm danh bằng cách nào?",
+        "expected_keywords": ["ML Kit", "khuôn mặt", "GPS"],
         "expected_category": "project_detail"
     },
     {
         "id": 11,
-        "query": "Tech stack của Quốc bao gồm những công nghệ cloud và database nào?",
-        "expected_keywords": ["AWS", "GCP", "PostgreSQL", "Qdrant"],
-        "expected_category": "tech_stack"
+        "query": "Attendance app dùng database và kiến trúc gì?",
+        "expected_keywords": ["Firebase", "Cloud Firestore", "Serverless"],
+        "expected_category": "project_detail"
     }
 ]
 
