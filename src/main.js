@@ -756,10 +756,10 @@ function handleRoute() {
             <div>
               <span class="font-code text-sm font-bold uppercase tracking-widest text-secondary dark:text-accent-light mb-2 block">Project Case Study</span>
               <h1 class="font-headline text-4xl md:text-7xl font-black uppercase text-primary dark:text-on-background leading-none">${escapeHtml(project.title)}</h1>
-              ${project.duration ? `<p class="font-code text-sm font-bold uppercase tracking-wider text-primary dark:text-on-primary mt-2 inline-flex items-center gap-1.5 bg-primary/10 dark:bg-secondary-container/40 px-3 py-1.5 border border-primary/30 dark:border-secondary/50"><span class="material-symbols-outlined text-base dark:text-on-secondary">event</span> ${escapeHtml(project.duration)}</p>` : ''}
+              ${project.duration ? `<p class="font-code text-sm font-bold uppercase tracking-wider text-primary dark:text-accent-light mt-2 inline-flex items-center gap-1.5 bg-primary/10 dark:bg-secondary-container/20 px-3 py-1.5 border border-primary/30 dark:border-secondary/40"><span class="material-symbols-outlined text-base dark:text-accent-light">event</span> ${escapeHtml(project.duration)}</p>` : ''}
             </div>
-            <a href="${escapeHtml(project.codeLink)}" target="_blank" rel="noopener" class="font-code text-sm font-bold bg-primary text-on-primary dark:bg-primary-container dark:text-on-primary-container px-6 py-3 border-2 border-primary dark:border-primary-container hover:bg-transparent hover:text-primary dark:hover:text-on-background transition-all rounded-none inline-flex items-center gap-2 cursor-pointer shadow-[4px_4px_0px_0px_rgba(114,87,101,1)] dark:shadow-[4px_4px_0px_0px_rgba(240,196,220,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(114,87,101,1)] dark:hover:shadow-[6px_6px_0px_0px_rgba(240,196,220,1)] active:translate-x-0 active:translate-y-0 active:shadow-[4px_4px_0px_0px_rgba(114,87,101,1)]">
-              <span class="material-symbols-outlined text-base">code</span> Source Code <span class="material-symbols-outlined text-sm">open_in_new</span>
+            <a href="${escapeHtml(project.codeLink)}" target="_blank" rel="noopener" class="btn-sourcecode font-code text-sm font-bold bg-primary text-on-primary dark:bg-primary dark:text-on-primary px-6 py-3 border-2 border-primary dark:border-primary hover:bg-transparent hover:text-primary dark:hover:text-primary transition-all rounded-none inline-flex items-center gap-2 cursor-pointer shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_var(--color-primary)] dark:hover:shadow-[6px_6px_0px_0px_var(--color-outline)] active:translate-x-0 active:translate-y-0 active:shadow-[4px_4px_0px_0px_var(--color-primary)]">
+              <span class="material-symbols-outlined text-base !text-inherit">code</span> Source Code <span class="material-symbols-outlined text-sm !text-inherit">open_in_new</span>
             </a>
           </div>
 
@@ -767,7 +767,7 @@ function handleRoute() {
           ${project.featureHighlights && project.featureHighlights.length > 0 ? `
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
             ${project.featureHighlights.map(f => `
-              <div class="border-2 border-primary dark:border-outline-variant p-4 bg-surface-container dark:bg-surface-container-low rounded-none flex flex-col items-center text-center gap-2 shadow-[4px_4px_0px_0px_rgba(6,20,73,1)] dark:shadow-[4px_4px_0px_0px_rgba(45,65,95,1)]">
+              <div class="border-2 border-primary dark:border-outline-variant p-4 bg-surface-container dark:bg-surface-container-low rounded-none flex flex-col items-center text-center gap-2 shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)]">
                 <span class="material-symbols-outlined text-3xl text-primary dark:text-primary-fixed">${f.icon}</span>
                 <span class="font-code text-xs font-bold uppercase tracking-wider text-on-surface">${escapeHtml(f.label)}</span>
                 <span class="font-body text-xs text-on-surface-variant/70">${escapeHtml(f.desc)}</span>
@@ -779,21 +779,21 @@ function handleRoute() {
           <!-- Asymmetric Grid-Shift Layout -->
           <div class="grid grid-cols-1 lg:grid-cols-4 gap-12 items-start">
             <!-- Left column: Sidebar (1/4 width) -->
-            <div class="lg:col-span-1 border-4 border-primary dark:border-outline-variant p-6 bg-surface-container dark:bg-surface-container-lowest rounded-none flex flex-col gap-6 shadow-[8px_8px_0px_0px_rgba(6,20,73,1)] dark:shadow-[8px_8px_0px_0px_rgba(45,65,95,1)]">
+            <div class="lg:col-span-1 border-4 border-primary dark:border-outline-variant p-6 bg-surface-container dark:bg-surface-container-lowest rounded-none flex flex-col gap-6 shadow-[8px_8px_0px_0px_var(--color-primary)] dark:shadow-[8px_8px_0px_0px_var(--color-outline)]">
               <div>
                 <h3 class="font-code text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-on-surface-variant mb-3 border-b-2 border-primary dark:border-outline-variant pb-1">Type</h3>
-                <span class="inline-block px-3 py-1 bg-primary text-on-primary dark:bg-primary-container dark:text-on-primary-container text-xs font-bold uppercase tracking-wider rounded-none">${escapeHtml(project.badge)}</span>
+                <span class="inline-block px-3 py-1 bg-secondary-container text-primary dark:bg-primary-container dark:text-white text-xs font-bold uppercase tracking-wider rounded-none">${escapeHtml(project.badge)}</span>
               </div>
 
               <div>
                 <h3 class="font-code text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-on-surface-variant mb-3 border-b-2 border-primary dark:border-outline-variant pb-1">Primary Tech</h3>
-                <span class="inline-block px-3 py-1 bg-secondary-container text-on-secondary-fixed-variant text-xs font-bold uppercase tracking-wider rounded-none">${escapeHtml(project.language)}</span>
+                <span class="inline-block px-3 py-1 bg-secondary-container text-primary dark:bg-primary-container dark:text-white text-xs font-bold uppercase tracking-wider rounded-none">${escapeHtml(project.language)}</span>
               </div>
 
               <div>
                 <h3 class="font-code text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-on-surface-variant mb-3 border-b-2 border-primary dark:border-outline-variant pb-1">Tech Stack</h3>
                 <div class="flex flex-wrap gap-2">
-                  ${project.tags.map(tag => `<span class="px-2.5 py-1 bg-surface-container-high dark:bg-surface-container-high text-on-surface dark:text-on-background text-xs font-medium border border-outline rounded-none">${escapeHtml(tag)}</span>`).join('')}
+                  ${project.tags.map(tag => `<span class="px-2.5 py-1 bg-secondary-container text-primary dark:bg-primary-container dark:text-white text-xs font-bold uppercase tracking-wider rounded-none">${escapeHtml(tag)}</span>`).join('')}
                 </div>
               </div>
 
@@ -802,8 +802,8 @@ function handleRoute() {
                 <dl class="flex flex-col gap-3 font-body text-sm">
                   ${Object.entries(project.details.systemSpecs).map(([key, val]) => `
                     <div>
-                      <dt class="font-bold text-primary dark:text-primary-fixed">${escapeHtml(key)}</dt>
-                      <dd class="text-on-surface-variant dark:text-on-surface-variant/80">${escapeHtml(val)}</dd>
+                      <dt class="font-bold text-primary dark:text-white">${escapeHtml(key)}</dt>
+                      <dd class="text-on-surface-variant dark:text-on-surface-variant">${escapeHtml(val)}</dd>
                     </div>
                   `).join('')}
                 </dl>
@@ -821,7 +821,7 @@ function handleRoute() {
               <!-- Challenges & Solutions side by side -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- Challenges -->
-                <div class="border-2 border-primary dark:border-outline-variant p-6 bg-rose-50/50 dark:bg-rose-950/10 rounded-none shadow-[4px_4px_0px_0px_rgba(114,87,101,1)] dark:shadow-[4px_4px_0px_0px_rgba(240,196,220,1)]">
+                <div class="border-2 border-primary dark:border-outline-variant p-6 bg-rose-50/50 dark:bg-rose-950/10 rounded-none shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)]">
                   <h3 class="font-headline text-xl font-bold uppercase text-rose-700 dark:text-rose-400 mb-4 inline-flex items-center gap-2">
                     <span class="material-symbols-outlined">warning</span> Key Challenges
                   </h3>
@@ -831,7 +831,7 @@ function handleRoute() {
                 </div>
 
                 <!-- Solutions -->
-                <div class="border-2 border-primary dark:border-outline-variant p-6 bg-emerald-50/50 dark:bg-emerald-950/10 rounded-none shadow-[4px_4px_0px_0px_rgba(6,20,73,1)] dark:shadow-[4px_4px_0px_0px_rgba(165,179,224,1)]">
+                <div class="border-2 border-primary dark:border-outline-variant p-6 bg-emerald-50/50 dark:bg-emerald-950/10 rounded-none shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)]">
                   <h3 class="font-headline text-xl font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-4 inline-flex items-center gap-2">
                     <span class="material-symbols-outlined">task_alt</span> Solutions & Engineering
                   </h3>

@@ -20,6 +20,45 @@ export const portfolioConfig = {
   },
   projects: [
     {
+      id: "edurag",
+      title: "EduRAG - Vietnamese Education Law RAG",
+      description: "A high-fidelity RAG system for Vietnamese Education Law, powered by LangChain Agent + Hybrid Search (Vector + Graph) + Qdrant.",
+      image: "",
+      tags: ["Python", "LangChain", "Qdrant", "Neo4j", "FastAPI", "Next.js"],
+      badge: "AI/ML",
+      featured: true,
+      codeLink: "https://github.com/kuokdavinci/EduRAG",
+      language: "Python",
+      stars: 0,
+      forks: 0,
+      duration: "Apr 2026 — Present",
+      featureHighlights: [
+        { icon: "route", label: "Semantic Routing", desc: "4-tier query intent classification" },
+        { icon: "hub", label: "Hybrid Search", desc: "Qdrant Vector + Neo4j Graph RRF fusion" },
+        { icon: "psychology", label: "Agent Reflection", desc: "LangChain self-correction loop" },
+        { icon: "monitoring", label: "Langfuse Tracing", desc: "Complete observability & costs" }
+      ],
+      details: {
+        longDescription: "EduRAG is an intelligent Vietnamese Education Law retrieval system utilizing a Triple-Gated Cascading Flow. It processes user queries in natural Vietnamese, routes them through a semantic classifier, performs parallel hybrid searches across both vector and knowledge graph databases, merges results using Reciprocal Rank Fusion (RRF), and uses a self-reflecting LLM agent loop to formulate accurate, cited responses.",
+        challenges: [
+          "Information overload and conflicting rules in Vietnamese education circulars and decrees.",
+          "Resolving indirect or implicit relationships between law sections and documents.",
+          "Maintaining query speed and low latency across multiple routing, retrieval, and reranking gates."
+        ],
+        solutions: [
+          "Triple-Gated Cascading Flow with semantic pre-routing to bypass heavy operations for non-legal intents.",
+          "Knowledge Graph in Neo4j defining hierarchical relationships and document amendments.",
+          "PipelineConfigBuilder for dynamic top-k limits, adaptive RRF weights, and caching using Redis."
+        ],
+        systemSpecs: {
+          "Backend": "FastAPI, LangChain, LangGraph, Python",
+          "Frontend": "Next.js Chat UI, Tailwind CSS",
+          "Databases": "PostgreSQL, Qdrant, Neo4j, Redis",
+          "Observability": "Langfuse"
+        }
+      }
+    },
+    {
       id: "movie-ticket",
       title: "Movie Ticket Booking System",
       description: "A full-stack cinema reservation platform with Spring Boot REST API backend and Flutter mobile frontend. Features user authentication, seat selection, payment integration, and real-time booking management.",
