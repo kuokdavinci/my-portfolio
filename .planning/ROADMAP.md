@@ -43,10 +43,10 @@
 - CHAT-03: Messages should have smooth entrance animations (fade + slide)
 - CHAT-04: Chat scroll behavior must remain smooth during animations
 
-**Plans:** 2 plans
+**Plans:** 1 plan
 
 **Plans:**
-- [ ] 03-01-PLAN.md — Chatbot UX Enhancement (thinking indicator + streaming + animations)
+- [x] 03-01-PLAN.md — Chatbot UX Enhancement (fix short circuit + streaming + animations)
 
 ---
 
