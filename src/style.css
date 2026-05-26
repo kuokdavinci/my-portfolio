@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+:root {
+  --bg-image: url('./assets/portfolio/l1.png');
+}
+
+.dark {
+  --bg-image: url('./assets/portfolio/d2.png');
+}
+
 @variant dark (&:where(.dark, .dark *));
 @theme {
   --color-primary: #3730a3;
@@ -68,6 +76,11 @@
   
   body {
     font-family: "Inter", system-ui, -apple-system, sans-serif;
+    background-image: var(--bg-image);
+    background-size: 100% 100%;
+    background-position: top center;
+    background-repeat: no-repeat;
+    background-color: var(--color-background);
     @apply bg-background text-on-background antialiased min-h-screen flex flex-col transition-colors duration-300;
   }
 
@@ -75,11 +88,13 @@
     @apply bg-primary/20 text-primary;
   }
 
+
+
 }
 
 @layer components {
   .gradient-hero {
-    background: linear-gradient(160deg, #fafaff 0%, #e0e7ff 50%, #c7d2fe 100%);
+    background: transparent;
   }
 
   .glass {
@@ -135,7 +150,7 @@
 
   .section-title {
     font-family: "Geist", "Inter", sans-serif;
-    @apply text-3xl md:text-4xl font-bold text-on-surface mb-4;
+    @apply text-4xl md:text-5xl font-bold text-on-surface mb-4;
   }
 
   .section-subtitle {
@@ -703,11 +718,11 @@ header button.md-hidden {
 .dark header, .dark footer,
 .dark header a, .dark footer a,
 .dark header .text-white, .dark footer .text-white {
-  color: #ffffff !important;
+  color: #e2dbf0 !important; /* Purple-tinted white */
 }
 
 .dark header .text-white\/80, .dark footer .text-white\/70 {
-  color: rgba(255, 255, 255, 0.8) !important;
+  color: rgba(226, 219, 240, 0.8) !important;
 }
 
 .dark header button.md-hidden {
@@ -725,51 +740,65 @@ header button.md-hidden {
   --color-surface-container: #24283b;
   --color-surface-container-high: #2f354f;
   --color-surface-container-highest: #3b4261;
-  --color-outline: #7aa2f7;
+  --color-outline: #bb9af7; /* Tokyo Night Purple */
   --color-outline-variant: #2f354f;
   
-  --color-primary: #7aa2f7;
+  --color-primary: #bb9af7; /* Tokyo Night Purple as Primary Accent */
   --color-on-primary: #1a1b26;
-  --color-primary-container: #3d59a1;
-  --color-on-primary-container: #7aa2f7;
+  --color-primary-container: #24283b;
+  --color-on-primary-container: #bb9af7;
   
-  --color-secondary: #7dcfff;
+  --color-secondary: #7aa2f7; /* Tokyo Night Blue as Secondary */
   --color-secondary-container: #24283b;
   --color-secondary-fixed: #2f354f;
   --color-secondary-fixed-dim: #24283b;
   --color-on-secondary-fixed: #ffffff;
-  --color-on-secondary-fixed-variant: #a9b1d6;
+  --color-on-secondary-fixed-variant: #7aa2f7; /* Blue */
   
-  --color-tertiary: #3d59a1;
+  --color-tertiary: #9d7cd8; /* Tokyo Night Lavender/Purple */
   --color-tertiary-container: #24283b;
-  --color-on-tertiary-container: #7aa2f7;
+  --color-on-tertiary-container: #bb9af7;
   
-  --color-accent: #7dcfff;
+  --color-accent: #bb9af7; /* Tokyo Night Purple */
   --color-on-accent: #1a1b26;
-  --color-accent-light: #7aa2f7;
+  --color-accent-light: #bb9af7;
   --color-accent-dark: #1f2335;
 }
 
 .dark .gradient-hero {
-  background: linear-gradient(160deg, #1a1b26 0%, #24283b 50%, #1f2335 100%);
+  background: transparent;
 }
 
 .dark .gradient-hero .text-gradient {
-  background: linear-gradient(135deg, #ffffff 0%, #7dcfff 50%, #7aa2f7 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #bb9af7 50%, #7aa2f7 100%);
   -webkit-background-clip: text;
   background-clip: text;
 }
 
-.dark .gradient-hero .bg-secondary-container {
-  background-color: #3d59a1;
+.dark .gradient-hero .bg-secondary-container.rounded-full {
+  background-color: rgba(187, 154, 247, 0.15);
+  color: #bb9af7;
 }
 
-.dark .gradient-hero .text-on-secondary-fixed-variant {
-  color: #ffffff;
+.dark .gradient-hero .bg-secondary-container.rounded-xl {
+  background-color: #24283b !important; /* Solid dark background consistent with light mode container structure */
+  border: 1px solid rgba(187, 154, 247, 0.2) !important;
 }
 
-.dark .gradient-hero .bg-white\/50 {
-  background-color: rgba(255, 255, 255, 0.08);
+.dark .gradient-hero .bg-secondary-container.rounded-xl .text-on-secondary-fixed-variant {
+  color: #c0caf5 !important; /* Neutral light text */
+}
+
+.dark .gradient-hero .bg-secondary-container.rounded-xl .counter {
+  color: #bb9af7 !important; /* Purple accent text */
+}
+
+.dark .gradient-hero .bg-secondary-container.rounded-xl .material-symbols-outlined {
+  color: #bb9af7 !important; /* Purple icon */
+}
+
+.dark .gradient-hero .bg-secondary-container.rounded-xl .bg-white\/50 {
+  background-color: rgba(187, 154, 247, 0.15) !important; /* Purple-tinted icon container */
 }
 
 .dark .gradient-hero .space-y-2 .text-on-surface-variant {
@@ -778,17 +807,18 @@ header button.md-hidden {
 
 /* Dark mode buttons - Tokyo Night */
 .dark .btn-primary {
-  background-color: #3d59a1;
-  color: #ffffff;
+  background-color: #bb9af7;
+  color: #1a1b26;
   border: none;
 }
 
 .dark .btn-primary:hover {
-  background-color: #4e75d4;
+  background-color: #9d7cd8;
+  color: #1a1b26;
 }
 
 .dark .btn-primary .material-symbols-outlined {
-  color: #ffffff;
+  color: #1a1b26;
 }
 
 /* Dark mode: project and journey cards (bg-primary = Tokyo Night Card) */
@@ -809,44 +839,44 @@ header button.md-hidden {
   color: rgba(192, 202, 245, 0.6);
 }
 .dark .bg-primary .bg-white\/10 {
-  background-color: #3d59a1;
-  color: #ffffff;
+  background-color: rgba(187, 154, 247, 0.15);
+  color: #bb9af7;
 }
 .dark .bg-primary .bg-white\/20 {
-  background-color: #3d59a1;
-  color: #ffffff;
+  background-color: rgba(187, 154, 247, 0.15);
+  color: #bb9af7;
 }
 .dark .bg-primary .badge.bg-secondary-container {
-  background-color: #3d59a1;
-  color: #ffffff;
+  background-color: rgba(187, 154, 247, 0.15);
+  color: #bb9af7;
 }
 .dark .bg-primary .material-symbols-outlined {
-  color: #7aa2f7;
+  color: #bb9af7;
 }
 
 /* Dark mode: project card gradient header */
 .dark .bg-gradient-to-br.from-primary\/10.to-secondary\/10 {
-  background: linear-gradient(135deg, rgba(122, 162, 247, 0.1) 0%, rgba(125, 207, 255, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(122, 162, 247, 0.1) 0%, rgba(187, 154, 247, 0.15) 100%);
 }
 
 .dark .bg-primary .w-24.h-24 {
-  background-color: rgba(61, 89, 161, 0.4);
+  background-color: rgba(187, 154, 247, 0.15);
 }
 
 .dark .bg-primary .w-24.h-24 .material-symbols-outlined {
-  color: #7aa2f7;
+  color: #bb9af7;
 }
 
 /* Dark mode overrides for journey items inside bg-primary */
 .dark .bg-primary .w-10.h-10 {
-  background-color: #3d59a1;
+  background-color: rgba(187, 154, 247, 0.15);
 }
 .dark .bg-primary .w-10.h-10 .material-symbols-outlined {
-  color: #ffffff;
+  color: #bb9af7;
 }
 .dark .bg-primary span.inline-block.px-3.py-1.bg-white\/20 {
-  background-color: #3d59a1;
-  color: #ffffff;
+  background-color: rgba(187, 154, 247, 0.15);
+  color: #bb9af7;
 }
 
 /* Dark mode secondary container - Tokyo Night */
@@ -861,11 +891,11 @@ header button.md-hidden {
   color: rgba(192, 202, 245, 0.8);
 }
 .dark .bg-secondary-container .badge-primary {
-  background-color: #3d59a1;
-  color: #ffffff;
+  background-color: rgba(187, 154, 247, 0.15);
+  color: #bb9af7;
 }
 .dark .bg-secondary-container .material-symbols-outlined {
-  color: #7aa2f7;
+  color: #bb9af7;
 }
 .dark .bg-secondary-container .bg-white\/50 {
   background-color: rgba(192, 202, 245, 0.08);
@@ -883,7 +913,7 @@ header button.md-hidden {
 }
 .dark .bg-secondary-container input:focus,
 .dark .bg-secondary-container textarea:focus {
-  border-color: #7aa2f7;
+  border-color: #bb9af7;
 }
 .dark .bg-secondary-container label {
   color: #c0caf5;
@@ -894,12 +924,12 @@ header button.md-hidden {
 
 /* Dark mode: skill tags */
 .dark .skill-tag {
-  background-color: rgba(122, 162, 247, 0.1) !important;
-  color: #7aa2f7 !important;
+  background-color: rgba(187, 154, 247, 0.1) !important;
+  color: #bb9af7 !important;
 }
 
 .dark .skill-tag .w-1\.5.h-1\.5 {
-  background-color: #7aa2f7 !important;
+  background-color: #bb9af7 !important;
 }
 
 /* Light mode: skill tag bullets use primary color */
@@ -907,9 +937,72 @@ header button.md-hidden {
   background-color: currentColor !important;
 }
 
-/* Dark mode: scroll hint */
-.dark .gradient-hero .animate-bounce {
-  color: rgba(169, 177, 214, 0.5);
+/* Scroll hint color contrast */
+.scroll-hint {
+  color: #1e1b4b !important; /* Dark blue/purple in light mode */
+}
+
+.dark .scroll-hint {
+  color: #e2dbf0 !important; /* Purple-tinted white */
+}
+
+/* Glassmorphic header card for section titles to maximize contrast against the waterfall background */
+.text-center.mb-16.reveal,
+.text-center.mb-12.reveal {
+  background: rgba(255, 255, 255, 0.4) !important; /* Transparent white in light mode */
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  padding: 1.75rem 2.5rem !important;
+  border-radius: 1.25rem !important;
+  border: 1px solid rgba(99, 102, 241, 0.15) !important; /* Light indigo border */
+  max-width: max-content !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.05) !important;
+}
+
+.dark .text-center.mb-16.reveal,
+.dark .text-center.mb-12.reveal {
+  background: rgba(22, 22, 30, 0.35) !important; /* Transparent dark in dark mode */
+  border: 1px solid rgba(187, 154, 247, 0.15) !important; /* Tokyo Night Purple border */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+}
+
+.dark .section-title {
+  background: linear-gradient(135deg, #bb9af7 0%, #7aa2f7 100%) !important; /* Bright gradient text is now perfect! */
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+.dark .section-subtitle {
+  color: #c0caf5 !important; /* Clean light gray-blue text */
+  font-weight: 500 !important;
+}
+
+/* Dark mode outline buttons */
+.dark .btn-outline {
+  border-color: #bb9af7 !important;
+  color: #bb9af7 !important;
+}
+
+.dark .btn-outline:hover {
+  background-color: #bb9af7 !important;
+  color: #1a1b26 !important;
+}
+
+/* Hero section text readability enhancements */
+#home p {
+  font-weight: 600; /* Make text semi-bold for high readability */
+}
+
+#home p.text-on-surface-variant\/80 {
+  color: #1e1b4b !important; /* High contrast dark color for light mode */
+}
+
+.dark #home p.text-on-surface-variant\/80 {
+  color: #e2dbf0 !important; /* Purple-tinted white for dark mode */
 }
 
 /* Dark mode filter buttons - Tokyo Night */
@@ -921,8 +1014,8 @@ header button.md-hidden {
   color: #a9b1d6;
 }
 .dark .project-filter.bg-primary.text-on-primary {
-  background-color: #3d59a1;
-  color: #ffffff;
+  background-color: #bb9af7;
+  color: #1a1b26;
   border: none;
 }
 
@@ -934,7 +1027,7 @@ header button.md-hidden {
 }
 
 .dark .btn-sourcecode {
-  background-color: #7aa2f7 !important;
+  background-color: #bb9af7 !important;
   color: #1a1b26 !important;
   border: none !important;
 }
@@ -947,7 +1040,7 @@ header button.md-hidden {
 
 .dark .btn-sourcecode:hover {
   background-color: transparent !important;
-  color: #7aa2f7 !important;
-  border: 2px solid #7aa2f7 !important;
+  color: #bb9af7 !important;
+  border: 2px solid #bb9af7 !important;
 }
 
