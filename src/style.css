@@ -222,6 +222,38 @@
     transform: translateX(20px);
   }
 
+  /* Theme icons - slide in/out of toggle */
+  .theme-icon {
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .sun-icon {
+    left: 50%;
+    opacity: 1;
+    transform: translateY(-50%) translateX(-72px);
+  }
+
+  .moon-icon {
+    right: 50%;
+    opacity: 0;
+    transform: translateY(-50%) translateX(0);
+  }
+
+  .ios-toggle.active ~ .sun-icon {
+    opacity: 0;
+    transform: translateY(-50%) translateX(0);
+  }
+
+  .ios-toggle.active ~ .moon-icon {
+    opacity: 1;
+    transform: translateY(-50%) translateX(72px);
+  }
+
+  /* Dark mode: contact links */
+
   .sr-only {
     position: absolute;
     width: 1px;
@@ -858,6 +890,26 @@ header button.md-hidden {
 }
 .dark .bg-secondary-container .hover\:bg-white\/30:hover {
   background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Dark mode: skill tags */
+.dark .skill-tag {
+  background-color: rgba(122, 162, 247, 0.1) !important;
+  color: #7aa2f7 !important;
+}
+
+.dark .skill-tag .w-1\.5.h-1\.5 {
+  background-color: #7aa2f7 !important;
+}
+
+/* Light mode: skill tag bullets use primary color */
+.skill-tag .w-1\.5.h-1\.5 {
+  background-color: currentColor !important;
+}
+
+/* Dark mode: scroll hint */
+.dark .gradient-hero .animate-bounce {
+  color: rgba(169, 177, 214, 0.5);
 }
 
 /* Dark mode filter buttons - Tokyo Night */
