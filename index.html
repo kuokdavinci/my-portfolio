@@ -27,6 +27,7 @@
         <li><a class="font-medium text-white/80 hover:text-white transition-colors" href="#journey">Journey</a></li>
         <li><a class="font-medium text-white/80 hover:text-white transition-colors" href="#projects">Projects</a></li>
         <li><a class="font-medium text-white/80 hover:text-white transition-colors" href="#skills">Skills</a></li>
+        <li><a class="font-medium text-white/80 hover:text-white transition-colors" href="#dashboard">Dashboard</a></li>
       </ul>
       <div class="hidden md:flex items-center gap-0 relative w-28 justify-center">
         <button class="ios-toggle relative z-10" id="themeToggle" aria-label="Toggle theme"></button>
@@ -112,49 +113,6 @@
       <div class="scroll-hint absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
         <span class="text-sm font-medium tracking-wide uppercase">Scroll</span>
         <span class="material-symbols-outlined text-4xl">expand_more</span>
-      </div>
-    </section>
-
-    <!-- PORTFOLIO STATS -->
-    <section id="stats" class="py-12 bg-surface/50 dark:bg-background/50 border-y border-outline-variant/20">
-      <div class="max-w-7xl mx-auto px-4 md:px-12">
-        <!-- Stat Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 reveal">
-          <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
-            <div class="text-3xl font-bold text-primary counter" data-target="41">0</div>
-            <div class="text-sm text-on-surface-variant mt-1">GitHub Repos</div>
-          </div>
-          <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
-            <div class="text-3xl font-bold text-primary" id="stat-queries">0</div>
-            <div class="text-sm text-on-surface-variant mt-1">Chat Queries</div>
-          </div>
-          <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
-            <div class="text-3xl font-bold text-primary" id="stat-sessions">0</div>
-            <div class="text-sm text-on-surface-variant mt-1">Active Sessions</div>
-          </div>
-          <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
-            <div class="text-3xl font-bold text-green-500">
-              <span class="material-symbols-outlined text-2xl align-middle">check_circle</span>
-            </div>
-            <div class="text-sm text-on-surface-variant mt-1">All Systems Online</div>
-          </div>
-        </div>
-        <!-- Grafana Embed -->
-        <div class="reveal rounded-xl overflow-hidden border border-outline-variant/30 shadow-2xl" style="height: 60vh; min-height: 400px;">
-          <iframe
-            id="grafana-iframe"
-            src="http://localhost:3000/d/visitor_analytics/visitor-and-chatbot-analytics?kiosk=tv&theme=dark"
-            frameborder="0"
-            allowfullscreen
-            style="width: 100%; height: 100%; border: none;"
-            loading="lazy"
-            title="Grafana Metrics Dashboard"
-          ></iframe>
-        </div>
-        <p class="text-center text-on-surface-variant/60 text-sm mt-4 reveal">
-          Real-time observability · Prometheus + Grafana · Auto-refresh 30s · 
-          <a href="http://localhost:3000/d/visitor_analytics/visitor-and-chatbot-analytics" target="_blank" rel="noopener" class="text-primary hover:underline">Open in Grafana ↗</a>
-        </p>
       </div>
     </section>
 
@@ -488,6 +446,53 @@
             </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="py-20 bg-transparent">
+      <div class="max-w-7xl mx-auto px-4 md:px-12">
+        <div class="text-center mb-16 reveal">
+          <h2 class="section-title">Dashboard</h2>
+          <p class="section-subtitle mx-auto">Real-time portfolio metrics and observability.</p>
+        </div>
+        <!-- Stat Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 reveal">
+          <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
+            <div class="text-3xl font-bold text-primary counter" data-target="41">0</div>
+            <div class="text-sm text-on-surface-variant mt-1">GitHub Repos</div>
+          </div>
+          <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
+            <div class="text-3xl font-bold text-primary" id="stat-queries">0</div>
+            <div class="text-sm text-on-surface-variant mt-1">Chat Queries</div>
+          </div>
+          <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
+            <div class="text-3xl font-bold text-primary" id="stat-sessions">0</div>
+            <div class="text-sm text-on-surface-variant mt-1">Active Sessions</div>
+          </div>
+          <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
+            <div class="text-3xl font-bold text-green-500">
+              <span class="material-symbols-outlined text-2xl align-middle">check_circle</span>
+            </div>
+            <div class="text-sm text-on-surface-variant mt-1">All Systems Online</div>
+          </div>
+        </div>
+        <!-- Grafana Embed -->
+        <div class="reveal rounded-xl overflow-hidden border border-outline-variant/30 shadow-2xl" style="height: 60vh; min-height: 400px;">
+          <iframe
+            id="grafana-iframe"
+            src="http://localhost:3000/d/visitor_analytics/visitor-and-chatbot-analytics?kiosk=tv&theme=dark"
+            frameborder="0"
+            allowfullscreen
+            style="width: 100%; height: 100%; border: none;"
+            loading="lazy"
+            title="Grafana Metrics Dashboard"
+          ></iframe>
+        </div>
+        <p class="text-center text-on-surface-variant/60 text-sm mt-4 reveal">
+          Real-time observability · Prometheus + Grafana · Auto-refresh 30s · 
+          <a href="http://localhost:3000/d/visitor_analytics/visitor-and-chatbot-analytics" target="_blank" rel="noopener" class="text-primary hover:underline">Open in Grafana ↗</a>
+        </p>
       </div>
     </section>
 
