@@ -98,14 +98,7 @@ export const portfolioConfig = {
           "LLM / Embedding": "OpenAI GPT-4o, text-embedding-3-small",
           "Reranker": "Cohere Multilingual",
           "Observability": "Langfuse"
-        },
-        notes: [
-          "If semantic routing misclassifies a query, the system may enter an inappropriate retrieval branch and return irrelevant results.",
-          "Citation quality depends heavily on input context quality and source document normalization — poor context leads to weak citations.",
-          "Keep `edurag-app` consistent as the project_id across all references.",
-          "When updating content, separate chunks for routing, retrieval, and citation to maintain retrieval clarity.",
-          "Avoid cramming too many technical layers into a single chunk unless the query specifically requires it."
-        ]
+        }
       }
     },
     {
@@ -187,12 +180,7 @@ export const portfolioConfig = {
           "Frontend": "Flutter, Provider, HTTP Client",
           "Database": "PostgreSQL, Redis (cache)",
           "Deployment": "Docker"
-        },
-        notes: [
-          "Under high load on the same showtime, pessimistic locks may cause increased wait times for competing booking sessions.",
-          "Redis cache requires proper TTL or invalidation strategy to prevent stale movie/showtime data.",
-          "If adding real payment integration, separate the payment flow into its own module for cleaner retrieval."
-        ]
+        }
       }
     },
     {
@@ -276,13 +264,7 @@ export const portfolioConfig = {
           "ML": "Google ML Kit Face Detection (on-device)",
           "Location": "Geolocator, GPS API, Geofencing",
           "Notifications": "Firebase Cloud Messaging (FCM)"
-        },
-        notes: [
-          "Attendance accuracy depends on camera quality and GPS signal strength — reliability may decrease in poor lighting or weak signal areas.",
-          "Real-time data sync requires stable network connection for optimal Firestore performance.",
-          "Keep admin features separate from student check-in flow in separate chunks/modules for cleaner architecture.",
-          "If adding new features, create separate modules per workflow or constraint to maintain retrieval clarity."
-        ]
+        }
       }
     },
     {
