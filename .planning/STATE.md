@@ -35,6 +35,6 @@
 
 ## Accumulated Context
 
-### Pending Todos (1)
+### Pending Todos (0)
 
-- [ ] Verify EduRAG project details completeness (ui) — add notes section, review systemSpecs
+_No pending todos_
