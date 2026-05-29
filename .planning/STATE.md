@@ -32,3 +32,9 @@
 - Chatbot falls back to synchronous `generateChatbotAnswer()` which is instant
 - This causes the thinking indicator to be added and removed in the same microtask
 - Browser never paints the thinking indicator
+
+## Accumulated Context
+
+### Pending Todos (1)
+
+- [ ] Verify EduRAG project details completeness (ui) — add notes section, review systemSpecs
