@@ -112,7 +112,7 @@ export function addChatMessage(container, role, content, sources = []) {
   `;
 
   container.appendChild(message);
-  container.scrollTop = container.scrollHeight;
+  container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
 
   setTimeout(() => {
     message.classList.remove('is-entering');
