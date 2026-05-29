@@ -95,8 +95,17 @@ export const portfolioConfig = {
           "Backend": "FastAPI, LangChain, LangGraph, Python",
           "Frontend": "Next.js Chat UI, Tailwind CSS",
           "Databases": "PostgreSQL, Qdrant, Neo4j, Redis",
+          "LLM / Embedding": "OpenAI GPT-4o, text-embedding-3-small",
+          "Reranker": "Cohere Multilingual",
           "Observability": "Langfuse"
-        }
+        },
+        notes: [
+          "If semantic routing misclassifies a query, the system may enter an inappropriate retrieval branch and return irrelevant results.",
+          "Citation quality depends heavily on input context quality and source document normalization — poor context leads to weak citations.",
+          "Keep `edurag-app` consistent as the project_id across all references.",
+          "When updating content, separate chunks for routing, retrieval, and citation to maintain retrieval clarity.",
+          "Avoid cramming too many technical layers into a single chunk unless the query specifically requires it."
+        ]
       }
     },
     {
