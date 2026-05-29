@@ -11,7 +11,7 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="/src/style.css">
   <script type="module" src="/src/main.js"></script>
@@ -27,6 +27,7 @@
         <li><a class="font-medium text-white/80 hover:text-white transition-colors" href="#journey">Journey</a></li>
         <li><a class="font-medium text-white/80 hover:text-white transition-colors" href="#projects">Projects</a></li>
         <li><a class="font-medium text-white/80 hover:text-white transition-colors" href="#skills">Skills</a></li>
+        <li><a class="font-medium text-white/80 hover:text-white transition-colors" href="#metrics">Metrics</a></li>
       </ul>
       <div class="hidden md:flex items-center gap-0 relative w-28 justify-center">
         <button class="ios-toggle relative z-10" id="themeToggle" aria-label="Toggle theme"></button>
@@ -53,7 +54,7 @@
             <h1 class="font-headline text-4xl md:text-5xl lg:text-6xl font-bold text-primary leading-tight">
               Hi, I'm <span class="text-gradient">Lê Trung Anh Quốc</span>
             </h1>
-            <p class="text-xl md:text-2xl text-on-surface-variant h-8">
+            <p class="text-2xl md:text-3xl font-bold text-on-surface-variant dark:text-white h-12">
               <span class="typing-effect" data-texts='["Backend Engineer", "AI Engineer"]'>Backend Engineer</span>
             </p>
             <p class="text-lg text-on-surface-variant/80 max-w-xl">
@@ -65,23 +66,27 @@
                 View My Work
                 <span class="material-symbols-outlined text-sm">arrow_forward</span>
               </a>
-              <a href="https://github.com/kuokdavinci" target="_blank" rel="noopener" class="btn-outline">
+              <a href="https://github.com/kuokdavinci" target="_blank" rel="noopener" class="btn-outline btn-github">
                 <span class="material-symbols-outlined text-sm">code</span>
                 GitHub Profile
               </a>
+              <button id="hero-chat-trigger" class="btn-outline btn-github">
+                <span class="material-symbols-outlined text-sm">forum</span>
+                Ask anything about me ~
+              </button>
             </div>
-            <div class="flex flex-wrap gap-4 pt-4">
-              <a href="mailto:leanhquoc128@gmail.com" class="flex items-center gap-3 text-on-surface-variant hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 0">mail</span>
-                <span class="text-sm">leanhquoc128@gmail.com</span>
+            <div class="flex flex-wrap gap-6 pt-6">
+              <a href="mailto:leanhquoc128@gmail.com" class="flex items-center gap-3 text-on-surface-variant dark:text-white hover:text-primary dark:hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 0">mail</span>
+                <span class="text-base font-medium">leanhquoc128@gmail.com</span>
               </a>
-              <a href="tel:+84768040802" class="flex items-center gap-3 text-on-surface-variant hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 0">phone</span>
-                <span class="text-sm">+84 76 804 0802</span>
+              <a href="tel:+84768040802" class="flex items-center gap-3 text-on-surface-variant dark:text-white hover:text-primary dark:hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 0">phone</span>
+                <span class="text-base font-medium">+84 76 804 0802</span>
               </a>
-              <a href="https://linkedin.com/in/kuokdavinci" target="_blank" rel="noopener" class="flex items-center gap-3 text-on-surface-variant hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 0">work</span>
-                <span class="text-sm">linkedin.com/in/kuokdavinci</span>
+              <a href="https://linkedin.com/in/kuokdavinci" target="_blank" rel="noopener" class="flex items-center gap-3 text-on-surface-variant dark:text-white hover:text-primary dark:hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 0">work</span>
+                <span class="text-base font-medium">linkedin.com/in/kuokdavinci</span>
               </a>
             </div>
           </div>
@@ -277,7 +282,7 @@
         </div>
 
         <div class="text-center mt-16 reveal">
-          <a href="https://github.com/kuokdavinci?tab=repositories" target="_blank" rel="noopener" class="btn-outline">
+          <a href="https://github.com/kuokdavinci?tab=repositories" target="_blank" rel="noopener" class="btn-outline btn-github">
             View All on GitHub
             <span class="material-symbols-outlined text-sm">open_in_new</span>
           </a>
@@ -441,6 +446,42 @@
             </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- METRICS DASHBOARD -->
+    <section id="metrics" class="py-20 bg-surface dark:bg-background">
+      <div class="max-w-7xl mx-auto px-4 md:px-12">
+        <div class="text-center mb-12 reveal">
+          <h2 class="section-title">Live Metrics Dashboard</h2>
+          <p class="section-subtitle mx-auto">Real-time observability — Prometheus metrics, API latency, chatbot queries, and visitor engagement tracked via Grafana.</p>
+          <div class="flex flex-wrap justify-center gap-3 mt-6">
+            <span class="skill-tag px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium inline-flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Prometheus
+            </span>
+            <span class="skill-tag px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium inline-flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Grafana
+            </span>
+            <span class="skill-tag px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium inline-flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>FastAPI Metrics
+            </span>
+          </div>
+        </div>
+        <div class="reveal rounded-xl overflow-hidden border border-outline-variant/30 shadow-2xl" style="height: 70vh; min-height: 500px;">
+          <iframe
+            id="grafana-iframe"
+            src="http://localhost:3000/d/visitor_analytics/visitor-and-chatbot-analytics?kiosk=tv&theme=dark"
+            frameborder="0"
+            allowfullscreen
+            style="width: 100%; height: 100%; border: none;"
+            loading="lazy"
+            title="Grafana Metrics Dashboard"
+          ></iframe>
+        </div>
+        <p class="text-center text-on-surface-variant/60 text-sm mt-6 reveal">
+          Dashboard auto-refreshes every 30s · Powered by Prometheus + Grafana · 
+          <a href="http://localhost:3000/d/visitor_analytics/visitor-and-chatbot-analytics" target="_blank" rel="noopener" class="text-primary hover:underline">Open in Grafana ↗</a>
+        </p>
       </div>
     </section>
 
