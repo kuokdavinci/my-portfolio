@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="/src/style.css">
+  <link rel="stylesheet" href="/src/modules/dashboard/dashboard.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
   <script type="module" src="/src/main.js"></script>
 </head>
@@ -457,90 +458,27 @@
           <h2 class="section-title">Dashboard</h2>
           <p class="section-subtitle mx-auto">Real-time portfolio metrics — Prometheus data, live charts, and system health.</p>
           <div class="flex flex-wrap justify-center gap-3 mt-6">
-            <span class="skill-tag px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium inline-flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Prometheus
+            <span class="skill-tag px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium inline-flex items-center gap-1.5" id="prometheus-badge">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" id="prometheus-pulse"></span>
+              <span id="prometheus-status-text">Prometheus Sandbox</span>
             </span>
             <span class="skill-tag px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium inline-flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Chart.js
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+              Chart.js
             </span>
             <span class="skill-tag px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium inline-flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>FastAPI Metrics
+              <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+              FastAPI Metrics
             </span>
           </div>
         </div>
-        <!-- Stat Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 reveal">
-          <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
-            <div class="text-3xl font-bold text-primary counter" data-target="41">0</div>
-            <div class="text-sm text-on-surface-variant mt-1">GitHub Repos</div>
-          </div>
-          <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
-            <div class="text-3xl font-bold text-primary" id="stat-queries">—</div>
-            <div class="text-sm text-on-surface-variant mt-1">Total Chat Queries</div>
-          </div>
-          <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
-            <div class="text-3xl font-bold text-primary" id="stat-requests">—</div>
-            <div class="text-sm text-on-surface-variant mt-1">Total API Requests</div>
-          </div>
-          <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
-            <div class="text-3xl font-bold text-green-500">
-              <span class="material-symbols-outlined text-2xl align-middle">check_circle</span>
-            </div>
-            <div class="text-sm text-on-surface-variant mt-1">All Systems Online</div>
-          </div>
-        </div>
-        <!-- Charts Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 reveal">
-          <div class="bg-secondary-container rounded-xl p-6">
-            <h3 class="font-headline text-base font-bold text-primary mb-4 flex items-center gap-2">
-              <span class="material-symbols-outlined text-lg">trending_up</span>
-              API Requests Over Time
-            </h3>
-            <div class="chart-container"><canvas id="chart-requests"></canvas></div>
-          </div>
-          <div class="bg-secondary-container rounded-xl p-6">
-            <h3 class="font-headline text-base font-bold text-primary mb-4 flex items-center gap-2">
-              <span class="material-symbols-outlined text-lg">category</span>
-              Chat Queries by Category
-            </h3>
-            <div class="chart-container"><canvas id="chart-categories"></canvas></div>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 reveal">
-          <div class="bg-secondary-container rounded-xl p-6">
-            <h3 class="font-headline text-base font-bold text-primary mb-4 flex items-center gap-2">
-              <span class="material-symbols-outlined text-lg">speed</span>
-              Request Latency (p50 / p95)
-            </h3>
-            <div class="chart-container"><canvas id="chart-latency"></canvas></div>
-          </div>
-          <div class="bg-secondary-container rounded-xl p-6">
-            <h3 class="font-headline text-base font-bold text-primary mb-4 flex items-center gap-2">
-              <span class="material-symbols-outlined text-lg">smart_toy</span>
-              LLM Response Time (seconds)
-            </h3>
-            <div class="chart-container"><canvas id="chart-llm"></canvas></div>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 reveal">
-          <div class="bg-secondary-container rounded-xl p-6">
-            <h3 class="font-headline text-base font-bold text-primary mb-4 flex items-center gap-2">
-              <span class="material-symbols-outlined text-lg">http</span>
-              Requests by Endpoint
-            </h3>
-            <div class="chart-container"><canvas id="chart-endpoints"></canvas></div>
-          </div>
-          <div class="bg-secondary-container rounded-xl p-6">
-            <h3 class="font-headline text-base font-bold text-primary mb-4 flex items-center gap-2">
-              <span class="material-symbols-outlined text-lg">pie_chart</span>
-              Requests by Status Code
-            </h3>
-            <div class="chart-container"><canvas id="chart-status"></canvas></div>
-          </div>
-        </div>
-        <p class="text-center text-on-surface-variant/60 text-sm mt-8 reveal">
-          Data sourced from Prometheus · Auto-refresh every 30s · 
-          <a href="http://localhost:9090" target="_blank" rel="noopener" class="text-primary hover:underline">Open Prometheus ↗</a>
+
+        <!-- Dashboard content rendered by dashboard.js modules -->
+        <div id="dashboard-modules"></div>
+
+        <p class="text-center text-on-surface-variant/60 text-sm mt-8 reveal font-code">
+          Data sourced from Prometheus · Auto-refresh every 10s ·
+          <a href="http://localhost:9090" target="_blank" rel="noopener" class="text-primary dark:text-primary hover:underline">Open Prometheus ↗</a>
         </p>
       </div>
     </section>

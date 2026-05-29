@@ -1,8 +1,10 @@
 import './style.css';
 import './modules/chatbot/chatbot.css';
+import './modules/dashboard/dashboard.css';
 import { portfolioConfig } from './data/portfolio-config.js';
 import { setupPortfolioChatbot } from './modules/chatbot/chatbot-ui.js';
 import { getTracker } from './modules/tracking/tracker.js';
+import { initDashboard as initModularDashboard, refreshDashboard as refreshModularDashboard, stopDashboard } from './modules/dashboard/dashboard.js';
 
 window.portfolioConfig = portfolioConfig;
 
@@ -41,6 +43,7 @@ function toggleTheme() {
   // Re-render dashboard charts immediately when switching modes to update colors
   if (window.location.hash === '#dashboard') {
     renderCharts();
+    refreshModularDashboard();
   }
 }
 
@@ -647,6 +650,7 @@ function handleRoute() {
 
     // Refresh stats on dashboard navigation
     loadPortfolioStats();
+    refreshModularDashboard();
 
     // Track page view
     trackEvent('page_view', { page: 'dashboard' });
@@ -660,11 +664,12 @@ function handleRoute() {
       section.classList.remove('hidden');
     });
 
-    // Hide dashboard (separate page)
+    // Hide dashboard (separate page) and stop refresh intervals
     const dashboardSection = document.getElementById('dashboard');
     if (dashboardSection) {
       dashboardSection.classList.add('hidden');
     }
+    stopDashboard();
 
     // Hide project details
     detailsView.classList.add('hidden');
@@ -858,6 +863,10 @@ async function promRange(query, step = '5m') {
   }
 }
 
+// Expose on window for dashboard section modules
+window.promQuery = promQuery;
+window.promRange = promRange;
+
 function chartColors() {
   const isDark = document.documentElement.classList.contains('dark');
   const primary = isDark ? '#cebdff' : '#3730a3';
@@ -899,9 +908,13 @@ function safeRenderChart(canvasId, config) {
 }
 
 async function initDashboard() {
+  // Use new modular dashboard (System Overview + User Behavior)
+  await initModularDashboard();
+
+  // Also load legacy stats for backward compatibility
   await loadDashboardStats();
   await renderCharts();
-  
+
   if (window.dashboardInterval) {
     clearInterval(window.dashboardInterval);
     window.dashboardInterval = null;
