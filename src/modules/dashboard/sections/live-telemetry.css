@@ -80,7 +80,9 @@
 }
 
 .log-entry.status-200 { color: #22c55e; }
+.log-entry.status-201 { color: #22c55e; }
 .log-entry.status-400 { color: #f59e0b; }
+.log-entry.status-429 { color: #f97316; }
 .log-entry.status-500 { color: #f43f5e; }
 
 .stream-disconnected {

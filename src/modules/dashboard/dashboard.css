@@ -1,5 +1,59 @@
 /* Dashboard — dark mode observability UI styles */
 
+/* ── Dashboard Container ────────────────────────────────── */
+
+#dashboard {
+  min-height: 100vh;
+  background: #0d1117;
+}
+
+.dashboard-section {
+  margin-bottom: 24px;
+}
+
+.dashboard-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Grid Layout Aliases ────────────────────────────────── */
+
+/* stats-grid alias for dashboard-overview pattern */
+.stats-grid,
+.dashboard-overview {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.charts-grid,
+.dashboard-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.charts-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+/* Chart container heights */
+.chart-container {
+  position: relative;
+  height: 280px;
+}
+
+.chart-container-sm {
+  position: relative;
+  height: 180px;
+}
+
 /* ── Stat Cards ─────────────────────────────────────────── */
 
 .dashboard-stat-card {
@@ -171,31 +225,29 @@
 }
 
 @media (max-width: 1200px) {
-  .dashboard-overview {
+  .dashboard-overview,
+  .stats-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (max-width: 768px) {
-  .dashboard-overview {
+  .dashboard-overview,
+  .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-}
-
-@media (max-width: 480px) {
-  .dashboard-overview {
+  .dashboard-charts-grid,
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .charts-grid-3 {
     grid-template-columns: 1fr;
   }
 }
 
-.dashboard-charts-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-@media (max-width: 768px) {
-  .dashboard-charts-grid {
+@media (max-width: 480px) {
+  .dashboard-overview,
+  .stats-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -449,4 +501,31 @@
   color: rgba(224, 227, 229, 0.4);
   font-style: italic;
   padding: 16px 0;
+}
+
+/* ── Scrollbar Styling ──────────────────────────────────── */
+
+#dashboard ::-webkit-scrollbar {
+  width: 6px;
+}
+#dashboard ::-webkit-scrollbar-track {
+  background: transparent;
+}
+#dashboard ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+#dashboard ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Number Ticker Animation ────────────────────────────── */
+
+@keyframes ticker-fade {
+  from { opacity: 0.5; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.stat-value-updating {
+  animation: ticker-fade 0.3s ease-out;
 }
