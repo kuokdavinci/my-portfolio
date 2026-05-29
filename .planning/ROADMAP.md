@@ -65,7 +65,7 @@
 - DASH-04: Theme sync with homepage (dark/light mode)
 - DASH-05: Dashboard link in navigation (desktop + mobile)
 
-**Plans:** 1/1 plan
+**Plans:** 1/1 plans complete
 
 **Plans:**
 - [x] 04-01-PLAN.md — Create Dashboard page, update navigation, wire routing
