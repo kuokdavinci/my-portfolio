@@ -118,23 +118,11 @@ export function addChatMessage(container, role, content, sources = []) {
   const message = document.createElement('div');
   message.className = `rag-chat-message ${role === 'user' ? 'is-user' : 'is-bot'} is-entering`;
 
-  const sourceMarkup = sources.length
-    ? `<div class="rag-chat-sources">${sources.map(source => {
-        if (typeof source === 'object' && source.link) {
-          const isExternal = source.link.startsWith('http');
-          const targetAttr = isExternal ? 'target="_blank" rel="noopener"' : '';
-          return `<a href="${escapeHtml(source.link)}" ${targetAttr} class="rag-chat-source-link">${escapeHtml(source.title)}</a>`;
-        }
-        return `<span>${escapeHtml(source)}</span>`;
-      }).join('')}</div>`
-    : '';
-
   const parsedContent = role === 'bot' ? parseMarkdown(content) : `<p>${escapeHtml(content)}</p>`;
 
   message.innerHTML = `
     <div class="rag-chat-bubble">
       ${parsedContent}
-      ${sourceMarkup}
     </div>
   `;
 
@@ -175,20 +163,6 @@ export async function streamBotResponse(container, text, sources = []) {
 
   // Streaming complete — render full markdown and remove cursor
   streamContent.innerHTML = parseMarkdown(text);
-
-  if (sources.length) {
-    const sourcesDiv = document.createElement('div');
-    sourcesDiv.className = 'rag-chat-sources';
-    sourcesDiv.innerHTML = sources.map(source => {
-      if (typeof source === 'object' && source.link) {
-        const isExternal = source.link.startsWith('http');
-        const targetAttr = isExternal ? 'target="_blank" rel="noopener"' : '';
-        return `<a href="${escapeHtml(source.link)}" ${targetAttr} class="rag-chat-source-link">${escapeHtml(source.title)}</a>`;
-      }
-      return `<span>${escapeHtml(source)}</span>`;
-    }).join('');
-    bubble.appendChild(sourcesDiv);
-  }
 
   setTimeout(() => {
     message.classList.remove('is-entering');
@@ -319,7 +293,7 @@ export function setupPortfolioChatbot(portfolioConfig) {
 
       if (response.ok) {
         const data = await response.json();
-        await streamBotResponse(messages, data.answer, data.sources);
+        await streamBotResponse(messages, data.answer);
       } else {
         throw new Error('API server returned error code ' + response.status);
       }
@@ -333,7 +307,7 @@ export function setupPortfolioChatbot(portfolioConfig) {
       removeThinking();
 
       const localResponse = generateChatbotAnswer(trimmedQuestion, knowledgeBase);
-      await streamBotResponse(messages, localResponse.answer, localResponse.sources);
+      await streamBotResponse(messages, localResponse.answer);
     }
   };
 
