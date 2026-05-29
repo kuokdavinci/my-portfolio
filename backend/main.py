@@ -3,13 +3,12 @@ import json
 import logging
 import asyncio
 import sqlite3
-import httpx
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, BackgroundTasks, HTTPException, status, Response
+from fastapi import FastAPI, BackgroundTasks, status, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from aiokafka import AIOKafkaProducer
@@ -18,7 +17,7 @@ from qdrant_client import QdrantClient
 from openai import AsyncOpenAI
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
-from retrieval_boost import detect_boost, build_qdrant_filter, merge_parent_child
+from retrieval_boost import detect_boost, build_qdrant_filter, merge_parent_child, get_dynamic_top_k, route_query
 
 # Load environment variables from .env
 def load_env():
@@ -100,17 +99,15 @@ async def close_kafka_producer():
 # Global AI clients
 openai_client: Optional[AsyncOpenAI] = None
 qdrant_client: Optional[QdrantClient] = None
+chat_history: Dict[str, List[Dict[str, str]]] = {}
 
 async def init_ai_components():
     """Initializes AsyncOpenAI and QdrantClient on application startup."""
     global openai_client, qdrant_client
     try:
         api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            logger.error("OPENAI_API_KEY environment variable is missing.")
-            return
         openai_client = AsyncOpenAI(api_key=api_key)
-        qdrant_client = QdrantClient(host="localhost", port=6333)
+        qdrant_client = QdrantClient(host=os.getenv("QDRANT_HOST", "localhost"), port=6333)
         logger.info("AsyncOpenAI client and QdrantClient initialized successfully.")
     except Exception as e:
         logger.error(f"Error initializing AI components: {e}")
@@ -260,7 +257,15 @@ def generate_mock_answer(message: str, contexts: List[str], score: int, category
     if score >= 30:
         prefix = f"[AI Assistant: Welcome back! I noticed you are deeply engaged with my portfolio (Engagement Score: {score}, main interest: {category})!]\n\n"
         
-    if "project" in message_lower:
+    if category == "contact" or "contact" in message_lower or "email" in message_lower or "phone" in message_lower:
+        return prefix + "You can contact Quoc via email at kuokdavinci@gmail.com, phone 0768040802, or find him on GitHub (github.com/kuokdavinci) and LinkedIn (linkedin.com/in/kuokdavinci)."
+    elif category == "education" or "school" in message_lower or "university" in message_lower or "hcmus" in message_lower or "vinuni" in message_lower:
+        return prefix + "Quoc graduated from HCMUS (University of Science - Ho Chi Minh City) with a GPA of 3.1/4.0 in October 2025, and is currently enrolled in the AI in Action program at VinUni."
+    elif category == "experience" or "experience" in message_lower or "intern" in message_lower or "company" in message_lower:
+        return prefix + "Quoc worked as a Software Engineer Intern at Phu An Phuoc Investment Company from March to June 2024."
+    elif category == "skills" or category == "competencies" or "skill" in message_lower or "tech" in message_lower:
+        return prefix + "Quoc's core competencies include backend (Spring Boot, Java, PostgreSQL), mobile development (Flutter, Dart, Firebase), AI/ML, and he is currently exploring distributed systems, microservices, and fintech domain knowledge."
+    elif "project" in message_lower:
         ans = "Here are some of Quoc's projects: "
         proj_contexts = [c for c in contexts if "System" in c or "App" in c or "Booking" in c]
         if proj_contexts:
@@ -268,10 +273,6 @@ def generate_mock_answer(message: str, contexts: List[str], score: int, category
         else:
             ans += "Movie Ticket Booking System (Spring Boot + Flutter) and Attendance Tracking App (Flutter + Firebase)."
         return prefix + ans
-    elif "contact" in message_lower or "email" in message_lower or "phone" in message_lower:
-        return prefix + "You can contact Quoc via email at kuokdavinci@gmail.com, phone 0768040802, or find him on GitHub (github.com/kuokdavinci) and LinkedIn (linkedin.com/in/kuokdavinci)."
-    elif "skill" in message_lower or "tech" in message_lower:
-        return prefix + "Quoc's core competencies include backend (Spring Boot, Java, PostgreSQL) and mobile development (Flutter, Dart, Firebase), along with AI/ML (Python, Pandas, RAG)."
     else:
         return prefix + (contexts[0] if contexts else "Hi there! I am Quoc's AI Assistant. Ask me anything about his skills, experience, or projects.")
 
@@ -283,7 +284,7 @@ async def chat(request: ChatRequest):
     retrieves knowledge context from Qdrant vector database, 
     and constructs a personalized system prompt for Gemini LLM response generation.
     """
-    global embedding_model, qdrant_client
+    global embedding_model, qdrant_client, chat_history
     
     # Increment chatbot query metric
     CHATBOT_QUERIES.labels(session_id=request.session_id).inc()
@@ -325,107 +326,188 @@ async def chat(request: ChatRequest):
     sources = []
     if qdrant_client and openai_client:
         try:
-            # Generate query embedding using OpenAI
-            embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-            emb_resp = await openai_client.embeddings.create(
-                input=request.message,
-                model=embedding_model
-            )
-            query_vector = emb_resp.data[0].embedding
-            
-            # Rule-based intent detection → build filter
+            route = route_query(request.message)
+            # Rule-based intent detection
             boost = detect_boost(request.message)
-            qdrant_filter = build_qdrant_filter(boost)
+            top_k = get_dynamic_top_k(request.message, boost)
             
-            # General vector search (fetch more for parent-child merge)
-            general_results = qdrant_client.query_points(
-                collection_name="portfolio_knowledge",
-                query=query_vector,
-                limit=8,
-            ).points
-            
-            # Filtered search if rule matched
-            filtered_results = []
-            if qdrant_filter:
-                filtered_results = qdrant_client.query_points(
+            if top_k > 0:
+                # Generate query embedding using OpenAI
+                embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+                emb_resp = await openai_client.embeddings.create(
+                    input=request.message,
+                    model=embedding_model
+                )
+                query_vector = emb_resp.data[0].embedding
+                
+                qdrant_filter = build_qdrant_filter(boost)
+                
+                # General vector search (fetch more for parent-child merge)
+                general_results = qdrant_client.query_points(
                     collection_name="portfolio_knowledge",
                     query=query_vector,
-                    query_filter=qdrant_filter,
-                    limit=5,
+                    limit=8,
                 ).points
-            
-            # Merge with parent-child awareness
-            search_results = merge_parent_child(
-                general_results, filtered_results,
-                boost=boost,
-                top_k=3,
-            )
-            
-            for hit in search_results:
-                contexts.append(hit.payload.get("text", ""))
-                metadata = hit.payload.get("metadata", {})
-                category = hit.payload.get("category", "")
-                if (category == "project" or category == "project_detail") and metadata.get("project_id"):
-                    sources.append({
-                        "title": metadata.get("title") or "Attendance Tracking App",
-                        "link": f"#/project/{metadata.get('project_id')}"
-                    })
-                elif category == "contact" and metadata.get("github"):
-                    sources.append({
-                        "title": "GitHub Profile",
-                        "link": "https://github.com/kuokdavinci"
-                    })
+                
+                # Filtered search if rule matched
+                filtered_results = []
+                if qdrant_filter:
+                    filtered_results = qdrant_client.query_points(
+                        collection_name="portfolio_knowledge",
+                        query=query_vector,
+                        query_filter=qdrant_filter,
+                        limit=5,
+                    ).points
+                
+                # Merge with parent-child awareness
+                search_results = merge_parent_child(
+                    general_results, filtered_results,
+                    boost=boost,
+                    top_k=top_k,
+                )
+                
+                for hit in search_results:
+                    contexts.append(hit.payload.get("text", ""))
+                    metadata = hit.payload.get("metadata", {})
+                    category = hit.payload.get("category", "")
+                    if (category == "project" or category == "project_detail") and metadata.get("project_id"):
+                        proj_id = metadata.get("project_id")
+                        if proj_id in ("legal-edu-app", "legal-edu", "edurag-app"):
+                            proj_id = "edurag"
+                        title_map_proj = {
+                            "edurag-app": "EduRAG - Vietnamese Education Law RAG",
+                            "attendance-app": "Attendance Tracking App",
+                            "movie-ticket": "Movie Ticket Booking System",
+                            "movie-ticket-app": "Movie Ticket Booking System",
+                        }
+                        sources.append({
+                            "title": title_map_proj.get(proj_id, metadata.get("doc_title", proj_id)),
+                            "link": f"#/project/{proj_id}"
+                        })
+                    elif category in ("personal_info", "education", "experience", "skills", "competencies"):
+                        title_map = {
+                            "personal_info": "Personal Info",
+                            "education": "Education",
+                            "experience": "Experience",
+                            "skills": "Skills",
+                            "competencies": "Competencies",
+                        }
+                        sources.append({
+                            "title": title_map.get(category, "Portfolio Profile"),
+                            "link": f"#/profile/{category}"
+                        })
+                    elif category == "contact" and metadata.get("github"):
+                        sources.append({
+                            "title": "GitHub Profile",
+                            "link": "https://github.com/kuokdavinci"
+                        })
+                
+                # Deduplicate sources by link
+                seen_links = set()
+                dedup_sources = []
+                for s in sources:
+                    if s["link"] not in seen_links:
+                        seen_links.add(s["link"])
+                        dedup_sources.append(s)
+                sources = dedup_sources
         except Exception as e:
             logger.error(f"Error searching Qdrant collection: {e}")
             
     if not contexts:
-        contexts.append("Lê Trung Anh Quốc is a Software Developer specializing in Java, Spring Boot, Flutter, and AI.")
-
+        route = route_query(request.message)
+        contexts.append(generate_mock_answer(request.message, [], 0, route.category))
+ 
     # 3. Call LLM (OpenAI Chat Completions API)
     model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
     response_text = ""
-    
     system_instruction = f"""You are Lê Trung Anh Quốc's AI Portfolio Assistant, an intelligent, helpful agent representing Quoc.
 You will answer questions about Quoc's projects, skills, education, experience, and contact info.
-
+ 
 Here is some retrieved context from Quoc's knowledge base to help you answer:
 {chr(10).join("- " + c for c in contexts)}
-
+ 
 Here is the current visitor's session information retrieved from the Feast Feature Store:
 - Engagement Score: {engagement_score} (This indicates how thoroughly they have browsed the portfolio. Scale: 0 to 100+. High scores indicate a very interested recruiter/visitor).
 - Last Category Viewed: {last_viewed_category} (The domain they are currently looking at).
 - Chat Count: {chat_count} (Number of questions asked in this session).
-
+ 
+CRITICAL GUARDRAIL & FOCUS RULES:
+1. STRICT PORTFOLIO FOCUS: You must ONLY answer questions, write code, or perform tasks related to Lê Trung Anh Quốc (Quoc), his projects, skills, experience, contact details, or education.
+2. POLITELY DECLINE UNRELATED REQUESTS: If the user asks you to write unrelated code, answer general knowledge questions (e.g., "What is the capital of France?", "How to make cookies"), tell jokes, translate unrelated text, write essays, or perform any tasks not related to Quoc or his portfolio, you MUST politely decline.
+   - Example Vietnamese decline: "Xin lỗi, tôi là trợ lý ảo đại diện cho Lê Trung Anh Quốc. Tôi chỉ hỗ trợ giải đáp các câu hỏi liên quan đến kỹ năng, dự án, học vấn và thông tin liên hệ của Quốc. Bạn có câu hỏi nào về Quốc không?"
+   - Example English decline: "I'm sorry, but I am an AI Assistant representing Lê Trung Anh Quốc. I only answer questions related to Quoc's projects, skills, education, and contact details. How can I help you with those topics?"
+3. CLARIFY AMBIGUOUS QUERIES: If the user's request is vague or ambiguous but seems like it might be related to Quoc's domains, politely ask them to clarify what they want to know about Quoc or his portfolio.
+ 
+CRITICAL ANSWER SYNTHESIS & FORMATTING RULES:
+1. SELECTIVE SYNTHESIS: Read all the retrieved context chunks carefully. Select, synthesize, and summarize only the facts directly relevant to answering the user's question. Avoid simply copy-pasting the raw context or listing chunks one by one.
+2. STRUCTURING WITH MARKDOWN: Always structure your response beautifully using standard Markdown. Use bullet points (`- `) for lists, bold text (`**`) for emphasis, inline code (`` ` ``) for technical terms/skills, and clean paragraph breaks (`\n\n`).
+3. TONE & CONCISENESS: Keep your answers natural, warm, conversational, yet concise and professional.
+ 
 ADAPT YOUR TONE AND FOCUS BASED ON USER ENGAGEMENT:
 - If the visitor's Engagement Score is high (e.g. >= 30), recognize their high interest! Be proactive, warm, and professional. Proactively suggest checking out Quoc's GitHub/LinkedIn or offering to download Quoc's CV, or scheduling a meeting.
 - Tailor your highlights to the "Last Category Viewed" if relevant. For example, if it is "Mobile", highlight Quoc's Flutter/Dart skills. If it is "Full-stack & Mobile", highlight Spring Boot, Java, and PostgreSQL.
-- Keep your answers concise, clear, and professional. Speak in the same language as the visitor's query (English or Vietnamese).
+- Speak in the same language as the visitor's query (English or Vietnamese).
 - Never make up information not supported by the context. If you don't know, say so.
+- IMPORTANT: If the visitor's query is a simple greeting (e.g. "hi", "hello", "chào bạn") or a general conversation that doesn't ask about projects or links, respond politely and briefly WITHOUT listing or introducing projects or links. Do not reference sources unless the user's question is actually about projects, contact details, or experience.
 """
-
+ 
     if openai_client:
         try:
             import time
             start_llm = time.time()
+            
+            # Build conversation history
+            session_history = chat_history.get(request.session_id, [])
+            
+            # Construct messages list for LLM
+            llm_messages = [{"role": "system", "content": system_instruction}]
+            
+            # Append last 8 turns of history to prevent token bloat
+            for msg in session_history[-8:]:
+                llm_messages.append(msg)
+                
+            # Append current user message
+            llm_messages.append({"role": "user", "content": request.message})
+            
             completion = await openai_client.chat.completions.create(
                 model=model_name,
-                messages=[
-                    {"role": "system", "content": system_instruction},
-                    {"role": "user", "content": request.message}
-                ],
+                messages=llm_messages,
                 temperature=0.3
             )
             
             # Observe latency
             LLM_LATENCY.observe(time.time() - start_llm)
             response_text = completion.choices[0].message.content.strip()
+            
+            # Save new turn to session history
+            if request.session_id not in chat_history:
+                chat_history[request.session_id] = []
+            chat_history[request.session_id].append({"role": "user", "content": request.message})
+            chat_history[request.session_id].append({"role": "assistant", "content": response_text})
         except Exception as e:
             logger.error(f"Failed to generate answer from OpenAI: {e}")
             
     if not response_text:
-        response_text = generate_mock_answer(request.message, contexts, engagement_score, last_viewed_category)
+            response_text = generate_mock_answer(request.message, contexts, engagement_score, route.category if 'route' in locals() else last_viewed_category)
         
+    # Filter sources based on whether they are relevant to the generated answer or query
+    filtered_sources = []
+    response_lower = response_text.lower()
+    query_lower = request.message.lower()
+    for s in sources:
+        title_lower = s["title"].lower()
+        project_id = ""
+        if "/project/" in s["link"]:
+            project_id = s["link"].split("/project/")[-1].lower()
+            
+        if title_lower in response_lower or (project_id and project_id in response_lower):
+            filtered_sources.append(s)
+        elif (project_id and project_id in query_lower) or ("project" in query_lower and project_id):
+            filtered_sources.append(s)
+        elif "github" in title_lower and ("github" in response_lower or "github" in query_lower or "contact" in response_lower or "contact" in query_lower):
+            filtered_sources.append(s)
+
     return {
         "answer": response_text,
-        "sources": sources
+        "sources": filtered_sources
     }
