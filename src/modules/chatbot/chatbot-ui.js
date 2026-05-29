@@ -12,13 +12,22 @@ const agentStateSteps = [
 function updateAgentState(thinkingMessage, activeStepId) {
   if (!thinkingMessage || !thinkingMessage.parentNode) return;
 
-  const labelEl = thinkingMessage.querySelector('.agent-state-label');
-  if (!labelEl) return;
+  const container = thinkingMessage.querySelector('.agent-state-indicator');
+  if (!container) return;
 
-  const step = agentStateSteps.find(s => s.id === activeStepId);
-  if (step) {
-    labelEl.textContent = step.label;
-  }
+  const activeIndex = agentStateSteps.findIndex(s => s.id === activeStepId);
+  if (activeIndex === -1) return;
+
+  let html = '';
+  agentStateSteps.forEach((step, i) => {
+    if (i < activeIndex) {
+      html += `<div class="agent-state-step is-completed"><span class="state-check">✓</span><span class="state-label">${step.label.replace('Đang ', '')}</span></div>`;
+    } else if (i === activeIndex) {
+      html += `<div class="agent-state-step is-active"><span class="state-label">${step.label}</span></div>`;
+    }
+    // future steps: not rendered
+  });
+  container.innerHTML = html;
 }
 
 function escapeHtml(value) {
@@ -265,9 +274,7 @@ export function setupPortfolioChatbot(portfolioConfig) {
     thinkingMessage.className = 'rag-chat-message is-bot is-thinking';
     thinkingMessage.innerHTML = `
       <div class="rag-chat-bubble">
-        <div class="agent-state-indicator">
-          <span class="agent-state-label">Đang phân tích câu hỏi</span>
-        </div>
+        <div class="agent-state-indicator"></div>
       </div>
     `;
     messages.appendChild(thinkingMessage);
@@ -284,6 +291,7 @@ export function setupPortfolioChatbot(portfolioConfig) {
 
       // Step 1: Analyzing
       updateAgentState(thinkingMessage, 'analyzing');
+      await new Promise(resolve => setTimeout(resolve, 400));
 
       // Step 2: Retrieving — during fetch
       updateAgentState(thinkingMessage, 'retrieving');

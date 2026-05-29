@@ -373,24 +373,46 @@
     }
   }
 
-  /* Agent state indicator — single sequential label */
+  /* Agent state indicator — timeline with checkmarks */
   .agent-state-indicator {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 6px;
-    padding: 6px 0;
+    padding: 4px 0;
   }
 
-  .agent-state-label {
+  .agent-state-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 0;
     font-size: 13px;
+    animation: state-fade-in 0.3s ease;
+  }
+
+  .agent-state-step.is-completed {
+    opacity: 0.6;
+  }
+
+  .agent-state-step.is-completed .state-check {
+    color: var(--color-success, #4caf50);
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  .agent-state-step.is-completed .state-label {
     color: var(--color-on-surface-variant);
+  }
+
+  .agent-state-step.is-active .state-label {
+    color: var(--color-on-surface);
     font-weight: 500;
   }
 
-  .agent-state-label::after {
+  .agent-state-step.is-active .state-label::after {
     content: '';
     display: inline-block;
-    width: 1.2em;
+    width: 1.4em;
     text-align: left;
     animation: loading-dots 1.5s steps(4, end) infinite;
   }
@@ -401,6 +423,11 @@
     50%  { content: '..'; }
     75%  { content: '...'; }
     100% { content: ''; }
+  }
+
+  @keyframes state-fade-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   /* Link cursor feedback in chat bubbles */
