@@ -3,17 +3,25 @@
  *
  * Exports: initDashboard(), refreshDashboard()
  *
- * Mounts System Overview and User Behavior sections into the #dashboard container.
+ * Mounts System Overview, User Behavior, AI Observability, Infrastructure Health,
+ * and Live Telemetry sections into the #dashboard container.
  * Manages 10s refresh cycles for all sections.
  */
 
 import { renderSystemOverview } from './sections/system-overview.js';
 import { renderUserBehavior } from './sections/user-behavior.js';
 import { renderAIObservability } from './sections/ai-observability.js';
+import { renderInfrastructureHealth } from './sections/infrastructure-health.js';
+import { renderLiveTelemetry } from './sections/live-telemetry.js';
+
+// Import Live Telemetry CSS
+import './sections/live-telemetry.css';
 
 let systemOverviewHandle = null;
 let userBehaviorHandle = null;
 let aiObservabilityHandle = null;
+let infrastructureHealthHandle = null;
+let liveTelemetryHandle = null;
 let isInitialized = false;
 
 /**
@@ -66,6 +74,18 @@ export async function initDashboard() {
   contentEl.appendChild(aiContainer);
   aiObservabilityHandle = await renderAIObservability(aiContainer);
 
+  // Render Infrastructure Health
+  const infraContainer = document.createElement('div');
+  infraContainer.style.marginTop = '24px';
+  contentEl.appendChild(infraContainer);
+  infrastructureHealthHandle = await renderInfrastructureHealth(infraContainer);
+
+  // Render Live Telemetry
+  const telemetryContainer = document.createElement('div');
+  telemetryContainer.style.marginTop = '24px';
+  contentEl.appendChild(telemetryContainer);
+  liveTelemetryHandle = await renderLiveTelemetry(telemetryContainer);
+
   isInitialized = true;
 }
 
@@ -82,6 +102,12 @@ export async function refreshDashboard() {
   if (aiObservabilityHandle && typeof aiObservabilityHandle.refresh === 'function') {
     await aiObservabilityHandle.refresh();
   }
+  if (infrastructureHealthHandle && typeof infrastructureHealthHandle.refresh === 'function') {
+    await infrastructureHealthHandle.refresh();
+  }
+  if (liveTelemetryHandle && typeof liveTelemetryHandle.refresh === 'function') {
+    await liveTelemetryHandle.refresh();
+  }
 }
 
 /**
@@ -97,6 +123,12 @@ export function stopDashboard() {
   }
   if (aiObservabilityHandle && typeof aiObservabilityHandle.stop === 'function') {
     aiObservabilityHandle.stop();
+  }
+  if (infrastructureHealthHandle && typeof infrastructureHealthHandle.stop === 'function') {
+    infrastructureHealthHandle.stop();
+  }
+  if (liveTelemetryHandle && typeof liveTelemetryHandle.stop === 'function') {
+    liveTelemetryHandle.stop();
   }
   isInitialized = false;
 }

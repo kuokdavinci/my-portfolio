@@ -7,15 +7,17 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List
 from contextlib import asynccontextmanager
 from pathlib import Path
+from collections import deque
 
 from fastapi import FastAPI, BackgroundTasks, status, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from aiokafka import AIOKafkaProducer
 
 from qdrant_client import QdrantClient
 from openai import AsyncOpenAI
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 
 from retrieval_boost import detect_boost, build_qdrant_filter, merge_parent_child, get_dynamic_top_k, route_query
 
@@ -220,6 +222,10 @@ COST_PER_MODEL = {
 # Active session tracking
 active_session_heartbeats = {}
 
+# SSE request stream — in-memory request log (last 100 requests)
+request_log = deque(maxlen=100)
+sse_clients: set = set()
+
 # Prometheus middleware for tracking request count and latency
 @app.middleware("http")
 async def prometheus_middleware(request, call_next):
@@ -237,10 +243,27 @@ async def prometheus_middleware(request, call_next):
     
     duration = time.time() - start_time
     status_code = response.status_code
-    
+
     REQUEST_COUNT.labels(method=method, endpoint=endpoint, status=status_code).inc()
     REQUEST_LATENCY.labels(method=method, endpoint=endpoint).observe(duration)
-    
+
+    # Broadcast to SSE clients (T-05.3-01: only method, path, status, duration — no bodies/params)
+    entry = {
+        "timestamp": datetime.utcnow().strftime("%H:%M:%S"),
+        "method": method,
+        "path": endpoint,
+        "status": status_code,
+        "duration_ms": round(duration * 1000),
+    }
+    request_log.append(entry)
+    # Broadcast to SSE clients (limit to 10 concurrent connections — T-05.3-02)
+    if sse_clients:
+        for client_queue in list(sse_clients):
+            try:
+                client_queue.put_nowait(entry)
+            except asyncio.QueueFull:
+                pass  # Drop events if client queue is full
+
     return response
 
 # Configure CORS for frontend access
@@ -343,6 +366,34 @@ async def health_check():
 async def metrics():
     """Exposes Prometheus metrics endpoint."""
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+MAX_SSE_CLIENTS = 10
+
+@app.get("/api/v1/stream")
+async def request_stream():
+    """
+    SSE endpoint for live request stream (T-05.3-01, T-05.3-02).
+    Only exposes method, path, status, duration — no request/response bodies,
+    no query params, no session IDs.
+    """
+    if len(sse_clients) >= MAX_SSE_CLIENTS:
+        return Response(content="Too many SSE connections", status_code=503)
+
+    async def event_generator():
+        client_queue = asyncio.Queue(maxsize=50)
+        sse_clients.add(client_queue)
+        try:
+            # Send existing log first (T-05.3-01: sanitized entries only)
+            for existing_entry in request_log:
+                yield f"data: {json.dumps(existing_entry)}\n\n"
+            # Then stream new events
+            while True:
+                entry = await client_queue.get()
+                yield f"data: {json.dumps(entry)}\n\n"
+        finally:
+            sse_clients.discard(client_queue)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 class ChatRequest(BaseModel):
     session_id: str = Field(..., description="Visitor's session ID")
