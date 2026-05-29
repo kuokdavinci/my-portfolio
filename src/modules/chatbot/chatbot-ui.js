@@ -4,38 +4,21 @@ const CHAT_API_URL = 'http://localhost:8000/api/v1/chat';
 const MIN_THINKING_TIME = 500; // ms
 
 const agentStateSteps = [
-  { id: 'analyzing', label: 'Đang phân tích câu hỏi...', icon: 'search' },
-  { id: 'retrieving', label: 'Đang tìm kiếm thông tin...', icon: 'database_search' },
-  { id: 'generating', label: 'Đang tạo câu trả lời...', icon: 'smart_toy' },
+  { id: 'analyzing', label: 'Đang phân tích câu hỏi' },
+  { id: 'retrieving', label: 'Đang tìm kiếm thông tin' },
+  { id: 'generating', label: 'Đang tạo câu trả lời' },
 ];
 
-function updateAgentState(thinkingMessage, completedStepId) {
+function updateAgentState(thinkingMessage, activeStepId) {
   if (!thinkingMessage || !thinkingMessage.parentNode) return;
 
-  const steps = thinkingMessage.querySelectorAll('.agent-state-step');
-  let foundCompleted = false;
+  const labelEl = thinkingMessage.querySelector('.agent-state-label');
+  if (!labelEl) return;
 
-  steps.forEach(stepEl => {
-    const stepId = stepEl.dataset.step;
-    const statusEl = stepEl.querySelector('.state-status');
-    const iconEl = stepEl.querySelector('.state-icon');
-
-    if (foundCompleted || stepId === completedStepId) {
-      // Mark this step as completed
-      stepEl.dataset.status = 'completed';
-      stepEl.classList.remove('state-pending', 'state-active');
-      stepEl.classList.add('state-completed');
-      if (statusEl) statusEl.innerHTML = '<span class="material-symbols-outlined state-check" style="color: var(--color-success, #4caf50); font-size: 18px;">check_circle</span>';
-      if (iconEl) iconEl.style.color = 'var(--color-success, #4caf50)';
-      foundCompleted = true;
-    } else if (!foundCompleted) {
-      // Mark as active (current step)
-      stepEl.dataset.status = 'active';
-      stepEl.classList.remove('state-pending', 'state-completed');
-      stepEl.classList.add('state-active');
-    }
-    // Steps after the completed one remain pending
-  });
+  const step = agentStateSteps.find(s => s.id === activeStepId);
+  if (step) {
+    labelEl.textContent = step.label;
+  }
 }
 
 function escapeHtml(value) {
@@ -283,13 +266,7 @@ export function setupPortfolioChatbot(portfolioConfig) {
     thinkingMessage.innerHTML = `
       <div class="rag-chat-bubble">
         <div class="agent-state-indicator">
-          ${agentStateSteps.map((step, i) => `
-            <div class="agent-state-step" data-step="${step.id}" data-status="pending">
-              <span class="material-symbols-outlined state-icon">${step.icon}</span>
-              <span class="state-label">${step.label}</span>
-              <span class="state-status"></span>
-            </div>
-          `).join('')}
+          <span class="agent-state-label">Đang phân tích câu hỏi</span>
         </div>
       </div>
     `;

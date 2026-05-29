@@ -373,54 +373,34 @@
     }
   }
 
-  /* Agent state indicator — sequential pipeline steps */
+  /* Agent state indicator — single sequential label */
   .agent-state-indicator {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 4px 0;
-  }
-
-  .agent-state-step {
-    display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-    opacity: 0.4;
+    gap: 6px;
+    padding: 6px 0;
   }
 
-  .agent-state-step.state-active {
-    opacity: 1;
-    background: rgba(var(--color-primary-rgb, 99, 102, 241), 0.08);
-  }
-
-  .agent-state-step.state-completed {
-    opacity: 0.7;
-  }
-
-  .agent-state-step .state-icon {
-    font-size: 18px;
-    color: var(--color-on-surface-variant);
-    transition: color 0.3s ease;
-  }
-
-  .agent-state-step .state-label {
+  .agent-state-label {
     font-size: 13px;
     color: var(--color-on-surface-variant);
-    flex: 1;
-  }
-
-  .agent-state-step.state-active .state-label {
-    color: var(--color-on-surface);
     font-weight: 500;
   }
 
-  .agent-state-step .state-status {
-    display: flex;
-    align-items: center;
-    min-width: 18px;
+  .agent-state-label::after {
+    content: '';
+    display: inline-block;
+    width: 1.2em;
+    text-align: left;
+    animation: loading-dots 1.5s steps(4, end) infinite;
+  }
+
+  @keyframes loading-dots {
+    0%   { content: ''; }
+    25%  { content: '.'; }
+    50%  { content: '..'; }
+    75%  { content: '...'; }
+    100% { content: ''; }
   }
 
   /* Link cursor feedback in chat bubbles */
