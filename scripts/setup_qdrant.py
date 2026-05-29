@@ -1,6 +1,5 @@
 import sys
 import os
-import re
 from pathlib import Path
 
 # Load environment variables from .env if present
@@ -72,6 +71,72 @@ def get_project_id_from_filename(filename: str) -> str:
     return stem.replace("_", "-")
 
 
+def load_personal_documents(kb_dir: Path, start_id: int) -> list[dict]:
+    """Load stable personal profile docs from knowledge_base/personal.md."""
+    personal_file = kb_dir / "personal.md"
+    if not personal_file.exists():
+        return []
+
+    with open(personal_file, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    section_category_map = {
+        "Personal Info": "personal_info",
+        "Education": "education",
+        "Experience": "experience",
+        "Contact": "contact",
+        "Competencies": "competencies",
+        "Skills": "skills",
+    }
+
+    docs = []
+    current_section = None
+    current_title = None
+    current_lines = []
+    doc_title = "Lê Trung Anh Quốc"
+
+    def flush_chunk():
+        nonlocal start_id
+        if not current_section or not current_title:
+            return
+        body = "\n".join(current_lines).strip()
+        if not body:
+            return
+        category = section_category_map.get(current_section, "personal_info")
+        docs.append({
+            "id": start_id,
+            "category": category,
+            "chunk_level": "parent",
+            "text": body,
+            "metadata": {
+                "doc_title": doc_title,
+                "section_title": current_section,
+                "chunk_title": current_title,
+                "project_id": None,
+            }
+        })
+        start_id += 1
+
+    for line in content.splitlines():
+        if line.startswith("## "):
+            flush_chunk()
+            current_section = line[3:].strip()
+            current_title = None
+            current_lines = []
+            continue
+        if line.startswith("### "):
+            flush_chunk()
+            current_title = line[4:].strip()
+            current_lines = []
+            continue
+        if line.startswith("# ") or line.startswith("> ") or line.strip() == "":
+            continue
+        current_lines.append(line)
+
+    flush_chunk()
+    return docs
+
+
 # ── Parent-Child Chunking Strategy ──────────────────────────────────
 #
 # PARENT chunks (chunk_level="parent"):
@@ -88,86 +153,8 @@ def get_project_id_from_filename(filename: str) -> str:
 # ─────────────────────────────────────────────────────────────────────
 
 
-# ── Base CV documents (always parent-level) ─────────────────────────
-knowledge_documents = [
-    {
-        "id": 1,
-        "category": "personal_info",
-        "chunk_level": "parent",
-        "text": "Lê Trung Anh Quốc is an AI & Software Developer based in Ho Chi Minh City, Vietnam. Tagline: Building intelligent systems, one line of code at a time.",
-        "metadata": {"name": "Lê Trung Anh Quốc", "role": "AI & Software Developer", "location": "Ho Chi Minh City"}
-    },
-    {
-        "id": 2,
-        "category": "education",
-        "chunk_level": "parent",
-        "text": "Quốc graduated from HCMUS (University of Science - Ho Chi Minh City) with a GPA of 3.1/4.0 in October 2025. Currently enrolled in the AI in Action program at VinUni (started April 2026).",
-        "metadata": {"institution": "HCMUS", "gpa": "3.1/4.0", "graduation": "Oct 2025"}
-    },
-    {
-        "id": 3,
-        "category": "experience",
-        "chunk_level": "parent",
-        "text": "Quốc worked as a Software Engineer Intern at Phu An Phuoc Investment Company from March to June 2024, gaining practical industry experience.",
-        "metadata": {"role": "Software Engineer Intern", "company": "Phu An Phuoc", "period": "Mar - Jun 2024"}
-    },
-    {
-        "id": 4,
-        "category": "project",
-        "chunk_level": "parent",
-        "text": "Movie Ticket Booking System: A full-stack cinema reservation platform featuring a Spring Boot REST API backend (Java, PostgreSQL) and a Flutter mobile frontend (Dart). Supports user authentication, seat selection, payment integration, and real-time booking management.",
-        "metadata": {"project_id": "movie-ticket", "title": "Movie Ticket Booking System", "tech_stack": "Java, Spring Boot, PostgreSQL, Flutter"}
-    },
-    {
-        "id": 5,
-        "category": "project",
-        "chunk_level": "parent",
-        "text": "Attendance Tracking App: A cross-platform mobile application for automated attendance check-ins built with Flutter. Integrates Firebase authentication, QR code scanning, real-time database sync, and an offline-first architecture.",
-        "metadata": {"project_id": "attendance-app", "title": "Attendance Tracking App", "tech_stack": "Dart, Flutter, Firebase, QR Code"}
-    },
-    {
-        "id": 6,
-        "category": "project",
-        "chunk_level": "parent",
-        "text": "Legal Education RAG System: An intelligent Vietnamese education law retrieval system. Triple-Gated Cascading Flow (Semantic Routing → GraphRAG → Agent Reflection). Uses Qdrant vector search + Neo4j knowledge graph with RRF fusion, temporal fusion, neural reranking. Supports GPT-4o, streaming SSE, mandatory legal citations, Langfuse observability.",
-        "metadata": {"project_id": "legal-edu", "title": "Legal Education RAG System", "tech_stack": "OpenAI, Qdrant, Neo4j, LangChain, Next.js, Redis"}
-    },
-    {
-        "id": 7,
-        "category": "competencies",
-        "chunk_level": "parent",
-        "text": "Backend Development Competencies: Building scalable RESTful APIs with Spring Boot and Java. Database design and optimization with PostgreSQL. Security implementation with Spring Security and JWT.",
-        "metadata": {"area": "Backend", "tech": "Spring Boot, Java, PostgreSQL, JWT"}
-    },
-    {
-        "id": 8,
-        "category": "competencies",
-        "chunk_level": "parent",
-        "text": "Mobile Development Competencies: Cross-platform mobile development with Flutter and Dart. Real-time DB sync and auth with Firebase. Offline-first local caching and sync strategies.",
-        "metadata": {"area": "Mobile", "tech": "Flutter, Dart, Firebase, Offline Cache"}
-    },
-    {
-        "id": 9,
-        "category": "competencies",
-        "chunk_level": "parent",
-        "text": "AI & Machine Learning Competencies: Data cleaning, analysis and preprocessing using Python, pandas, and numpy. Building RAG (Retrieval-Augmented Generation) systems and multi-agent concepts.",
-        "metadata": {"area": "AI/ML", "tech": "Python, pandas, numpy, RAG, LangChain"}
-    },
-    {
-        "id": 10,
-        "category": "skills",
-        "chunk_level": "parent",
-        "text": "Complete Tech Stack: Python, Java, Dart, HTML/CSS, Spring Boot, Flutter, Firebase, PostgreSQL, Qdrant, Neo4j, Git, GitHub, Docker, AWS, GCP, LangChain.",
-        "metadata": {"skills_list": "Python, Java, Dart, Spring Boot, Flutter, PostgreSQL, Qdrant, Docker, AWS"}
-    },
-    {
-        "id": 11,
-        "category": "contact",
-        "chunk_level": "parent",
-        "text": "Contact Lê Trung Anh Quốc via email at kuokdavinci@gmail.com. GitHub Profile: https://github.com/kuokdavinci, LinkedIn Profile: https://linkedin.com/in/kuokdavinci. Phone: 0768040802.",
-        "metadata": {"email": "kuokdavinci@gmail.com", "github": "kuokdavinci", "phone": "0768040802"}
-    }
-]
+# ── Base CV documents (loaded from knowledge_base/personal.md) ─────
+knowledge_documents = []
 
 
 def parse_markdown_hierarchical(content: str, project_id: str):
@@ -244,8 +231,9 @@ def parse_markdown_hierarchical(content: str, project_id: str):
 
 # ── Load markdown files → child chunks ──────────────────────────────
 kb_dir = Path(__file__).resolve().parent.parent / "knowledge_base"
+knowledge_documents.extend(load_personal_documents(kb_dir, start_id=1))
 if kb_dir.exists() and kb_dir.is_dir():
-    md_files = [f for f in kb_dir.glob("*.md") if f.name != "template.md"]
+    md_files = [f for f in kb_dir.glob("*.md") if f.name not in {"template.md", "personal.md"}]
     print(f"Found {len(md_files)} markdown document(s) in knowledge_base/")
 
     for md_file in md_files:
@@ -257,6 +245,50 @@ if kb_dir.exists() and kb_dir.is_dir():
             project_id = get_project_id_from_filename(md_file.name)
             doc_title, chunks = parse_markdown_hierarchical(content, project_id)
 
+            # ── Create PARENT chunk for this project ──────────────────────
+            # Extract intro/summary section for parent chunk
+            intro_text = ""
+            tech_stack_text = ""
+            lines = content.splitlines()
+            in_intro = False
+            in_tech_stack = False
+            for line in lines:
+                if line.startswith("# "):
+                    in_intro = True
+                    continue
+                if line.startswith("> "):
+                    if in_intro:
+                        intro_text += line[2:].strip() + "\n"
+                    continue
+                if line.startswith("## "):
+                    in_intro = False
+                if line.startswith("### Tech Stack"):
+                    in_tech_stack = True
+                    continue
+                if line.startswith("### ") and in_tech_stack:
+                    in_tech_stack = False
+                if in_tech_stack and line.strip():
+                    tech_stack_text += line.strip() + "\n"
+
+            parent_text = f"{doc_title}\n\n{intro_text.strip()}"
+            if tech_stack_text.strip():
+                parent_text += f"\n\nTech Stack:\n{tech_stack_text.strip()}"
+
+            knowledge_documents.append({
+                "id": len(knowledge_documents) + 1,
+                "category": "project",
+                "chunk_level": "parent",
+                "text": parent_text,
+                "metadata": {
+                    "doc_title": doc_title,
+                    "project_id": project_id,
+                    "section_title": "Overview",
+                    "chunk_title": "Summary",
+                }
+            })
+            print(f"  → 1 parent chunk created for {project_id}")
+
+            # ── Create CHILD chunks ───────────────────────────────────────
             for chunk in chunks:
                 knowledge_documents.append({
                     "id": len(knowledge_documents) + 1,
