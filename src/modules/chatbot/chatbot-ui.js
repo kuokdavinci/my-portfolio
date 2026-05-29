@@ -162,10 +162,12 @@ export async function streamBotResponse(container, text, sources = []) {
   const cursorSpan = streamContent.querySelector('.streaming-cursor');
 
   let currentText = '';
-  const delay = 15; // ms per character
+  // Adaptive speed: faster for longer texts, mimics LLM token generation (~30-50 tokens/sec)
+  const batchSize = text.length > 500 ? 4 : text.length > 200 ? 2 : 1;
+  const delay = text.length > 500 ? 20 : text.length > 200 ? 15 : 10;
 
-  for (let i = 0; i < text.length; i++) {
-    currentText += text[i];
+  for (let i = 0; i < text.length; i += batchSize) {
+    currentText += text.slice(i, i + batchSize);
     textSpan.textContent = currentText;
     container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     await new Promise(resolve => setTimeout(resolve, delay));
