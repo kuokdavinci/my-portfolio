@@ -1,0 +1,271 @@
+/* Dashboard — dark mode observability UI styles */
+
+/* ── Stat Cards ─────────────────────────────────────────── */
+
+.dashboard-stat-card {
+  background: rgba(22, 25, 27, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-stat-card:hover {
+  border-color: rgba(206, 189, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: #e0e3e5;
+  line-height: 1.2;
+}
+
+.stat-subtitle {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: rgba(224, 227, 229, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+.stat-delta {
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.stat-delta.positive { color: #22c55e; }
+.stat-delta.negative { color: #f43f5e; }
+
+.stat-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: stat-pulse 2s infinite;
+  flex-shrink: 0;
+}
+
+.stat-pulse.active {
+  animation: stat-pulse-active 1.2s infinite;
+  background: #22c55e;
+}
+
+@keyframes stat-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+@keyframes stat-pulse-active {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+  50% { opacity: 0.7; transform: scale(1.3); box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); }
+}
+
+.stat-live-badge {
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.stat-sparkline {
+  width: 100%;
+  height: 32px;
+  margin-top: 8px;
+}
+
+.stat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.stat-card-title {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #cebdff;
+}
+
+/* ── Chart Sections ─────────────────────────────────────── */
+
+.chart-section {
+  background: rgba(22, 25, 27, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #cebdff;
+}
+
+.chart-header .material-symbols-outlined {
+  font-size: 18px;
+  color: #cebdff;
+}
+
+.time-range-switcher {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.time-range-btn {
+  padding: 4px 8px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e0e3e5;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 4px;
+}
+
+.time-range-btn:hover {
+  border-color: rgba(206, 189, 255, 0.3);
+  color: #cebdff;
+}
+
+.time-range-btn.active {
+  background: rgba(206, 189, 255, 0.2);
+  border-color: #cebdff;
+  color: #cebdff;
+}
+
+/* ── Dashboard Layout ───────────────────────────────────── */
+
+.dashboard-overview {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-overview {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-overview {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-overview {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-chart-canvas {
+  position: relative;
+  height: 260px;
+  width: 100%;
+}
+
+/* ── Section Headers ────────────────────────────────────── */
+
+.dashboard-section-title {
+  font-size: 13px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #cebdff;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(206, 189, 255, 0.15);
+}
+
+/* ── Funnel Chart ───────────────────────────────────────── */
+
+.funnel-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
+.funnel-label {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #e0e3e5;
+  min-width: 40px;
+  text-align: right;
+}
+
+.funnel-track {
+  flex: 1;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.funnel-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+}
+
+.funnel-value {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #e0e3e5;
+  white-space: nowrap;
+}
