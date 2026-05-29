@@ -3,6 +3,41 @@ import { buildKnowledgeBase, generateChatbotAnswer } from './chatbot-rag.js';
 const CHAT_API_URL = 'http://localhost:8000/api/v1/chat';
 const MIN_THINKING_TIME = 500; // ms
 
+const agentStateSteps = [
+  { id: 'analyzing', label: 'Đang phân tích câu hỏi...', icon: 'search' },
+  { id: 'retrieving', label: 'Đang tìm kiếm thông tin...', icon: 'database_search' },
+  { id: 'generating', label: 'Đang tạo câu trả lời...', icon: 'smart_toy' },
+];
+
+function updateAgentState(thinkingMessage, completedStepId) {
+  if (!thinkingMessage || !thinkingMessage.parentNode) return;
+
+  const steps = thinkingMessage.querySelectorAll('.agent-state-step');
+  let foundCompleted = false;
+
+  steps.forEach(stepEl => {
+    const stepId = stepEl.dataset.step;
+    const statusEl = stepEl.querySelector('.state-status');
+    const iconEl = stepEl.querySelector('.state-icon');
+
+    if (foundCompleted || stepId === completedStepId) {
+      // Mark this step as completed
+      stepEl.dataset.status = 'completed';
+      stepEl.classList.remove('state-pending', 'state-active');
+      stepEl.classList.add('state-completed');
+      if (statusEl) statusEl.innerHTML = '<span class="material-symbols-outlined state-check" style="color: var(--color-success, #4caf50); font-size: 18px;">check_circle</span>';
+      if (iconEl) iconEl.style.color = 'var(--color-success, #4caf50)';
+      foundCompleted = true;
+    } else if (!foundCompleted) {
+      // Mark as active (current step)
+      stepEl.dataset.status = 'active';
+      stepEl.classList.remove('state-pending', 'state-completed');
+      stepEl.classList.add('state-active');
+    }
+    // Steps after the completed one remain pending
+  });
+}
+
 function escapeHtml(value) {
   const div = document.createElement('div');
   div.textContent = value;
@@ -242,13 +277,19 @@ export function setupPortfolioChatbot(portfolioConfig) {
 
     addChatMessage(messages, 'user', trimmedQuestion);
 
-    // 1. Add temporary thinking indicator bubble
+    // 1. Add agent state indicator bubble
     const thinkingMessage = document.createElement('div');
     thinkingMessage.className = 'rag-chat-message is-bot is-thinking';
     thinkingMessage.innerHTML = `
       <div class="rag-chat-bubble">
-        <div class="thinking-dots">
-          <span></span><span></span><span></span>
+        <div class="agent-state-indicator">
+          ${agentStateSteps.map((step, i) => `
+            <div class="agent-state-step" data-step="${step.id}" data-status="pending">
+              <span class="material-symbols-outlined state-icon">${step.icon}</span>
+              <span class="state-label">${step.label}</span>
+              <span class="state-status"></span>
+            </div>
+          `).join('')}
         </div>
       </div>
     `;
@@ -263,8 +304,13 @@ export function setupPortfolioChatbot(portfolioConfig) {
 
     try {
       const sessionId = getSessionId();
-      
-      // Run both fetch and minimum delay timer in parallel
+
+      // Step 1: Analyzing
+      updateAgentState(thinkingMessage, 'analyzing');
+
+      // Step 2: Retrieving — during fetch
+      updateAgentState(thinkingMessage, 'retrieving');
+
       const [response] = await Promise.all([
         fetch(CHAT_API_URL, {
           method: 'POST',
@@ -279,6 +325,9 @@ export function setupPortfolioChatbot(portfolioConfig) {
         new Promise(resolve => setTimeout(resolve, MIN_THINKING_TIME))
       ]);
 
+      // Step 3: Generating — response received
+      updateAgentState(thinkingMessage, 'generating');
+
       removeThinking();
 
       if (response.ok) {
@@ -289,9 +338,11 @@ export function setupPortfolioChatbot(portfolioConfig) {
       }
     } catch (error) {
       console.warn('Backend chatbot API failed, falling back to local generation:', error);
-      
-      // Enforce the same minimum delay on error path to avoid jarring instant response
+
+      // For local fallback: retrieving + generating happen together
+      updateAgentState(thinkingMessage, 'retrieving');
       await new Promise(resolve => setTimeout(resolve, MIN_THINKING_TIME));
+      updateAgentState(thinkingMessage, 'generating');
       removeThinking();
 
       const localResponse = generateChatbotAnswer(trimmedQuestion, knowledgeBase);
