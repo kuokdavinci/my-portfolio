@@ -912,6 +912,7 @@ async function renderCharts() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        aspectRatio: 2,
         plugins: {
           legend: { position: 'right', labels: { color: c.text, font: { family: "'JetBrains Mono', monospace", size: 11 } } }
         }
@@ -924,6 +925,7 @@ function chartOpts(c, unit, extra = {}) {
   return {
     responsive: true,
     maintainAspectRatio: false,
+    aspectRatio: 2,
     plugins: {
       legend: { labels: { color: c.text, font: { family: "'JetBrains Mono', monospace", size: 11 } } },
       tooltip: {

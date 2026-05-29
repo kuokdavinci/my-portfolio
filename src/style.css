@@ -934,10 +934,20 @@ header button.md-hidden {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* Chart containers — fixed height to prevent infinite stretch */
+.chart-container {
+  position: relative;
+  height: 280px;
+  width: 100%;
+}
+
 @media (max-width: 768px) {
   #stats .reveal[style*="height: 60vh"] {
     height: 50vh !important;
     min-height: 350px !important;
+  }
+  .chart-container {
+    height: 240px;
   }
 }
 
