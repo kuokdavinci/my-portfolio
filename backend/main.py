@@ -150,6 +150,76 @@ LLM_LATENCY = Histogram(
     "Duration of LLM API calls in seconds"
 )
 
+# Extended observability metrics
+PORTFOLIO_SESSIONS = Counter(
+    "portfolio_sessions_total",
+    "Total unique browsing sessions",
+    ["session_id"]
+)
+RESUME_DOWNLOADS = Counter(
+    "resume_download_total",
+    "Total resume downloads",
+    ["session_id"]
+)
+PROJECT_VIEWS = Counter(
+    "project_view_total",
+    "Total project page views",
+    ["project", "session_id"]
+)
+CACHE_HITS = Counter(
+    "cache_hits_total",
+    "Total cache hits",
+    ["key_prefix"]
+)
+CACHE_MISSES = Counter(
+    "cache_misses_total",
+    "Total cache misses",
+    ["key_prefix"]
+)
+RATE_LIMIT_TRIGGERS = Counter(
+    "rate_limit_trigger_total",
+    "Total rate limit events",
+    ["endpoint", "session_id"]
+)
+CHATBOT_INPUT_TOKENS = Counter(
+    "chatbot_input_tokens_total",
+    "Total input tokens consumed",
+    ["session_id", "model"]
+)
+CHATBOT_OUTPUT_TOKENS = Counter(
+    "chatbot_output_tokens_total",
+    "Total output tokens consumed",
+    ["session_id", "model"]
+)
+CHATBOT_COST_USD = Counter(
+    "chatbot_cost_usd_total",
+    "Total estimated AI cost in USD",
+    ["session_id", "model"]
+)
+SESSION_DURATION = Histogram(
+    "session_duration_seconds",
+    "Session duration in seconds",
+    ["session_id"]
+)
+SCROLL_DEPTH = Histogram(
+    "scroll_depth_reached",
+    "Maximum scroll depth reached",
+    ["session_id", "depth_percentile"]
+)
+ACTIVE_SESSIONS = Gauge(
+    "active_sessions",
+    "Currently connected visitors"
+)
+
+COST_PER_MODEL = {
+    "gpt-4o": {"input": 2.50, "output": 10.00},
+    "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+    "gpt-3.5-turbo": {"input": 0.50, "output": 1.50},
+}
+
+# Active session tracking
+active_session_heartbeats = {}
+
 # Prometheus middleware for tracking request count and latency
 @app.middleware("http")
 async def prometheus_middleware(request, call_next):
@@ -230,6 +300,34 @@ async def track_event(event: TrackingEvent, background_tasks: BackgroundTasks):
         background_tasks.add_task(push_event_to_kafka, event)
         
     return {"status": "accepted", "message": "Event is being processed"}
+
+class HeartbeatRequest(BaseModel):
+    session_id: str
+
+@app.post("/api/v1/heartbeat", status_code=status.HTTP_200_OK)
+async def session_heartbeat(req: HeartbeatRequest):
+    """Updates active session heartbeat for real-time visitor tracking."""
+    import time
+    active_session_heartbeats[req.session_id] = time.time()
+    # Clean up stale sessions (no heartbeat for 120s)
+    now = time.time()
+    stale = [sid for sid, ts in active_session_heartbeats.items() if now - ts > 120]
+    for sid in stale:
+        del active_session_heartbeats[sid]
+    ACTIVE_SESSIONS.set(len(active_session_heartbeats))
+    return {"status": "ok", "active_sessions": len(active_session_heartbeats)}
+
+@app.post("/api/v1/resume-download", status_code=status.HTTP_202_ACCEPTED)
+async def track_resume_download(req: HeartbeatRequest):
+    """Tracks resume download events."""
+    RESUME_DOWNLOADS.labels(session_id=req.session_id).inc()
+    return {"status": "accepted"}
+
+@app.post("/api/v1/project-view", status_code=status.HTTP_202_ACCEPTED)
+async def track_project_view(req: HeartbeatRequest, project: str = ""):
+    """Tracks project case study views."""
+    PROJECT_VIEWS.labels(project=project or "unknown", session_id=req.session_id).inc()
+    return {"status": "accepted"}
 
 @app.get("/api/v1/health")
 async def health_check():
@@ -484,6 +582,18 @@ ADAPT YOUR TONE AND FOCUS BASED ON USER ENGAGEMENT:
             # Observe latency
             LLM_LATENCY.observe(time.time() - start_llm)
             response_text = completion.choices[0].message.content.strip()
+            
+            # Track token usage and cost
+            usage = getattr(completion, 'usage', None)
+            if usage:
+                prompt_tokens = getattr(usage, 'prompt_tokens', 0)
+                completion_tokens = getattr(usage, 'completion_tokens', 0)
+                CHATBOT_INPUT_TOKENS.labels(session_id=request.session_id, model=model_name).inc(prompt_tokens)
+                CHATBOT_OUTPUT_TOKENS.labels(session_id=request.session_id, model=model_name).inc(completion_tokens)
+                
+                cost_cfg = COST_PER_MODEL.get(model_name, COST_PER_MODEL["gpt-4o-mini"])
+                cost_usd = (prompt_tokens * cost_cfg["input"] + completion_tokens * cost_cfg["output"]) / 1_000_000
+                CHATBOT_COST_USD.labels(session_id=request.session_id, model=model_name).inc(cost_usd)
             
             # Save new turn to session history
             if request.session_id not in chat_history:

@@ -2,6 +2,7 @@ import './style.css';
 import './modules/chatbot/chatbot.css';
 import { portfolioConfig } from './data/portfolio-config.js';
 import { setupPortfolioChatbot } from './modules/chatbot/chatbot-ui.js';
+import { getTracker } from './modules/tracking/tracker.js';
 
 window.portfolioConfig = portfolioConfig;
 
@@ -36,6 +37,11 @@ function toggleTheme() {
     localStorage.setItem('theme', 'dark');
   }
   syncAllToggles();
+  
+  // Re-render dashboard charts immediately when switching modes to update colors
+  if (window.location.hash === '#dashboard') {
+    renderCharts();
+  }
 }
 
 function setupThemeToggle() {
@@ -698,20 +704,21 @@ function setupTracking() {
     });
   });
 
-  // 2. Scroll depth tracking listener
+  // 2. Scroll depth tracking at 25%, 50%, 75%, 100%
+  const scrollThresholds = [25, 50, 75, 100];
+  const scrollReached = new Set();
+
   window.addEventListener('scroll', () => {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
     const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
     if (docHeight <= 0) return;
     const scrollPercent = (scrollTop / docHeight) * 100;
 
-    if (scrollPercent >= 50 && !scrolled50) {
-      scrolled50 = true;
-      trackEvent('scroll_depth', { percent: 50 });
-    }
-    if (scrollPercent >= 90 && !scrolled90) {
-      scrolled90 = true;
-      trackEvent('scroll_depth', { percent: 90 });
+    for (const threshold of scrollThresholds) {
+      if (scrollPercent >= threshold && !scrollReached.has(threshold)) {
+        scrollReached.add(threshold);
+        trackEvent('scroll_depth', { percent: threshold });
+      }
     }
   });
 }
@@ -726,48 +733,179 @@ document.addEventListener('DOMContentLoaded', () => {
   setupProjectFilters();
   setupPortfolioChatbot(portfolioConfig);
   setupRouter();
-  setupTracking();
+  getTracker().init();
 });
 
 const PROMETHEUS = 'http://localhost:9090/api/v1';
+let prometheusOffline = false;
+
+// Mock database results generator for Prometheus offline/sandbox mode
+function getMockQueryResult(query) {
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (query.includes('chatbot_queries_total') && query.includes('by (category)')) {
+    return [
+      { metric: { category: 'RAG Retrieval' }, value: [nowSec, '342'] },
+      { metric: { category: 'General Info' }, value: [nowSec, '215'] },
+      { metric: { category: 'Skills Audit' }, value: [nowSec, '188'] },
+      { metric: { category: 'Project Detail' }, value: [nowSec, '294'] },
+      { metric: { category: 'Chitchat' }, value: [nowSec, '87'] }
+    ];
+  }
+  if (query.includes('chatbot_queries_total')) {
+    return [{ value: [nowSec, '1126'] }];
+  }
+  if (query.includes('api_requests_total') && query.includes('by (endpoint)')) {
+    return [
+      { metric: { endpoint: '/api/v1/chat' }, value: [nowSec, '1126'] },
+      { metric: { endpoint: '/api/v1/track' }, value: [nowSec, '3482'] },
+      { metric: { endpoint: '/api/v1/health' }, value: [nowSec, '829'] },
+      { metric: { endpoint: '/api/v1/projects' }, value: [nowSec, '512'] }
+    ];
+  }
+  if (query.includes('api_requests_total') && query.includes('by (status)')) {
+    return [
+      { metric: { status: '200' }, value: [nowSec, '5624'] },
+      { metric: { status: '201' }, value: [nowSec, '210'] },
+      { metric: { status: '400' }, value: [nowSec, '12'] },
+      { metric: { status: '500' }, value: [nowSec, '3'] }
+    ];
+  }
+  if (query.includes('api_requests_total')) {
+    return [{ value: [nowSec, '5849'] }];
+  }
+  return [];
+}
+
+function getMockRangeResult(query) {
+  const points = 12; 
+  const result = [];
+  const now = Math.floor(Date.now() / 1000);
+  
+  if (query.includes('api_requests_total')) {
+    const values = [];
+    for (let i = points - 1; i >= 0; i--) {
+      const time = now - i * 300;
+      const rate = 15 + Math.sin(i / 2) * 8 + Math.random() * 4;
+      values.push([time, rate.toString()]);
+    }
+    result.push({ metric: {}, values });
+  } else if (query.includes('api_request_duration_seconds_bucket')) {
+    const isP95 = query.includes('0.95');
+    const values = [];
+    for (let i = points - 1; i >= 0; i--) {
+      const time = now - i * 300;
+      const base = isP95 ? 0.18 : 0.04;
+      const val = base + Math.random() * (isP95 ? 0.05 : 0.015);
+      values.push([time, val.toString()]);
+    }
+    result.push({ metric: {}, values });
+  } else if (query.includes('chatbot_llm_duration_seconds')) {
+    const values = [];
+    for (let i = points - 1; i >= 0; i--) {
+      const time = now - i * 300;
+      const val = 1.6 + Math.sin(i / 3) * 0.3 + Math.random() * 0.4;
+      values.push([time, val.toString()]);
+    }
+    result.push({ metric: {}, values });
+  }
+  return result;
+}
+
+function updateConnectionStatus(isOnline) {
+  const badge = document.getElementById('prometheus-badge');
+  const pulse = document.getElementById('prometheus-pulse');
+  const text = document.getElementById('prometheus-status-text');
+  if (!badge) return;
+
+  if (isOnline) {
+    badge.className = 'skill-tag px-3 py-1.5 bg-green-500/10 text-green-600 dark:text-green-400 rounded-full text-sm font-medium inline-flex items-center gap-1.5';
+    if (pulse) pulse.className = 'w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse';
+    if (text) text.textContent = 'Prometheus Live Connected';
+  } else {
+    badge.className = 'skill-tag px-3 py-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full text-sm font-medium inline-flex items-center gap-1.5';
+    if (pulse) pulse.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse';
+    if (text) text.textContent = 'Telemetry Simulated (Sandbox)';
+  }
+}
 
 async function promQuery(query) {
-  const res = await fetch(`${PROMETHEUS}/query?query=${encodeURIComponent(query)}`);
-  const json = await res.json();
-  return json.data?.result || [];
+  try {
+    const res = await fetch(`${PROMETHEUS}/query?query=${encodeURIComponent(query)}`);
+    if (!res.ok) throw new Error('Prometheus response error');
+    const json = await res.json();
+    prometheusOffline = false;
+    updateConnectionStatus(true);
+    return json.data?.result || [];
+  } catch (err) {
+    prometheusOffline = true;
+    updateConnectionStatus(false);
+    return getMockQueryResult(query);
+  }
 }
 
 async function promRange(query, step = '5m') {
-  const res = await fetch(`${PROMETHEUS}/query_range?query=${encodeURIComponent(query)}&start=${Math.floor(Date.now()/1000)-3600}&end=${Math.floor(Date.now()/1000)}&step=${step}`);
-  const json = await res.json();
-  return json.data?.result || [];
+  try {
+    const res = await fetch(`${PROMETHEUS}/query_range?query=${encodeURIComponent(query)}&start=${Math.floor(Date.now()/1000)-3600}&end=${Math.floor(Date.now()/1000)}&step=${step}`);
+    if (!res.ok) throw new Error('Prometheus response error');
+    const json = await res.json();
+    prometheusOffline = false;
+    updateConnectionStatus(true);
+    return json.data?.result || [];
+  } catch (err) {
+    prometheusOffline = true;
+    updateConnectionStatus(false);
+    return getMockRangeResult(query);
+  }
 }
 
 function chartColors() {
   const isDark = document.documentElement.classList.contains('dark');
+  const primary = isDark ? '#cebdff' : '#3730a3';
+  const secondary = isDark ? '#a4c9ff' : '#6366f1';
+  const tertiary = isDark ? '#c4c1fb' : '#4f46e5';
+  const text = isDark ? '#e0e3e5' : '#1e1b4b';
+  const grid = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(30,27,75,0.06)';
+  
   return {
-    text: isDark ? '#e2e8f0' : '#1e293b',
-    grid: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-    primary: '#6366f1',
-    primaryAlpha: 'rgba(99,102,241,0.15)',
+    text,
+    grid,
+    primary,
+    primaryAlpha: isDark ? 'rgba(206,189,255,0.12)' : 'rgba(55,48,163,0.08)',
+    secondary,
+    secondaryAlpha: isDark ? 'rgba(164,201,255,0.12)' : 'rgba(99,102,241,0.08)',
+    tertiary,
+    tertiaryAlpha: isDark ? 'rgba(196,193,251,0.12)' : 'rgba(79,70,229,0.08)',
     green: '#22c55e',
-    greenAlpha: 'rgba(34,197,94,0.15)',
+    greenAlpha: 'rgba(34,197,94,0.12)',
     amber: '#f59e0b',
-    amberAlpha: 'rgba(245,158,11,0.15)',
+    amberAlpha: 'rgba(245,158,11,0.12)',
     rose: '#f43f5e',
-    roseAlpha: 'rgba(244,63,94,0.15)',
+    roseAlpha: 'rgba(244,63,94,0.12)',
     cyan: '#06b6d4',
-    cyanAlpha: 'rgba(6,182,212,0.15)',
+    cyanAlpha: 'rgba(6,182,212,0.12)'
   };
+}
+
+window.myCharts = window.myCharts || {};
+
+function safeRenderChart(canvasId, config) {
+  if (window.myCharts[canvasId]) {
+    window.myCharts[canvasId].destroy();
+  }
+  const el = document.getElementById(canvasId);
+  if (el) {
+    window.myCharts[canvasId] = new Chart(el, config);
+  }
 }
 
 async function initDashboard() {
   await loadDashboardStats();
   await renderCharts();
-  setInterval(async () => {
-    await loadDashboardStats();
-    await renderCharts();
-  }, 30000);
+  
+  if (window.dashboardInterval) {
+    clearInterval(window.dashboardInterval);
+    window.dashboardInterval = null;
+  }
 }
 
 async function loadDashboardStats() {
@@ -786,23 +924,22 @@ async function renderCharts() {
   if (typeof Chart === 'undefined') return;
   const c = chartColors();
 
-  // 1. API Requests Over Time (line chart)
+  // 1. API Traffic Volume (Line Chart)
   const reqResults = await promRange('sum(rate(api_requests_total[5m])) * 60');
-  const reqChart = document.getElementById('chart-requests');
-  if (reqChart && reqResults.length > 0) {
+  if (reqResults.length > 0) {
     const pts = reqResults[0].values;
-    new Chart(reqChart, {
+    safeRenderChart('chart-requests', {
       type: 'line',
       data: {
         labels: pts.map(p => new Date(p[0] * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})),
         datasets: [{
-          label: 'Requests/min',
+          label: 'Requests / min',
           data: pts.map(p => parseFloat(p[1]).toFixed(1)),
           borderColor: c.primary,
           backgroundColor: c.primaryAlpha,
           fill: true,
           tension: 0.4,
-          pointRadius: 0,
+          pointRadius: 2,
           borderWidth: 2,
         }]
       },
@@ -810,12 +947,11 @@ async function renderCharts() {
     });
   }
 
-  // 2. Chat Queries by Category (bar chart)
+  // 2. AI Intent Category (Bar Chart)
   const catResults = await promQuery('sum by (category) (chatbot_queries_total)');
-  const catChart = document.getElementById('chart-categories');
-  if (catChart && catResults.length > 0) {
-    const colors = [c.primary, c.green, c.amber, c.rose, c.cyan];
-    new Chart(catChart, {
+  if (catResults.length > 0) {
+    const colors = [c.primary, c.secondary, c.tertiary, c.cyan, c.green];
+    safeRenderChart('chart-categories', {
       type: 'bar',
       data: {
         labels: catResults.map(r => r.metric.category || 'general'),
@@ -823,98 +959,150 @@ async function renderCharts() {
           label: 'Queries',
           data: catResults.map(r => parseFloat(r.value[1])),
           backgroundColor: catResults.map((_, i) => colors[i % colors.length]),
-          borderRadius: 6,
+          borderRadius: 0,
+          borderWidth: 2,
+          borderColor: c.text
         }]
       },
-      options: chartOpts(c, 'queries', {legend: {display: false}})
+      options: chartOpts(c, 'queries', { plugins: { legend: { display: false } } })
     });
   }
 
-  // 3. Request Latency p50/p95 (line chart)
+  // 3. System Performance Profile (Dual-axis Line Chart: API Latency & LLM Duration)
   const latResults = await promRange('histogram_quantile(0.5, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))');
   const lat95Results = await promRange('histogram_quantile(0.95, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))');
-  const latChart = document.getElementById('chart-latency');
-  if (latChart && latResults.length > 0) {
+  const llmResults = await promRange('sum(rate(chatbot_llm_duration_seconds_sum[5m])) / sum(rate(chatbot_llm_duration_seconds_count[5m]))');
+  
+  if (latResults.length > 0) {
     const pts50 = latResults[0]?.values || [];
     const pts95 = lat95Results[0]?.values || [];
-    new Chart(latChart, {
+    const ptsLlm = llmResults[0]?.values || [];
+    
+    safeRenderChart('chart-latency', {
       type: 'line',
       data: {
         labels: pts50.map(p => new Date(p[0] * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})),
         datasets: [
-          { label: 'p50', data: pts50.map(p => (parseFloat(p[1]) * 1000).toFixed(0)), borderColor: c.green, backgroundColor: c.greenAlpha, fill: false, tension: 0.4, pointRadius: 0, borderWidth: 2 },
-          { label: 'p95', data: pts95.map(p => (parseFloat(p[1]) * 1000).toFixed(0)), borderColor: c.amber, backgroundColor: c.amberAlpha, fill: false, tension: 0.4, pointRadius: 0, borderWidth: 2 },
+          { 
+            label: 'API p50 Latency (L)', 
+            data: pts50.map(p => (parseFloat(p[1]) * 1000).toFixed(0)), 
+            borderColor: c.green, 
+            backgroundColor: c.greenAlpha, 
+            yAxisID: 'y',
+            fill: false, 
+            tension: 0.3, 
+            pointRadius: 2, 
+            borderWidth: 2 
+          },
+          { 
+            label: 'API p95 Latency (L)', 
+            data: pts95.map(p => (parseFloat(p[1]) * 1000).toFixed(0)), 
+            borderColor: c.amber, 
+            backgroundColor: c.amberAlpha, 
+            yAxisID: 'y',
+            fill: false, 
+            tension: 0.3, 
+            pointRadius: 2, 
+            borderWidth: 2 
+          },
+          { 
+            label: 'Avg LLM Gen Time (R)', 
+            data: ptsLlm.map(p => parseFloat(p[1]).toFixed(2)), 
+            borderColor: c.rose, 
+            backgroundColor: c.roseAlpha, 
+            yAxisID: 'y1',
+            fill: true, 
+            tension: 0.3, 
+            pointRadius: 2, 
+            borderWidth: 2 
+          }
         ]
       },
-      options: chartOpts(c, 'ms')
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: c.text, font: { family: "'JetBrains Mono', monospace", size: 10 } } },
+          tooltip: {
+            backgroundColor: c.text === '#e0e3e5' ? '#16191b' : '#ffffff',
+            titleColor: c.text === '#e0e3e5' ? '#ffffff' : '#16191b',
+            bodyColor: c.text === '#e0e3e5' ? '#e0e3e5' : '#16191b',
+            borderColor: c.grid,
+            borderWidth: 1,
+            cornerRadius: 0
+          }
+        },
+        scales: {
+          x: { ticks: { color: c.text, font: { size: 9 } }, grid: { color: c.grid } },
+          y: { 
+            type: 'linear',
+            position: 'left',
+            ticks: { color: c.text, font: { size: 9 }, callback: v => `${v} ms` },
+            grid: { color: c.grid } 
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            ticks: { color: c.text, font: { size: 9 }, callback: v => `${v}s` },
+            grid: { drawOnChartArea: false }
+          }
+        }
+      }
     });
   }
 
-  // 4. LLM Response Time (line chart)
-  const llmResults = await promRange('sum(rate(chatbot_llm_duration_seconds_sum[5m])) / sum(rate(chatbot_llm_duration_seconds_count[5m]))');
-  const llmChart = document.getElementById('chart-llm');
-  if (llmChart && llmResults.length > 0) {
-    const pts = llmResults[0].values;
-    new Chart(llmChart, {
-      type: 'line',
-      data: {
-        labels: pts.map(p => new Date(p[0] * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})),
-        datasets: [{
-          label: 'Avg LLM Latency',
-          data: pts.map(p => parseFloat(p[1]).toFixed(2)),
-          borderColor: c.rose,
-          backgroundColor: c.roseAlpha,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 0,
-          borderWidth: 2,
-        }]
-      },
-      options: chartOpts(c, 'seconds')
-    });
-  }
-
-  // 5. Requests by Endpoint (horizontal bar)
-  const epResults = await promQuery('sum by (endpoint) (api_requests_total)');
-  const epChart = document.getElementById('chart-endpoints');
-  if (epChart && epResults.length > 0) {
-    const colors = [c.primary, c.green, c.amber, c.rose, c.cyan];
-    new Chart(epChart, {
-      type: 'bar',
-      data: {
-        labels: epResults.map(r => r.metric.endpoint || '/'),
-        datasets: [{
-          label: 'Total Requests',
-          data: epResults.map(r => parseFloat(r.value[1])),
-          backgroundColor: epResults.map((_, i) => colors[i % colors.length]),
-          borderRadius: 6,
-        }]
-      },
-      options: chartOpts(c, 'requests', {legend: {display: false}, indexAxis: 'y'})
-    });
-  }
-
-  // 6. Requests by Status Code (doughnut)
+  // 4. Requests by Status Code (Doughnut)
   const statusResults = await promQuery('sum by (status) (api_requests_total)');
-  const statusChart = document.getElementById('chart-status');
-  if (statusChart && statusResults.length > 0) {
-    const colors = [c.green, c.amber, c.rose, c.primary, c.cyan];
-    new Chart(statusChart, {
+  if (statusResults.length > 0) {
+    const colors = [c.green, c.secondary, c.amber, c.rose];
+    safeRenderChart('chart-status', {
       type: 'doughnut',
       data: {
-        labels: statusResults.map(r => r.metric.status || 'unknown'),
+        labels: statusResults.map(r => `HTTP ${r.metric.status || 'unknown'}`),
         datasets: [{
           data: statusResults.map(r => parseFloat(r.value[1])),
           backgroundColor: statusResults.map((_, i) => colors[i % colors.length]),
-          borderWidth: 0,
+          borderWidth: 2,
+          borderColor: c.text
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        aspectRatio: 2,
         plugins: {
-          legend: { position: 'right', labels: { color: c.text, font: { family: "'JetBrains Mono', monospace", size: 11 } } }
+          legend: { 
+            position: 'bottom', 
+            labels: { color: c.text, font: { family: "'JetBrains Mono', monospace", size: 9 }, boxWidth: 12 } 
+          }
+        }
+      }
+    });
+  }
+
+  // 5. Requests by Endpoint (Horizontal Bar)
+  const epResults = await promQuery('sum by (endpoint) (api_requests_total)');
+  if (epResults.length > 0) {
+    const colors = [c.primary, c.secondary, c.tertiary, c.cyan];
+    safeRenderChart('chart-endpoints', {
+      type: 'bar',
+      data: {
+        labels: epResults.map(r => r.metric.endpoint || '/'),
+        datasets: [{
+          label: 'Requests',
+          data: epResults.map(r => parseFloat(r.value[1])),
+          backgroundColor: epResults.map((_, i) => colors[i % colors.length]),
+          borderWidth: 2,
+          borderColor: c.text
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: c.text, font: { size: 8 } }, grid: { color: c.grid } },
+          y: { ticks: { color: c.text, font: { size: 8 } }, grid: { color: c.grid } }
         }
       }
     });
@@ -925,22 +1113,21 @@ function chartOpts(c, unit, extra = {}) {
   return {
     responsive: true,
     maintainAspectRatio: false,
-    aspectRatio: 2,
     plugins: {
-      legend: { labels: { color: c.text, font: { family: "'JetBrains Mono', monospace", size: 11 } } },
+      legend: { labels: { color: c.text, font: { family: "'JetBrains Mono', monospace", size: 10 } } },
       tooltip: {
-        backgroundColor: c.text === '#e2e8f0' ? '#1e293b' : '#ffffff',
-        titleColor: c.text === '#e2e8f0' ? '#ffffff' : '#1e293b',
-        bodyColor: c.text === '#e2e8f0' ? '#e2e8f0' : '#1e293b',
+        backgroundColor: c.text === '#e0e3e5' ? '#16191b' : '#ffffff',
+        titleColor: c.text === '#e0e3e5' ? '#ffffff' : '#16191b',
+        bodyColor: c.text === '#e0e3e5' ? '#e0e3e5' : '#16191b',
         borderColor: c.grid,
         borderWidth: 1,
-        cornerRadius: 8,
+        cornerRadius: 0
       },
       ...extra.plugins || {}
     },
     scales: {
-      x: { ticks: { color: c.text, font: { size: 10 }, maxRotation: 45 }, grid: { color: c.grid } },
-      y: { beginAtZero: true, ticks: { color: c.text, font: { size: 10 }, callback: v => `${v} ${unit}` }, grid: { color: c.grid } },
+      x: { ticks: { color: c.text, font: { size: 9 } }, grid: { color: c.grid } },
+      y: { beginAtZero: true, ticks: { color: c.text, font: { size: 9 }, callback: v => `${v} ${unit}` }, grid: { color: c.grid } },
     },
     ...extra
   };
