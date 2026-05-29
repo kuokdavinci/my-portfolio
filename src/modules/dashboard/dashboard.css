@@ -346,3 +346,107 @@
   font-family: 'JetBrains Mono', monospace;
   color: #e0e3e5;
 }
+
+/* ── Infrastructure Health Section ──────────────────────── */
+
+/* Container Resources — 3 mini charts */
+.container-resources-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 8px 0;
+}
+
+@media (max-width: 768px) {
+  .container-resources-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.container-mini-chart {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  padding: 12px;
+  text-align: center;
+}
+
+.container-mini-title {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(224, 227, 229, 0.5);
+  margin-bottom: 8px;
+}
+
+.container-mini-canvas {
+  height: 60px;
+  width: 100%;
+}
+
+.container-mini-value {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: #e0e3e5;
+  margin-top: 4px;
+}
+
+/* Deployment Timeline */
+.timeline {
+  position: relative;
+  padding-left: 24px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.timeline-event {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.timeline-event::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid rgba(22, 25, 27, 0.8);
+}
+
+.timeline-event.error::before {
+  background: #f43f5e;
+}
+
+.timeline-timestamp {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.timeline-label {
+  font-size: 13px;
+  color: #e0e3e5;
+  margin-top: 2px;
+}
+
+.timeline-placeholder {
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  color: rgba(224, 227, 229, 0.4);
+  font-style: italic;
+  padding: 16px 0;
+}
