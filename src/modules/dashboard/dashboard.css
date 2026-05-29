@@ -269,3 +269,80 @@
   color: #e0e3e5;
   white-space: nowrap;
 }
+
+/* ── AI Observability Section ───────────────────────────── */
+
+.ai-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.ai-section .chart-section:last-child {
+  grid-column: 1 / -1;
+  max-width: 50%;
+  justify-self: center;
+}
+
+@media (max-width: 768px) {
+  .ai-section {
+    grid-template-columns: 1fr;
+  }
+  .ai-section .chart-section:last-child {
+    max-width: 100%;
+  }
+}
+
+/* Cost Card */
+.cost-card {
+  background: rgba(22, 25, 27, 0.9);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.cost-total {
+  font-size: 36px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: #22c55e;
+}
+
+.cost-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.cost-item {
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #e0e3e5;
+}
+
+.cost-item-label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Gauge Chart */
+.gauge-container {
+  position: relative;
+  width: 200px;
+  height: 120px;
+  margin: 0 auto;
+}
+
+.gauge-value {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: #e0e3e5;
+}

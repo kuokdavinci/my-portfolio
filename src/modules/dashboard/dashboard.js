@@ -9,9 +9,11 @@
 
 import { renderSystemOverview } from './sections/system-overview.js';
 import { renderUserBehavior } from './sections/user-behavior.js';
+import { renderAIObservability } from './sections/ai-observability.js';
 
 let systemOverviewHandle = null;
 let userBehaviorHandle = null;
+let aiObservabilityHandle = null;
 let isInitialized = false;
 
 /**
@@ -58,6 +60,12 @@ export async function initDashboard() {
   contentEl.appendChild(behaviorContainer);
   userBehaviorHandle = await renderUserBehavior(behaviorContainer);
 
+  // Render AI Observability
+  const aiContainer = document.createElement('div');
+  aiContainer.style.marginTop = '24px';
+  contentEl.appendChild(aiContainer);
+  aiObservabilityHandle = await renderAIObservability(aiContainer);
+
   isInitialized = true;
 }
 
@@ -71,6 +79,9 @@ export async function refreshDashboard() {
   if (userBehaviorHandle && typeof userBehaviorHandle.refresh === 'function') {
     await userBehaviorHandle.refresh();
   }
+  if (aiObservabilityHandle && typeof aiObservabilityHandle.refresh === 'function') {
+    await aiObservabilityHandle.refresh();
+  }
 }
 
 /**
@@ -83,6 +94,9 @@ export function stopDashboard() {
   }
   if (userBehaviorHandle && typeof userBehaviorHandle.stop === 'function') {
     userBehaviorHandle.stop();
+  }
+  if (aiObservabilityHandle && typeof aiObservabilityHandle.stop === 'function') {
+    aiObservabilityHandle.stop();
   }
   isInitialized = false;
 }

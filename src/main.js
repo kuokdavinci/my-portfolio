@@ -759,6 +759,18 @@ function getMockQueryResult(query) {
   if (query.includes('chatbot_queries_total')) {
     return [{ value: [nowSec, '1126'] }];
   }
+  if (query.includes('chatbot_cost_usd_total') && !query.includes('rate(')) {
+    return [{ value: [nowSec, '12.47'] }];
+  }
+  if (query.includes('chatbot_cost_usd_total') && query.includes('rate(')) {
+    return [{ value: [nowSec, '0.52'] }];
+  }
+  if (query.includes('cache_hits_total')) {
+    return [{ value: [nowSec, '847'] }];
+  }
+  if (query.includes('cache_misses_total')) {
+    return [{ value: [nowSec, '279'] }];
+  }
   if (query.includes('api_requests_total') && query.includes('by (endpoint)')) {
     return [
       { metric: { endpoint: '/api/v1/chat' }, value: [nowSec, '1126'] },
@@ -809,6 +821,22 @@ function getMockRangeResult(query) {
     for (let i = points - 1; i >= 0; i--) {
       const time = now - i * 300;
       const val = 1.6 + Math.sin(i / 3) * 0.3 + Math.random() * 0.4;
+      values.push([time, val.toString()]);
+    }
+    result.push({ metric: {}, values });
+  } else if (query.includes('chatbot_input_tokens_total')) {
+    const values = [];
+    for (let i = points - 1; i >= 0; i--) {
+      const time = now - i * 300;
+      const val = 12000 + Math.sin(i / 2) * 3000 + Math.random() * 1000;
+      values.push([time, val.toString()]);
+    }
+    result.push({ metric: {}, values });
+  } else if (query.includes('chatbot_output_tokens_total')) {
+    const values = [];
+    for (let i = points - 1; i >= 0; i--) {
+      const time = now - i * 300;
+      const val = 8000 + Math.sin(i / 2.5) * 2000 + Math.random() * 800;
       values.push([time, val.toString()]);
     }
     result.push({ metric: {}, values });
