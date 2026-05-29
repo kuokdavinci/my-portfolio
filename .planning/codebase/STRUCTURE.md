@@ -1,233 +1,258 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-05-18
+**Analysis Date:** 2026-05-29
 
 ## Directory Layout
 
 ```
 my-portfolio/
-├── index.html                          # Single-page HTML entry point (355 lines)
-├── package.json                        # Project manifest: Vite 5.2, Tailwind CSS 4
-├── package-lock.json                   # Dependency lock file
-├── vite.config.js                      # Vite build configuration
-├── Plan.md                             # Project planning document
-├── PLAN.md                             # Project planning document (duplicate)
-│
-├── src/                                # Source code
-│   ├── main.js                         # All JavaScript logic (629 lines)
-│   ├── style.css                       # Tailwind CSS + custom styles (650 lines)
-│   └── data/
-│       └── portfolio-config.js         # Portfolio data configuration (286 lines)
-│
-├── dist/                               # Build output (generated)
-│   ├── index.html                      # Processed HTML
+├── index.html                  # Single-page application entry point
+├── src/                        # Frontend source code
+│   ├── main.js                 # Application entry point (655 lines)
+│   ├── style.css               # Tailwind CSS + custom theme (880 lines)
+│   ├── data/
+│   │   └── portfolio-config.js # Portfolio content configuration (412 lines)
+│   ├── modules/
+│   │   └── chatbot/
+│   │       ├── chatbot-ui.js   # Chatbot UI component (332 lines)
+│   │       ├── chatbot-rag.js  # Local RAG fallback engine (174 lines)
+│   │       └── chatbot.css     # Chatbot component styles (361 lines)
 │   └── assets/
-│       ├── main-DiJXqv24.js            # Bundled + minified JavaScript
-│       └── main-Dmkhsl9G.css           # Processed + minified CSS
-│
-├── node_modules/                       # Dependencies (generated)
-│
-├── stitch_indigo_pastel_personal_portfolio/  # Stitch design explorations
-│   ├── d_n_backend_ai_portfolio/       # Vietnamese: "Backend AI portfolio"
-│   ├── d_n_portfolio_h_ng_ph_n/        # Vietnamese: "Portfolio components"
-│   ├── d_n_portfolio/                  # Vietnamese: "Portfolio"
-│   ├── indigo_logic/                   # English design variant
-│   ├── indigo_peony_logic/             # English design variant
-│   ├── indigo_peony/                   # English design variant
-│   ├── li_n_h_backend_ai_portfolio/    # Vietnamese: "Contact backend AI portfolio"
-│   ├── li_n_h_portfolio_h_ng_ph_n/     # Vietnamese: "Contact portfolio components"
-│   ├── li_n_h_portfolio/               # Vietnamese: "Contact portfolio"
-│   ├── trang_ch_backend_ai_portfolio/  # Vietnamese: "Homepage backend AI portfolio"
-│   ├── trang_ch_portfolio_h_ng_ph_n/   # Vietnamese: "Homepage portfolio components"
-│   ├── trang_ch_portfolio/             # Vietnamese: "Homepage portfolio"
-│   ├── v_t_i_backend_ai_portfolio/     # Vietnamese: "About me backend AI portfolio"
-│   ├── v_t_i_portfolio_h_ng_ph_n/      # Vietnamese: "About me portfolio components"
-│   └── v_t_i_portfolio/                # Vietnamese: "About me portfolio"
-│
-├── .agent/                             # AI agent configuration
-│   ├── ARCHITECTURE.md                 # Agent architecture documentation
-│   ├── mcp_config.json                 # MCP server configuration
-│   ├── .shared/                        # Shared agent resources
-│   ├── agents/                         # Agent definitions (20 specialist agents)
-│   ├── rules/                          # Agent rules
-│   ├── scripts/                        # Agent scripts
-│   ├── skills/                         # Agent skills
-│   └── workflows/                      # Agent workflows
-│
-├── .planning/                          # GSD planning documents
-│   └── codebase/                       # Codebase analysis output
-│       ├── ARCHITECTURE.md             # Architecture analysis (this project)
-│       └── STRUCTURE.md                # Structure analysis (this project)
-│
-└── .codex/                             # Codex configuration
+│       └── portfolio/          # Background images (light/dark mode)
+├── backend/                    # FastAPI backend service
+│   ├── main.py                 # API gateway + chat + tracking (507 lines)
+│   ├── requirements.txt        # Python dependencies
+│   ├── Dockerfile              # Backend container build
+│   ├── retrieval_boost.py      # Query routing & RAG boost rules (394 lines)
+│   ├── test_chat_integration.py
+│   ├── test_tdd_rag.py
+│   ├── data/                   # Runtime data (SQLite DB, Parquet)
+│   ├── feature_store/
+│   │   ├── feature_store.yaml  # Feast configuration
+│   │   ├── features.py         # Entity + FeatureView definitions
+│   │   └── data/               # Feast registry + offline store
+│   └── pipeline/
+│       ├── ingestion_flow.py   # Prefect ETL: SQLite → Parquet (141 lines)
+│       ├── materialize_feast.py # Feast: Parquet → Redis (26 lines)
+│       └── test_feast_retrieval.py
+├── scripts/                    # Setup and utility scripts
+│   ├── setup_qdrant.py         # Knowledge ingestion to Qdrant (318 lines)
+│   └── test_retrieval.py
+├── knowledge_base/             # Markdown source for RAG knowledge
+│   ├── personal.md             # Profile, education, experience, skills
+│   ├── edurag_pj.md            # EduRAG project documentation
+│   ├── movie_ticket_pj.md      # Movie ticket project documentation
+│   ├── attendance_pj.md        # Attendance app project documentation
+│   └── template.md             # Template for new project docs
+├── prometheus/                 # Prometheus configuration
+│   └── prometheus.yml          # Scrape configs (api-gateway job)
+├── grafana/                    # Grafana provisioning
+│   └── provisioning/
+│       ├── datasources/
+│       │   └── datasource.yml  # Prometheus datasource
+│       └── dashboards/
+│           ├── dashboards.yml  # Dashboard provider config
+│           └── visitor_analytics.json
+├── docker-compose.yml          # All service orchestration (8 services)
+├── Dockerfile                  # Frontend multi-stage build (Node → Nginx)
+├── package.json                # Frontend dependencies (Vite + Tailwind)
+├── vite.config.js              # Vite build configuration
+├── pyproject.toml              # Python project manifest (minimal)
+├── .env                        # Environment variables (secrets)
+├── dist/                       # Build output (generated)
+└── node_modules/               # Frontend dependencies (generated)
 ```
 
 ## Directory Purposes
 
-**Root Level:**
-- Purpose: Project entry point, configuration, and documentation
-- Contains: `index.html` (HTML source), `package.json` (dependencies), `vite.config.js` (build config), planning docs
+### `src/` — Frontend Application
+- **Purpose:** Single-page portfolio website with embedded AI chatbot
+- **Contains:** ES module JavaScript, CSS with Tailwind, static HTML
+- **Key files:**
+  - `src/main.js` — Application orchestrator: theme, routing, tracking, animations, chatbot setup
+  - `src/style.css` — Complete design system: Tokyo Night dark theme, Material Design 3 color tokens, component classes
+  - `src/data/portfolio-config.js` — Single source of truth for all portfolio content
 
-**`src/`:**
-- Purpose: All source code for the portfolio application
-- Contains: `main.js` (JavaScript), `style.css` (CSS), `data/` (configuration data)
-- Key files: `src/main.js`, `src/style.css`, `src/data/portfolio-config.js`
+### `src/modules/chatbot/` — Chatbot Feature Module
+- **Purpose:** AI RAG chatbot widget (self-contained feature)
+- **Contains:** UI component, local RAG engine, component styles
+- **Pattern:** Co-located JS + CSS for a single feature module
+- **Key files:**
+  - `chatbot-ui.js` — DOM-based chat UI, API communication, streaming responses
+  - `chatbot-rag.js` — Local fallback: token-based knowledge retrieval (no backend needed)
+  - `chatbot.css` — Component-scoped styles under `@layer components`
 
-**`src/data/`:**
-- Purpose: Centralized portfolio content configuration
-- Contains: `portfolio-config.js` — single exported `portfolioConfig` object
-- Key files: `src/data/portfolio-config.js`
+### `src/data/` — Configuration Data
+- **Purpose:** Centralized portfolio content
+- **Contains:** Single `portfolio-config.js` exporting all portfolio data
+- **Pattern:** JavaScript module with named export, consumed by both UI rendering and local RAG
 
-**`dist/`:**
-- Purpose: Production build output (generated by `npm run build`)
-- Contains: Optimized `index.html`, hashed asset files in `assets/`
-- Generated: Yes — do not edit manually
-- Committed: Yes (present in repository)
+### `src/assets/` — Static Assets
+- **Purpose:** Background images for light/dark themes
+- **Contains:** `portfolio/` subdirectory with theme-specific images
 
-**`stitch_indigo_pastel_personal_portfolio/`:**
-- Purpose: Stitch AI design exploration outputs — visual design variants
-- Contains: 15 subdirectories with design variants in English and Vietnamese
-- Generated: Yes — by Stitch AI design tool
-- Committed: Yes (present in repository)
+### `backend/` — FastAPI API Gateway
+- **Purpose:** Backend service for tracking events and AI chatbot
+- **Contains:** API routes, AI service orchestration, retrieval logic, data pipeline
+- **Key files:**
+  - `main.py` — FastAPI app with `/api/v1/track`, `/api/v1/chat`, `/metrics`, `/api/v1/health`
+  - `retrieval_boost.py` — Query routing, boost rules, parent-child chunk merging
 
-**`.agent/`:**
-- Purpose: AI agent ecosystem configuration for the GSD (Goal-Driven Development) framework
-- Contains: 20 specialist agent definitions, MCP config, rules, scripts, skills, workflows
-- Key files: `.agent/agents/orchestrator.md`, `.agent/mcp_config.json`
+### `backend/feature_store/` — Feast Feature Store
+- **Purpose:** Session feature definitions and configuration for personalization
+- **Contains:** Feast YAML config, Python feature definitions
+- **Key files:**
+  - `feature_store.yaml` — Project config, Redis online store connection
+  - `features.py` — Entity (`session_id`), FeatureView (`session_features`)
 
-**`.planning/`:**
-- Purpose: GSD planning and codebase analysis output
-- Contains: `codebase/` directory with analysis markdown files
-- Generated: Yes — by `/gsd-map-codebase` command
+### `backend/pipeline/` — Data Pipeline
+- **Purpose:** ETL flow transforming raw events to session features
+- **Contains:** Prefect flows, Feast materialization
+- **Key files:**
+  - `ingestion_flow.py` — Extract (SQLite) → Transform (engagement scoring) → Load (Parquet)
+  - `materialize_feast.py` — Push features from Parquet to Redis online store
+
+### `backend/data/` — Runtime Data Storage
+- **Purpose:** Local data files created at runtime
+- **Contains:** SQLite tracking database, Parquet feature files, Feast registry
+- **Note:** Generated directory, not committed to git
+
+### `scripts/` — Setup and Utility Scripts
+- **Purpose:** One-time setup and testing scripts
+- **Contains:** Qdrant knowledge ingestion, retrieval testing
+- **Key files:**
+  - `setup_qdrant.py` — Parses markdown, generates embeddings, populates Qdrant
+
+### `knowledge_base/` — RAG Knowledge Source
+- **Purpose:** Markdown documents that form the chatbot's knowledge base
+- **Contains:** Personal profile + project documentation
+- **Pattern:** `personal.md` for profile data, `*_pj.md` for project docs, `template.md` for new projects
+
+### `prometheus/` and `grafana/` — Observability
+- **Purpose:** Monitoring configuration
+- **Contains:** Prometheus scrape config, Grafana datasource and dashboard provisioning
 
 ## Key File Locations
 
-**Entry Points:**
-- `index.html`: HTML document with semantic sections (header, hero, journey, projects, skills, footer)
-- `src/main.js`: JavaScript entry — loaded as ES module via `<script type="module">`
-- `src/style.css`: CSS entry — imported by `main.js`, processed by Vite + Tailwind plugin
+### Entry Points
+- `index.html`: HTML entry point, loads `src/main.js` as ES module
+- `src/main.js`: JavaScript entry point, initializes all application features
+- `backend/main.py`: FastAPI application entry, served on port 8000
+- `scripts/setup_qdrant.py`: Knowledge base ingestion script
 
-**Configuration:**
-- `package.json`: Project name `kuokdavinci-portfolio`, type `module`, scripts: `dev`, `build`, `preview`
-- `vite.config.js`: Vite config with `@tailwindcss/vite` plugin, single entry `index.html`
+### Configuration
+- `package.json`: Frontend dependencies and npm scripts
+- `vite.config.js`: Vite build config with Tailwind plugin
+- `pyproject.toml`: Python project manifest (minimal, dependencies in `backend/requirements.txt`)
+- `docker-compose.yml`: All 8 service definitions
+- `Dockerfile`: Frontend multi-stage build (Node 20 Alpine → Nginx Alpine)
+- `backend/Dockerfile`: Backend build (Python 3.11 Slim)
+- `.env`: Environment variables (API keys, service hosts)
 
-**Core Logic:**
-- `src/main.js`: 12 functions — `initTheme`, `setupThemeToggle`, `setupMobileMenu`, `setupScrollReveal`, `setupTypingEffect`, `animateCounters`, `setupProjectFilters`, `setupContactForm`, `showToast`, `setupPortfolioChatbot`, plus RAG functions `buildKnowledgeBase`, `retrieveKnowledge`, `generateChatbotAnswer`
-- `src/data/portfolio-config.js`: `portfolioConfig` object with `personalInfo`, `projects` (10 items), `experience` (3 items), `competencies` (4 categories), `techStack` (23 items), `languages` (2 items), `contact`
+### Core Logic
+- `src/main.js`: Frontend application orchestrator (theme, routing, tracking, animations)
+- `src/data/portfolio-config.js`: Portfolio content configuration
+- `backend/main.py`: API gateway, tracking, chat RAG pipeline
+- `backend/retrieval_boost.py`: Query routing and retrieval optimization
+- `src/modules/chatbot/chatbot-ui.js`: Chatbot UI and API communication
+- `src/modules/chatbot/chatbot-rag.js`: Local RAG fallback engine
 
-**Styling:**
-- `src/style.css`: Tailwind `@theme` with 40+ design tokens, `@layer base/components/utilities`, dark mode overrides, RAG chatbot component styles
-
-**Testing:**
-- No test files detected. No testing framework configured.
+### Testing
+- `backend/test_chat_integration.py`: Chat integration tests
+- `backend/test_tdd_rag.py`: RAG TDD tests
+- `backend/pipeline/test_feast_retrieval.py`: Feast retrieval tests
+- `scripts/test_retrieval.py`: Retrieval testing
 
 ## Naming Conventions
 
 **Files:**
-- JavaScript: `kebab-case.js` — `main.js`, `portfolio-config.js`
-- CSS: `kebab-case.css` — `style.css`
-- HTML: lowercase — `index.html`
-- Markdown: `UPPERCASE.md` or `Title-Case.md` — `PLAN.md`, `Plan.md`, `ARCHITECTURE.md`
+- JavaScript: kebab-case (`chatbot-ui.js`, `portfolio-config.js`)
+- Python: snake_case (`retrieval_boost.py`, `ingestion_flow.py`, `setup_qdrant.py`)
+- Markdown: snake_case with `_pj` suffix for projects (`edurag_pj.md`, `movie_ticket_pj.md`)
+- CSS: kebab-case class names (`.rag-chatbot`, `.rag-chat-panel`)
+- Config: standard names (`docker-compose.yml`, `vite.config.js`, `feature_store.yaml`)
 
 **Directories:**
-- `kebab-case` or `snake_case` — `src/`, `node_modules/`, `stitch_indigo_pastel_personal_portfolio/`
-- Dot-prefixed for tooling — `.agent/`, `.planning/`, `.codex/`
+- snake_case for Python-related (`feature_store`, `knowledge_base`)
+- kebab-case for frontend (`chatbot`)
+
+**Functions:**
+- JavaScript: camelCase (`setupPortfolioChatbot`, `trackEvent`, `handleRoute`)
+- Python: snake_case (`detect_boost`, `merge_parent_child`, `run_ingestion_flow`)
 
 **CSS Classes:**
-- BEM-inspired with Tailwind utility classes — `.btn-primary`, `.btn-outline`, `.card-hover`, `.section-title`, `.section-subtitle`
-- Component prefixes for complex widgets — `.rag-chat-*` (chatbot), `.ios-toggle` (theme switch)
-- State classes — `.reveal.visible`, `.ios-toggle.active`
-
-**JavaScript Functions:**
-- `camelCase` with verb prefixes — `initTheme()`, `setupThemeToggle()`, `setupMobileMenu()`, `setupScrollReveal()`, `setupTypingEffect()`, `animateCounters()`, `setupProjectFilters()`, `setupContactForm()`, `showToast()`, `setupPortfolioChatbot()`
-- Utility functions without prefix — `escapeHtml()`, `normalizeText()`, `tokenize()`, `buildKnowledgeBase()`, `retrieveKnowledge()`, `generateChatbotAnswer()`, `addChatMessage()`
-
-## Import/Export Patterns
-
-**ES Modules:**
-- `src/main.js` uses ES module imports:
-  ```javascript
-  import './style.css';
-  import { portfolioConfig } from './data/portfolio-config.js';
-  ```
-- `src/data/portfolio-config.js` uses named export:
-  ```javascript
-  export const portfolioConfig = { ... };
-  ```
-- No barrel files (no `index.js` re-exports)
-- No third-party imports in source code (all dependencies are build-time only)
-
-**Global Exposure:**
-- `window.portfolioConfig = portfolioConfig;` — config attached to global scope for chatbot answer generation
-
-**CSS Import:**
-- `src/style.css` uses Tailwind v4 import:
-  ```css
-  @import "tailwindcss";
-  ```
-- Imported from JS: `import './style.css';` in `main.js`
+- BEM-like with feature prefix: `.rag-chat-*` for chatbot components
+- Utility-first: Tailwind classes for layout and spacing
+- Custom components: `.btn-primary`, `.card-hover`, `.section-title`, `.ios-toggle`
 
 ## Where to Add New Code
 
-**New Portfolio Section:**
-- HTML: Add `<section id="new-section">` in `index.html` within `<main>`, between existing sections
-- Styling: Add component classes in `src/style.css` under appropriate `@layer`
-- JavaScript: Add `setupNewFeature()` function in `src/main.js`, call from `DOMContentLoaded` listener
+### New Frontend Feature (section/page)
+- **HTML structure:** Add section to `index.html` within `<main>`
+- **JavaScript logic:** Add setup function to `src/main.js`, call from `DOMContentLoaded` handler
+- **Styles:** Add to `src/style.css` under appropriate `@layer` (base/components/utilities)
+- **Data:** If content-driven, add to `src/data/portfolio-config.js`
 
-**New Project Entry:**
-- Location: `src/data/portfolio-config.js` → `projects` array
-- Add object with: `id`, `title`, `description`, `tags`, `badge`, `featured`, `codeLink`, `language`
+### New Chatbot Feature
+- **UI changes:** Modify `src/modules/chatbot/chatbot-ui.js`
+- **Local RAG logic:** Modify `src/modules/chatbot/chatbot-rag.js`
+- **Styles:** Add to `src/modules/chatbot/chatbot.css`
 
-**New Skill/Competency:**
-- Location: `src/data/portfolio-config.js` → `competencies` array or `techStack` array
+### New Backend API Endpoint
+- **Route:** Add to `backend/main.py` with Pydantic schema
+- **Metrics:** Add Prometheus Counter/Histogram if needed
+- **Tests:** Add to `backend/test_*.py`
 
-**New CSS Component:**
-- Location: `src/style.css` → `@layer components { ... }` block
-- Pattern: Use design tokens from `@theme` (e.g., `var(--color-primary)`)
+### New RAG Knowledge
+- **Project docs:** Create `knowledge_base/<project_name>_pj.md` following `template.md`
+- **Personal info:** Update `knowledge_base/personal.md`
+- **Re-ingest:** Run `python scripts/setup_qdrant.py` to update Qdrant
 
-**New Utility Function:**
-- Location: `src/main.js` — place near related functions, before `DOMContentLoaded` listener
+### New Boost Rule (query routing)
+- **Location:** `backend/retrieval_boost.py` — add to `BOOST_RULES` list (line 43+)
+- **Also update:** `route_query()` function if new category needed (line 218+)
 
-**New Data Category:**
-- Location: `src/data/portfolio-config.js` — add new property to `portfolioConfig` export
-- Update `buildKnowledgeBase()` in `main.js` if chatbot should reference it
+### New Feast Feature
+- **Definition:** Add to `backend/feature_store/features.py` — extend FeatureView schema
+- **ETL:** Update `backend/pipeline/ingestion_flow.py` — transform function
+- **Chat usage:** Update `backend/main.py` — feature retrieval in chat endpoint
 
-## Build Output Structure
+### New Pipeline Step
+- **Prefect task:** Add `@task` decorated function to `backend/pipeline/ingestion_flow.py`
+- **Flow:** Add task call to `run_ingestion_flow()` function
 
-**`dist/` directory (generated by `npm run build`):**
-```
-dist/
-├── index.html              # HTML with hashed asset references
-└── assets/
-    ├── main-<hash>.js      # Bundled, minified JavaScript
-    └── main-<hash>.css     # Processed, minified CSS (Tailwind purged)
-```
-
-- Asset filenames include content hashes for cache busting
-- `index.html` references assets with hashed paths
-- No source maps detected in current build
+### New Monitoring Dashboard
+- **Dashboard JSON:** Add to `grafana/provisioning/dashboards/`
+- **Datasource:** Modify `grafana/provisioning/datasources/datasource.yml` if needed
 
 ## Special Directories
 
-**`stitch_indigo_pastel_personal_portfolio/`:**
-- Purpose: Stitch AI design exploration outputs — 15 visual design variants
-- Naming: Vietnamese section names (`d_n` = điện/điện tử, `li_n_h` = liên hệ, `trang_ch` = trang chủ, `v_t_i` = về tôi)
-- Generated: Yes — by Stitch AI design tool
-- Committed: Yes — stored in repository
-- Not referenced by build — design reference only
+### `dist/` — Build Output
+- **Purpose:** Vite production build output
+- **Generated:** Yes, by `npm run build`
+- **Committed:** No (in `.gitignore`)
+- **Contents:** Bundled JS, CSS, HTML, assets
 
-**`.agent/`:**
-- Purpose: GSD framework AI agent definitions
-- Contains 20 specialist agents: `backend-specialist.md`, `frontend-specialist.md`, `orchestrator.md`, `qa-automation-engineer.md`, etc.
-- MCP config: `.agent/mcp_config.json` — Model Context Protocol server configuration
-- Not referenced by build — agent tooling only
+### `node_modules/` — Frontend Dependencies
+- **Purpose:** npm packages
+- **Generated:** Yes, by `npm install`
+- **Committed:** No (in `.gitignore`)
 
-**`.planning/codebase/`:**
-- Purpose: Codebase analysis documents generated by `/gsd-map-codebase`
-- Contains: `ARCHITECTURE.md`, `STRUCTURE.md`, and other analysis files
-- Generated: Yes — by GSD mapper agents
-- Referenced by: `/gsd-plan-phase`, `/gsd-execute-phase` commands
+### `backend/data/` — Runtime Data
+- **Purpose:** SQLite tracking database, Parquet feature files, Feast registry
+- **Generated:** Yes, at runtime by backend and pipeline
+- **Committed:** No
+
+### `.planning/` — GSD Planning Artifacts
+- **Purpose:** AI-assisted planning documents
+- **Contains:** STATE.md, ROADMAP.md, phase plans, codebase analysis docs
+- **Committed:** Yes
+
+### `.agent/` — Agent Configuration
+- **Purpose:** AI agent skills, workflows, and role definitions
+- **Contains:** Agent role files, workflow definitions, API pattern guides
+- **Committed:** Yes
 
 ---
 
-*Structure analysis: 2026-05-18*
+*Structure analysis: 2026-05-29*

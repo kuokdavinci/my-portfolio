@@ -1,202 +1,173 @@
 # Architecture
 
-**Analysis Date:** 2026-05-18
+**Analysis Date:** 2026-05-29
 
 ## Pattern Overview
 
-**Overall:** Static single-page application with anchor-based navigation and client-side interactivity.
+**Overall:** Client-server architecture with a static SPA frontend (Vite + vanilla JS) and a FastAPI backend API gateway. The backend acts as an orchestrator for AI/ML services (Qdrant vector DB, OpenAI LLM, Feast feature store) and event streaming (Kafka).
 
 **Key Characteristics:**
-- Vanilla JavaScript with ES modules — no framework or UI library
-- Single `index.html` entry point with semantic HTML sections
-- All JavaScript logic consolidated in `src/main.js` with function-based module separation
-- CSS-driven animations and transitions (Tailwind CSS v4 + custom `@layer` classes)
-- Client-side RAG chatbot with in-memory knowledge base
-- Theme system using CSS class toggling with `localStorage` persistence
+- **Static SPA frontend** — built with Vite, served via Nginx in production, no framework (vanilla JS ES modules)
+- **API Gateway backend** — FastAPI service that routes tracking events and chat queries to downstream services
+- **Event-driven analytics pipeline** — tracking events flow from frontend → backend → Kafka (primary) / SQLite (fallback) → Prefect ETL → Feast feature store → personalized RAG responses
+- **RAG chatbot** — retrieval-augmented generation using Qdrant vector search + OpenAI embeddings + OpenAI/Gemini LLM with rule-based query routing and parent-child chunk merging
+- **Observability stack** — Prometheus metrics scraped from backend, visualized in Grafana dashboards
 
 ## Layers
 
-**Data Layer:**
-- Purpose: Centralized configuration and content source
-- Location: `src/data/portfolio-config.js`
-- Contains: `portfolioConfig` object with `personalInfo`, `projects`, `experience`, `competencies`, `techStack`, `languages`, `contact`
-- Depends on: Nothing (pure data export)
-- Used by: `src/main.js` (imported and attached to `window.portfolioConfig`)
+### Frontend Layer (Presentation)
+- **Purpose:** Portfolio display, user interaction, event tracking, chatbot UI
+- **Location:** `src/` and `index.html`
+- **Contains:** Single-page application with hash-based routing, theme toggle, scroll animations, project filtering, contact form, RAG chatbot widget
+- **Depends on:** Backend API at `http://localhost:8000` for tracking and chat
+- **Used by:** End users (recruiters, visitors)
 
-**Presentation Layer (HTML):**
-- Purpose: Semantic document structure and content
-- Location: `index.html`
-- Contains: `<header>`, `<main>` with sections (`#home`, `#journey`, `#projects`, `#skills`), `<footer>`
-- Depends on: `src/style.css` (styles), `src/main.js` (behavior)
-- Used by: Browser rendering engine
+### API Gateway Layer (Backend)
+- **Purpose:** Receives tracking events, processes chat queries, orchestrates AI services
+- **Location:** `backend/main.py`
+- **Contains:** FastAPI app with `/api/v1/track` and `/api/v1/chat` endpoints, Prometheus middleware, CORS configuration, lifespan management
+- **Depends on:** Qdrant, OpenAI API, Feast/Redis, Kafka, SQLite
+- **Used by:** Frontend SPA
 
-**Styling Layer (CSS):**
-- Purpose: Visual design system with dark/light theming
-- Location: `src/style.css` (650 lines)
-- Contains: Tailwind `@theme` design tokens, `@layer base/components/utilities`, dark mode via `.dark` class selector, custom component classes (`.btn-primary`, `.btn-outline`, `.card-hover`, `.section-title`, `.rag-chatbot`, etc.)
-- Depends on: Tailwind CSS v4 (`@import "tailwindcss"`)
-- Used by: All HTML elements
+### AI/ML Service Layer
+- **Purpose:** Vector search, embedding generation, LLM inference, feature retrieval
+- **Location:** `backend/main.py` (orchestration), `backend/retrieval_boost.py` (routing logic), `scripts/setup_qdrant.py` (knowledge ingestion)
+- **Contains:**
+  - Qdrant vector search with parent-child chunk merging (`backend/retrieval_boost.py`)
+  - OpenAI embedding generation and chat completions
+  - Feast feature store retrieval for session personalization
+  - Rule-based query routing with boost detection
+- **Depends on:** OpenAI API, Qdrant container, Redis (Feast online store)
+- **Used by:** API Gateway `/api/v1/chat` endpoint
 
-**Behavior Layer (JavaScript):**
-- Purpose: Interactive features and animations
-- Location: `src/main.js` (629 lines)
-- Contains: 12 top-level functions organized by feature
-- Depends on: `portfolioConfig` data, DOM APIs, `localStorage`, `IntersectionObserver`
-- Used by: `DOMContentLoaded` event listener
+### Data Pipeline Layer
+- **Purpose:** Transform raw tracking events into session features for personalization
+- **Location:** `backend/pipeline/`
+- **Contains:**
+  - Prefect ETL flow: SQLite → Parquet (`backend/pipeline/ingestion_flow.py`)
+  - Feast materialization: Parquet → Redis (`backend/pipeline/materialize_feast.py`)
+  - Feature definitions: Entity, FeatureView, FileSource (`backend/feature_store/features.py`)
+- **Depends on:** SQLite tracking DB, Parquet files, Redis, Feast
+- **Used by:** Chat endpoint for session feature retrieval
+
+### Infrastructure Layer
+- **Purpose:** Containerized services for data storage, streaming, and observability
+- **Location:** `docker-compose.yml`, `Dockerfile`, `backend/Dockerfile`
+- **Contains:** Qdrant, Redis, Zookeeper, Kafka, Prometheus, Grafana, Backend (FastAPI), Frontend (Nginx)
+- **Used by:** All application layers
 
 ## Data Flow
 
-**Initialization Flow:**
+### Tracking Event Flow
 
-1. Browser loads `index.html`
-2. `<script type="module" src="/src/main.js">` triggers ES module loading
-3. `main.js` imports `./style.css` (triggers CSS processing via Vite + Tailwind plugin)
-4. `main.js` imports `portfolioConfig` from `./data/portfolio-config.js`
-5. `portfolioConfig` is attached to `window.portfolioConfig` for global access
-6. `DOMContentLoaded` fires, triggering the initialization sequence:
-   ```
-   initTheme() → setupThemeToggle() → setupMobileMenu() → setupScrollReveal()
-   → setupTypingEffect() → animateCounters() → setupProjectFilters()
-   → setupPortfolioChatbot()
-   ```
+1. User interacts with portfolio frontend (`src/main.js`)
+2. `trackEvent()` sends POST to `http://localhost:8000/api/v1/track` with session ID, event type, and payload
+3. Backend receives event, immediately returns 202 Accepted
+4. Background task saves event to SQLite (`backend/data/tracking_events.db`)
+5. If Kafka is available, background task also pushes event to `user.activity.raw` topic
+6. Prefect ETL flow (`backend/pipeline/ingestion_flow.py`) runs periodically:
+   - **Extract:** Reads raw events from SQLite
+   - **Transform:** Computes engagement scores, last viewed category, chat count per session
+   - **Load:** Writes features to Parquet file (`backend/data/processed/user_features.parquet`)
+7. Feast materialization (`backend/pipeline/materialize_feast.py`) pushes features from Parquet to Redis online store
+8. Grafana dashboard visualizes metrics from Prometheus
 
-**Theme Data Flow:**
+### Chatbot RAG Flow
 
-1. `initTheme()` reads `localStorage.getItem('theme')` or falls back to `prefers-color-scheme`
-2. Adds/removes `.dark` class on `document.documentElement`
-3. `syncAllToggles()` updates all `.ios-toggle` elements to match state
-4. User clicks toggle → `toggleTheme()` flips class and persists to `localStorage`
+1. User types question in chatbot widget (`src/modules/chatbot/chatbot-ui.js`)
+2. Frontend sends POST to `http://localhost:8000/api/v1/chat` with session ID and message
+3. Backend increments Prometheus `chatbot_queries_total` metric
+4. **Feature retrieval:** Fetches session engagement score, last viewed category, chat count from Feast/Redis
+5. **Query routing:** `route_query()` in `backend/retrieval_boost.py` classifies intent (project, contact, education, skills, etc.)
+6. **Boost detection:** `detect_boost()` matches keywords to Qdrant filter rules
+7. **Embedding:** Generates query embedding via OpenAI `text-embedding-3-small`
+8. **Vector search:** Queries Qdrant `portfolio_knowledge` collection with both general and filtered searches
+9. **Parent-child merge:** `merge_parent_child()` combines results ensuring parent context is included
+10. **LLM generation:** Sends system prompt (with retrieved context + session features) to OpenAI `gpt-4o-mini`
+11. **Response:** Returns answer + filtered source links to frontend
+12. **Fallback:** If LLM unavailable, uses `generate_mock_answer()` with rule-based responses
+13. **Frontend fallback:** If backend API fails entirely, uses local RAG (`src/modules/chatbot/chatbot-rag.js`) with token-based scoring
 
-**RAG Chatbot Data Flow:**
+### Knowledge Ingestion Flow
 
-1. `setupPortfolioChatbot()` builds knowledge base from `portfolioConfig`:
-   - `buildKnowledgeBase(config)` → creates structured chunks from personal info, projects, experience, competencies
-   - Each chunk is tokenized with `tokenize()` and normalized with `normalizeText()`
-2. User submits question → `generateChatbotAnswer(question, knowledgeBase)`
-3. `retrieveKnowledge(question, knowledgeBase)` scores chunks via token matching:
-   - Token overlap scoring (1 point per match)
-   - Title match boost (3 points)
-   - Full phrase match boost (4 points)
-   - Returns top 3 results
-4. Answer generation uses keyword-based routing:
-   - Contact/email queries → direct contact info from config
-   - Project queries → filtered project matches
-   - Skill/tech queries → tech stack from config
-   - AI/ML queries → AI-focused response template
-   - Default → raw context from matched chunks
-5. Response rendered via `addChatMessage()` with DOM element creation
-
-## State Management
-
-**Approach:** DOM-based state with `localStorage` persistence. No global state library.
-
-| State | Storage | Key/Selector |
-|-------|---------|-------------|
-| Theme preference | `localStorage` | `theme` (`'dark'` / `'light'`) |
-| Dark mode active | DOM class | `document.documentElement.classList` (`.dark`) |
-| Toggle UI state | DOM class | `.ios-toggle.active` |
-| Mobile drawer | DOM class | `.mobile-nav-drawer.translate-x-full` |
-| Chat panel visibility | DOM attribute | `panel.hidden` |
-| Counter animation | `setInterval` timer | Local variable per counter |
-| Typing effect | Closure variables | `textIndex`, `charIndex`, `isDeleting` |
-
-**Config on window:** `window.portfolioConfig` provides global read-only access to portfolio data, used by the chatbot's answer generation.
+1. Markdown documents in `knowledge_base/` are parsed by `scripts/setup_qdrant.py`
+2. `personal.md` → parent chunks (one per section: personal_info, education, experience, contact, competencies, skills)
+3. `*_pj.md` files → child chunks (one per `###` subsection, linked to parent by project_id)
+4. Each chunk is embedded via OpenAI and upserted to Qdrant `portfolio_knowledge` collection
+5. Payload includes: category, chunk_level (parent/child), text, metadata (project_id, section, parent_id)
 
 ## Key Abstractions
 
-**Design Token System:**
-- Purpose: Material Design 3-inspired color system
-- Location: `src/style.css` `@theme` block (lines 5-63)
-- Pattern: CSS custom properties with semantic naming (`--color-primary`, `--color-surface-container`, etc.)
-- Examples: 40+ color tokens, 3 font families, 5 radius values, 4 shadow levels
+### Session Management
+- **Purpose:** Track individual visitor sessions for analytics and personalization
+- **Implementation:** UUID-like session ID stored in `sessionStorage` (`src/main.js` line 337-343)
+- **Lifecycle:** Created on first page load, persists until tab close
+- **Used by:** Tracking SDK, chat endpoint, Feast feature retrieval
 
-**Reveal Animation System:**
-- Purpose: Scroll-triggered fade-in animations
-- Location: `src/style.css` `.reveal` / `.stagger-children` classes + `src/main.js` `setupScrollReveal()`
-- Pattern: `IntersectionObserver` adds `.visible` class → CSS transitions handle animation
-- Threshold: 0.1, root margin: `0px 0px -50px 0px`
+### Retrieval Boost Rules
+- **Purpose:** Map natural language queries to Qdrant filter conditions for targeted retrieval
+- **Location:** `backend/retrieval_boost.py` lines 43-179
+- **Pattern:** `BoostRule` dataclass with name, keywords, filter_condition, boost_factor
+- **Categories:** 3 project rules (attendance, movie_ticket, edurag), 7 category rules (contact, education, experience, skills, project, personal_info, competencies)
 
-**Counter Animation:**
-- Purpose: Animated number counting on scroll
-- Location: `src/main.js` `animateCounters()` (lines 256-284)
-- Pattern: `IntersectionObserver` triggers `setInterval` at 16ms (~60fps), unobserves after completion
+### Parent-Child Chunking
+- **Purpose:** Improve RAG recall by maintaining document hierarchy in vector search
+- **Location:** `backend/retrieval_boost.py` lines 320-364, `scripts/setup_qdrant.py` lines 153-278
+- **Strategy:** Parent chunks answer broad queries, child chunks answer specific queries; merge ensures parent context is included when child is matched
 
-**Typing Effect:**
-- Purpose: Rotating text animation
-- Location: `src/main.js` `setupTypingEffect()` (lines 130-171)
-- Pattern: Recursive `setTimeout` with state machine (typing → pause → deleting → next text)
-- Configured via `data-texts` JSON attribute on `.typing-effect` elements
+### Portfolio Configuration
+- **Purpose:** Single source of truth for all portfolio content
+- **Location:** `src/data/portfolio-config.js`
+- **Structure:** Exports `portfolioConfig` object with personalInfo, projects, experience, competencies, techStack, languages, contact
+- **Used by:** Frontend rendering, local chatbot knowledge base builder
 
 ## Entry Points
 
-**HTML Entry:**
-- Location: `index.html`
-- Triggers: Browser navigation
-- Responsibilities: Document structure, semantic sections, external font loading (Google Fonts: Geist, Inter, JetBrains Mono, Material Symbols)
+### Frontend Entry Point
+- **Location:** `index.html` → `/src/main.js`
+- **Triggers:** Browser page load
+- **Responsibilities:** Initialize theme, mobile menu, scroll reveal, typing effects, counters, project filters, chatbot, hash router, tracking SDK
 
-**JavaScript Entry:**
-- Location: `src/main.js` line 620
-- Triggers: `DOMContentLoaded` event
-- Responsibilities: Sequential initialization of all interactive modules
+### Backend Entry Point
+- **Location:** `backend/main.py` → FastAPI app
+- **Triggers:** HTTP requests on port 8000
+- **Responsibilities:** Accept tracking events, process chat queries, expose Prometheus metrics, health checks
 
-**CSS Entry:**
-- Location: `src/style.css`
-- Triggers: Imported by `src/main.js` (line 1)
-- Responsibilities: Tailwind processing, design tokens, component classes, dark mode overrides
+### Knowledge Ingestion Entry Point
+- **Location:** `scripts/setup_qdrant.py`
+- **Triggers:** Manual execution (development/setup)
+- **Responsibilities:** Parse markdown, generate embeddings, populate Qdrant collection
 
-**Build Entry:**
-- Location: `vite.config.js`
-- Triggers: `npm run build`
-- Responsibilities: Resolves `index.html` as single entry, applies Tailwind plugin, outputs to `dist/`
+### ETL Pipeline Entry Point
+- **Location:** `backend/pipeline/ingestion_flow.py` → `run_ingestion_flow()`
+- **Triggers:** Manual or scheduled execution
+- **Responsibilities:** Extract raw events, transform to features, load to Parquet
 
 ## Error Handling
 
-**Strategy:** Defensive DOM queries with early returns, try/catch for async operations, user-facing toast notifications.
+**Strategy:** Graceful degradation with multiple fallback levels
 
 **Patterns:**
-- Null guards: `if (!element) return;` used in `setupMobileMenu()`, `setupContactForm()`, `setupProjectFilters()`
-- Async error handling: `try/catch` in `setupContactForm()` with `showToast()` for user feedback
-- HTML escaping: `escapeHtml()` function prevents XSS in chatbot output (line 320-324)
-- RAG fallback: `generateChatbotAnswer()` returns default message when no knowledge match found
+- **Kafka fallback:** If Kafka broker is unavailable, events are saved to SQLite only (no streaming). Backend starts normally with warning log. (`backend/main.py` lines 68-84)
+- **LLM fallback:** If OpenAI API fails, `generate_mock_answer()` provides rule-based responses based on query category (`backend/main.py` lines 253-277)
+- **Backend API fallback:** If backend is unreachable, frontend chatbot uses local RAG with token-based scoring (`src/modules/chatbot/chatbot-ui.js` lines 285-294)
+- **Feast fallback:** If feature store retrieval fails, engagement defaults to 0, category to "General" (`backend/main.py` lines 321-322)
+- **Qdrant fallback:** If vector search fails, contexts remain empty and mock answer is used (`backend/main.py` lines 407-412)
 
 ## Cross-Cutting Concerns
 
-**Logging:** `console.error()` only — used in `setupContactForm()` catch block (line 216). No logging framework.
+**Logging:** Python `logging` module with INFO level in backend (`backend/main.py` line 37). Frontend uses `console.warn`/`console.error` for non-critical issues.
 
-**Validation:** Client-side only — contact form relies on Formspree endpoint validation. Chatbot input trimmed before processing.
+**Validation:** Pydantic models for API request/response schemas (`TrackingEvent`, `ChatRequest` in `backend/main.py` lines 186-251).
 
-**Accessibility:**
-- `aria-label` on chatbot toggle and panel
-- `aria-expanded` for chat panel state
-- `aria-live="polite"` on chat messages container
-- `aria-controls` linking toggle to panel
-- `sr-only` class for screen-reader-only labels
-- `rel="noopener"` on external links
+**Authentication:** None for portfolio viewing. OpenAI API key required via `OPENAI_API_KEY` environment variable for chat functionality.
 
-**Performance:**
-- `IntersectionObserver` for lazy animations (no scroll event listeners)
-- `requestAnimationFrame` for smooth CSS transitions (drawer open, toast slide-in)
-- CSS transitions over JS animations where possible
-- Single `DOMContentLoaded` listener (no repeated event binding)
+**CORS:** Backend allows all origins (`allow_origins=["*"]`) for local development (`backend/main.py` lines 177-183).
 
-## Design Patterns
+**Session tracking:** UUID-like session IDs generated client-side, stored in `sessionStorage`, sent with every tracking event and chat query.
 
-**Module Pattern:**
-- All functions in `src/main.js` are module-scoped (ES module), not polluting global namespace
-- Only `window.portfolioConfig` is intentionally exposed globally
-
-**Observer Pattern:**
-- `IntersectionObserver` used for scroll reveal (`setupScrollReveal()`) and counter animations (`animateCounters()`)
-- `addEventListener` for user interactions (clicks, form submits)
-
-**Factory Pattern:**
-- DOM element creation via `document.createElement()` in `setupMobileMenu()`, `showToast()`, `setupPortfolioChatbot()`, `addChatMessage()`
-- Template literals used for innerHTML assembly
-
-**Strategy Pattern:**
-- Theme toggle supports multiple strategies: `localStorage` preference, `prefers-color-scheme` media query, manual toggle
-- Chatbot answer generation routes to different strategies based on keyword detection
+**Prometheus metrics:** Middleware tracks request count, latency, and chatbot queries. Exposed at `/metrics` endpoint for Prometheus scraping.
 
 ---
 
-*Architecture analysis: 2026-05-18*
+*Architecture analysis: 2026-05-29*

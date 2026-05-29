@@ -1,191 +1,107 @@
 # Technology Stack
 
-**Analysis Date:** 2026-05-18
+**Analysis Date:** 2026-05-29
 
 ## Languages
 
 **Primary:**
-- **JavaScript (ES2022+)** - All application logic in `src/main.js` (629 lines), using ES modules (`type: "module"` in `package.json`)
-- **HTML5** - Semantic markup in `index.html` (355 lines) with sections: hero, journey, projects, skills, footer
-- **CSS3** - Custom styles in `src/style.css` (650 lines) using Tailwind CSS v4 `@theme` directive
+- JavaScript (ES Modules) - Frontend application code in `src/`
+- Python 3.11 - Backend API service in `backend/` (Dockerfile uses `python:3.11-slim`)
+
+**Secondary:**
+- Python 3.14 - Local development target (`.python-version` specifies 3.14, `pyproject.toml` requires `>=3.14`)
+- HTML/CSS - Portfolio static pages in `index.html` and `src/style.css`
 
 ## Runtime
 
 **Environment:**
-- **Browser** - Client-side only, no server runtime required
-- **ES Modules** - Native browser ESM via `<script type="module">` in `index.html`
+- Node.js 20 - Frontend build stage (`node:20-alpine` in `Dockerfile`)
+- Python 3.11 - Backend runtime (`python:3.11-slim` in `backend/Dockerfile`)
 
-**Package Manager:**
-- **npm** - Standard npm package management
-- Lockfile: `package-lock.json` present
+**Package Managers:**
+- npm - Frontend dependency management (lockfile: `package-lock.json` present)
+- uv - Python dependency management (lockfile: `uv.lock` present)
+- pip - Backend dependency installation via `requirements.txt`
 
 ## Frameworks
 
 **Core:**
-- **Vite 5.2** - Build tool and dev server, configured in `vite.config.js`
-- **Tailwind CSS 4.0** - Utility-first CSS framework with `@tailwindcss/vite` plugin
+- Vite 5.2.0 - Frontend build tool and dev server (`package.json`)
+- FastAPI >=0.110.0 - Backend REST API framework (`backend/requirements.txt`)
+- Tailwind CSS 4.0.0 - Utility-first CSS framework via `@tailwindcss/vite` plugin
+
+**AI/ML:**
+- OpenAI SDK >=1.0.0 - LLM chat completions and embeddings (`backend/requirements.txt`)
+- Qdrant Client >=1.8.0 - Vector database client for RAG retrieval (`backend/requirements.txt`)
+- Feast >=0.34.0 (with Redis) - Feature store for ML personalization (`backend/requirements.txt`)
+- LangChain - Referenced in project descriptions and knowledge base (not a direct backend dependency)
+
+**Data Pipeline:**
+- Prefect >=3.0.0 - Workflow orchestration for batch data ingestion (`backend/requirements.txt`)
+- aiokafka >=0.10.0 - Async Kafka producer for event streaming (`backend/requirements.txt`)
+- pandas >=2.0.0 - Data transformation in pipeline (`backend/requirements.txt`)
+- pyarrow >=15.0.0 - Parquet file support for Feast offline store (`backend/requirements.txt`)
 
 **Testing:**
-- Not configured - no test framework detected
+- unittest - Python standard library testing (`backend/test_chat_integration.py`, `backend/test_tdd_rag.py`)
 
 **Build/Dev:**
-- **Vite** - `npm run dev` (dev server), `npm run build` (production build), `npm run preview` (preview build)
-- **Rollup** - Bundler (used internally by Vite), configured via `rollupOptions` in `vite.config.js`
-- **LightningCSS** - CSS transformer (detected in `node_modules`, used by Tailwind v4)
+- Uvicorn >=0.28.0 (standard) - ASGI server for FastAPI (`backend/requirements.txt`)
+- Rollup - Bundler used internally by Vite
+- esbuild - Fast JavaScript bundler used by Vite
+- nginx:alpine - Production frontend web server (`Dockerfile`)
 
 ## Key Dependencies
 
 **Critical:**
-- `vite` ^5.2.0 - Build tool and dev server
-- `tailwindcss` ^4.0.0 - CSS framework
-- `@tailwindcss/vite` ^4.0.0 - Vite plugin for Tailwind v4
+- `pydantic` >=2.6.0 - Data validation and serialization for FastAPI models (`backend/requirements.txt`)
+- `prometheus-client` >=0.20.0 - Metrics export for observability (`backend/requirements.txt`)
 
 **Infrastructure:**
-- No other runtime dependencies - zero external JS libraries
-
-## CSS Architecture
-
-**Tailwind CSS v4 Approach:**
-- Uses new `@import "tailwindcss"` syntax (not `@tailwind` directives)
-- Custom `@variant dark (&:where(.dark, .dark *))` for manual dark mode toggle
-- `@theme` block in `src/style.css` (lines 5-63) defines all design tokens:
-  - **Color system**: Material Design 3-inspired tokens (`--color-primary`, `--color-surface`, `--color-secondary-container`, etc.)
-  - **Font tokens**: `--font-sans`, `--font-headline`, `--font-code`
-  - **Radius tokens**: `--radius-sm` through `--radius-full`
-  - **Shadow tokens**: `--shadow-sm` through `--shadow-xl`
-
-**Dark Mode Strategy:**
-- Manual class-based toggle via `.dark` class on `<html>` element
-- Dark theme overrides defined in `src/style.css` lines 512-536 (CSS custom property reassignments)
-- Additional dark mode specificity overrides for hero section, cards, and filters (lines 538-650)
-- Respects `prefers-color-scheme` system preference as initial value
-
-**Component Layer Architecture:**
-- `@layer base` - HTML defaults (scroll behavior, body styles, selection colors)
-- `@layer components` - Reusable classes: `.gradient-hero`, `.glass`, `.card-hover`, `.btn-primary`, `.btn-outline`, `.badge`, `.section-title`, `.typing-cursor`, `.reveal`, `.stagger-children`, `.ios-toggle`, full RAG chatbot styles (`.rag-chatbot` through `.rag-chat-form`)
-- `@layer utilities` - Font utilities, `.bg-dots` pattern, `.text-gradient`, custom scrollbar
-
-**Custom Animations:**
-- `@keyframes blink` - Typing cursor animation
-- `@keyframes float` - Hero image floating animation (`.animate-float`)
-- `.reveal` / `.reveal.visible` - Scroll-triggered fade-in with translateY
-- `.stagger-children` - Sequential child animation with nth-child delays (up to 8 children)
-
-## JavaScript Architecture
-
-**Pattern:** Vanilla JavaScript with function-based module organization
-- No framework, no library dependencies
-- All code in single `src/main.js` file (629 lines)
-- ES module imports: `import './style.css'` and `import { portfolioConfig } from './data/portfolio-config.js'`
-- Configuration exposed globally: `window.portfolioConfig = portfolioConfig`
-
-**Initialization Pattern:**
-```javascript
-document.addEventListener('DOMContentLoaded', () => {
-  initTheme();
-  setupThemeToggle();
-  setupMobileMenu();
-  setupScrollReveal();
-  setupTypingEffect();
-  animateCounters();
-  setupProjectFilters();
-  setupPortfolioChatbot();
-});
-```
-
-**Feature Modules (all in `src/main.js`):**
-| Feature | Function | Lines |
-|---------|----------|-------|
-| Theme toggle | `initTheme`, `syncAllToggles`, `toggleTheme`, `setupThemeToggle` | 6-47 |
-| Mobile menu | `setupMobileMenu` (dynamically creates drawer + backdrop) | 49-114 |
-| Scroll reveal | `setupScrollReveal` (IntersectionObserver) | 116-128 |
-| Typing effect | `setupTypingEffect` (setTimeout-based character animation) | 130-171 |
-| Contact form | `setupContactForm` (async fetch to Formspree) | 173-225 |
-| Toast notifications | `showToast` (dynamic DOM creation) | 227-254 |
-| Counter animation | `animateCounters` (IntersectionObserver + setInterval) | 256-284 |
-| Project filters | `setupProjectFilters` (tag-based filtering with animation) | 286-318 |
-| RAG chatbot | `setupPortfolioChatbot` + knowledge base + retrieval | 519-618 |
-
-**RAG Chatbot Implementation:**
-- **Knowledge base builder**: `buildKnowledgeBase()` - creates document chunks from `portfolioConfig`
-- **Tokenizer**: `tokenize()` with Vietnamese + English stop words
-- **Retrieval**: `retrieveKnowledge()` - token overlap scoring with title phrase boost
-- **Response generation**: `generateChatbotAnswer()` - intent-based routing (contact, projects, skills, AI)
-- **XSS protection**: `escapeHtml()` using DOM textContent approach
-- **Text normalization**: `normalizeText()` - NFD Unicode normalization, diacritic removal
-
-**DOM Manipulation Approach:**
-- `document.querySelector` / `document.querySelectorAll` for element selection
-- `document.createElement` + `innerHTML` for dynamic elements (mobile drawer, toast, chatbot)
-- `classList.add/remove/toggle` for state changes
-- `addEventListener` for all interactions
-- `requestAnimationFrame` for smooth transitions
-
-## Font Stack
-
-**Loaded via Google Fonts** (`index.html` line 11):
-- **Geist** (weights 100-900) - Headline font via `.font-headline`
-- **Inter** (weights 100-900, italic) - Body font via `.font-body` / `--font-sans`
-- **JetBrains Mono** (weights 100-800, italic) - Code font via `.font-code`
-- **Material Symbols Outlined** - Icon font (opsz 20-48, weight 100-700, fill 0-1, grad -50 to 200)
-
-**CSS Font Variables** (`src/style.css` lines 49-51):
-```css
---font-sans: "Inter", system-ui, -apple-system, sans-serif;
---font-headline: "Geist", "Inter", sans-serif;
---font-code: "JetBrains Mono", "Fira Code", monospace;
-```
+- Confluent Kafka 7.6.0 - Message broker via Docker (`docker-compose.yml`)
+- Confluent Zookeeper 7.6.0 - Kafka coordination via Docker (`docker-compose.yml`)
+- Redis 7-alpine - Feast online store via Docker (`docker-compose.yml`)
+- Qdrant latest - Vector database via Docker (`docker-compose.yml`)
+- Prometheus latest - Metrics collection via Docker (`docker-compose.yml`)
+- Grafana latest - Dashboard visualization via Docker (`docker-compose.yml`)
 
 ## Configuration
 
-**Build Configuration:**
-- `vite.config.js` - Single entry point `index.html`, Tailwind CSS plugin
-- No TypeScript configuration - pure JavaScript project
-- No environment variables required for build
+**Environment:**
+- `.env` file at project root - Contains `OPENAI_API_KEY`, `OPENAI_EMBEDDING_MODEL`, `OPENAI_MODEL`, `QDRANT_HOST`, `QDRANT_VECTOR_DIM`, `KAFKA_BOOTSTRAP_SERVERS` (loaded by custom `load_env()` in `backend/main.py`)
+- Environment variables loaded manually from `.env` (no python-dotenv dependency)
 
-**Content Configuration:**
-- `src/data/portfolio-config.js` (286 lines) - Centralized portfolio data:
-  - `personalInfo` - Name, title, bio, avatar, social links
-  - `projects` - 10 projects with tags, descriptions, code links
-  - `experience` - 3 experience entries with achievements
-  - `competencies` - 4 competency categories with items
-  - `techStack` - Array of 23 technologies
-  - `languages` - Vietnamese (Native), English (Professional)
-  - `contact` - Email and Formspree endpoint
+**Build:**
+- `vite.config.js` - Vite configuration with Tailwind CSS plugin, single entry point `index.html`
+- `pyproject.toml` - Minimal Python project config (name: `my-portfolio`, version: `0.1.0`)
+- `backend/requirements.txt` - All backend Python dependencies
+- `backend/feature_store/feature_store.yaml` - Feast config (project: `portfolio_analytics`, provider: `local`, online store: Redis)
 
 ## Platform Requirements
 
 **Development:**
-- Node.js (version compatible with Vite 5.2)
-- npm
-- Modern browser with ES module support
+- Docker and Docker Compose for full infrastructure stack
+- Node.js 20+ for frontend development
+- Python 3.14+ for local Python tooling (uv-managed)
+- Python 3.11 compatible for backend (Docker runtime)
 
 **Production:**
-- Static file hosting (any HTTP server)
-- Build output in `dist/` directory:
-  - `dist/index.html` - Bundled HTML
-  - `dist/assets/main-*.js` - Minified JavaScript
-  - `dist/assets/main-*.css` - Minified CSS
+- Frontend: Static assets served via nginx (port 80)
+- Backend: FastAPI served via Uvicorn (port 8000)
+- Target deployment: Vercel/Netlify (frontend), Hugging Face Spaces (backend) per `ai-portfolio-copilot.md`
+- Cloud services: Qdrant Cloud (free), Upstash Redis (free), Neon Postgres (free)
 
-## Performance Characteristics
+## Font & Asset Dependencies
 
-**Bundle Size:**
-- Zero external JS runtime dependencies (only Vite + Tailwind at build time)
-- Vanilla JavaScript - no framework overhead
-- Single JS bundle, single CSS bundle
+**External Fonts (Google Fonts):**
+- Geist (weights 100-900) - Headline font
+- Inter (weights 100-900) - Body font
+- JetBrains Mono (weights 100-800) - Code font
+- Material Symbols Outlined - Icon font
 
-**Runtime Performance:**
-- No virtual DOM, no reactivity system
-- Direct DOM manipulation
-- IntersectionObserver for lazy scroll animations (efficient, no scroll event listeners)
-- `requestAnimationFrame` for smooth animations
-
-**Network:**
-- Google Fonts loaded with `preconnect` hints
-- Material Symbols loaded as single font file
-- Avatar loaded from GitHub CDN
-- No other external resources at runtime
+**External Images:**
+- GitHub avatar: `https://avatars.githubusercontent.com/u/163934382?v=4`
 
 ---
 
-*Stack analysis: 2026-05-18*
+*Stack analysis: 2026-05-29*

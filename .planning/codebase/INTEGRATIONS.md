@@ -1,218 +1,155 @@
 # External Integrations
 
-**Analysis Date:** 2026-05-18
+**Analysis Date:** 2026-05-29
 
 ## APIs & External Services
 
-### Formspree (Contact Form)
-- **Purpose:** Contact form submission endpoint
-- **Endpoint:** `https://formspree.io/f/xvonzndk` (configured in `src/data/portfolio-config.js` line 284)
-- **Auth:** None (public endpoint)
-- **Implementation:** `src/main.js` lines 173-225 (`setupContactForm`)
-  - POST request with `Content-Type: application/json`
-  - Sends form data as JSON: `JSON.stringify(data)`
-  - Accepts `application/json` responses
-  - Loading state with spinner animation on submit button
-  - Success/error toast notifications via `showToast()`
+**LLM Provider:**
+- OpenAI API - Chat completions and text embeddings
+  - SDK: `openai` >=1.0.0 (`backend/requirements.txt`)
+  - Models: `gpt-4o-mini` (default, configurable via `OPENAI_MODEL` env var), `text-embedding-3-small` (default embedding model, configurable via `OPENAI_EMBEDDING_MODEL`)
+  - Auth: `OPENAI_API_KEY` environment variable
+  - Client: `AsyncOpenAI` (async client used in `backend/main.py`)
+  - Usage: RAG chat endpoint (`/api/v1/chat`) generates embeddings for Qdrant queries and calls LLM for responses
 
-```javascript
-// src/main.js - Contact form submission
-const response = await fetch(form.action, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  },
-  body: JSON.stringify(data)
-});
-```
-
-### GitHub
-- **Purpose:** Profile links, repository links, avatar image
-- **Profile:** `https://github.com/kuokdavinci`
-- **Avatar:** `https://avatars.githubusercontent.com/u/163934382?v=4` (loaded in `index.html` line 90)
-- **Repository links:** All project cards link to individual repos via `codeLink` in `portfolioConfig`
-- **Implementation:**
-  - Hero section: GitHub profile button (`index.html` lines 63-66)
-  - Hero contact info: GitHub link (`index.html` lines 81-84)
-  - Project cards: Each project links to its repo (`index.html` lines 193, 216)
-  - "View All on GitHub" button (`index.html` lines 241-245)
-  - All links use `target="_blank" rel="noopener"` for security
-
-### LinkedIn
-- **Purpose:** Professional profile link
-- **Profile:** `https://linkedin.com/in/kuokdavinci`
-- **Implementation:** Hero section contact info (`index.html` lines 77-80)
-- Configured in `src/data/portfolio-config.js` line 17
-
-### Google Fonts
-- **Purpose:** Typography (Geist, Inter, JetBrains Mono) and icons (Material Symbols)
-- **URL:** `https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap`
-- **Loaded in:** `index.html` line 11
-- **Preconnect hints:** `index.html` lines 9-10
-  - `https://fonts.googleapis.com`
-  - `https://fonts.gstatic.com`
-
-### Google Material Symbols
-- **Purpose:** Icon library throughout the portfolio
-- **Font family:** `Material Symbols Outlined`
-- **Usage:** `<span class="material-symbols-outlined">icon_name</span>` pattern
-- **Icons used:**
-  - `menu` - Mobile menu button
-  - `close` - Close buttons (mobile drawer, chatbot)
-  - `mail` - Email contact
-  - `phone` - Phone contact
-  - `work` - LinkedIn link
-  - `code` - GitHub links, code icon
-  - `arrow_forward` - CTA button
-  - `school` - Education timeline item
-  - `emoji_events` - Graduation timeline item
-  - `menu_book` - Self-study timeline item
-  - `psychology` - AI timeline item
-  - `local_movies` - Movie ticket project
-  - `badge` - Attendance app project
-  - `open_in_new` - External link indicators
-  - `circle` - Language indicators
-  - `smart_toy` - Chatbot toggle
-  - `send` - Chatbot send button
-  - `check_circle` - Success toast
-  - `error` - Error toast
-  - `dns`, `smartphone`, `model_training`, `web` - Competency icons (in config)
+**Contact Form:**
+- Formspree - Contact form submission endpoint
+  - Endpoint: `https://formspree.io/f/xvonzndk` (configured in `src/data/portfolio-config.js`)
+  - Auth: Formspree-managed (no API key in frontend code)
 
 ## Data Storage
 
-### LocalStorage
-- **Purpose:** Theme preference persistence
-- **Key:** `'theme'`
-- **Values:** `'dark'` or `'light'`
-- **Implementation:** `src/main.js` lines 6-37
-  - Read on init: `localStorage.getItem('theme')`
-  - Write on toggle: `localStorage.setItem('theme', 'dark'/'light')`
-  - Falls back to `prefers-color-scheme` if no stored value
+**Vector Database:**
+- Qdrant - Vector similarity search for RAG knowledge base
+  - Connection: `QDRANT_HOST` env var (default: `localhost`), port 6333
+  - Client: `qdrant-client` >=1.8.0
+  - Collection: `portfolio_knowledge` (1536 dimensions, cosine distance)
+  - Setup script: `scripts/setup_qdrant.py`
+  - Docker: `qdrant/qdrant:latest` (ports 6333, 6334)
+  - Data: Populated from `knowledge_base/*.md` files with parent-child chunking strategy
 
-```javascript
-// src/main.js - Theme persistence
-const currentTheme = localStorage.getItem('theme') || 
-  (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-```
+**Feature Store:**
+- Feast - ML feature store for visitor personalization
+  - Online store: Redis (`backend/feature_store/feature_store.yaml`)
+  - Offline store: Parquet files (`backend/data/processed/user_features.parquet`)
+  - Registry: SQLite (`backend/feature_store/data/registry.db`)
+  - Features: `engagement_score`, `last_viewed_category`, `chat_count` (entity: `session_id`)
+  - Materialization: `backend/pipeline/materialize_feast.py`
 
-### No Databases
-- Static site with no server-side database
-- All content defined in `src/data/portfolio-config.js`
+**Relational Database:**
+- SQLite - Fallback event tracking storage
+  - Path: `backend/data/tracking_events.db`
+  - Schema: `tracking_events` table (id, session_id, timestamp, event_type, payload)
+  - Used when Kafka is unavailable (graceful degradation)
 
-### No File Storage
-- No file upload or storage functionality
-- Avatar image served from GitHub CDN
+**Message Broker:**
+- Apache Kafka - Event streaming for real-time activity tracking
+  - Bootstrap servers: `KAFKA_BOOTSTRAP_SERVERS` env var (default: `localhost:9092`)
+  - Topic: `user.activity.raw`
+  - Client: `aiokafka` >=0.10.0 (async producer)
+  - Docker: `confluentinc/cp-kafka:7.6.0` + `confluentinc/cp-zookeeper:7.6.0`
+  - Fallback: SQLite when Kafka is unreachable
 
-### No Caching Layer
-- No Redis, no service worker, no caching strategy beyond browser defaults
+**Cache / Online Store:**
+- Redis 7 - Feast online feature store
+  - Connection: `${REDIS_HOST}:6379` (from `feature_store.yaml`)
+  - Docker: `redis:7-alpine` (port 6379)
 
 ## Authentication & Identity
 
-**Auth Provider:** None
-- No user authentication system
-- Contact form uses public Formspree endpoint (no auth required)
-- No protected routes or authenticated content
-
-## Browser APIs Used
-
-### IntersectionObserver
-- **Purpose:** Scroll-triggered animations and counter animations
-- **Usage 1 - Scroll Reveal:** `src/main.js` lines 116-128
-  - Threshold: `0.1`
-  - Root margin: `'0px 0px -50px 0px'`
-  - Observes elements with `.reveal` and `.stagger-children` classes
-  - Adds `.visible` class when element enters viewport
-
-- **Usage 2 - Counter Animation:** `src/main.js` lines 256-284
-  - Threshold: `0.5`
-  - Observes elements with `.counter` class
-  - Triggers counting animation once, then unobserves
-
-### matchMedia API
-- **Purpose:** Detect system color scheme preference
-- **Usage:** `src/main.js` line 7
-  - `window.matchMedia('(prefers-color-scheme: dark)').matches`
-
-### requestAnimationFrame
-- **Purpose:** Smooth animation timing
-- **Usage:**
-  - Mobile drawer backdrop opacity transition (`src/main.js` line 88)
-  - Toast notification slide-in (`src/main.js` line 246)
-  - Project filter card animations (`src/main.js` lines 307-311)
-  - Chatbot input focus (`src/main.js` line 570)
+**Auth Provider:**
+- None (portfolio is public, no user authentication)
+- Session tracking: UUID-like session IDs stored in `sessionStorage` (generated client-side in `src/main.js`)
+- API keys: `OPENAI_API_KEY` for LLM access (server-side only)
 
 ## Monitoring & Observability
 
-**Error Tracking:** None
-- No Sentry, no LogRocket, no analytics
+**Metrics Collection:**
+- Prometheus - Metrics scraping and storage
+  - Docker: `prom/prometheus:latest` (port 9090)
+  - Config: `prometheus/prometheus.yml`
+  - Scrape targets: `localhost:9090` (self), `host.docker.internal:8000` (API gateway)
+  - Scrape interval: 15s
 
-**Logs:**
-- `console.error(error)` in contact form error handler (`src/main.js` line 217)
-- No structured logging framework
+**Dashboard:**
+- Grafana - Visualization dashboard
+  - Docker: `grafana/grafana:latest` (port 3000)
+  - Datasource: Prometheus (provisioned via `grafana/provisioning/datasources/datasource.yml`)
+  - Dashboard provisioning: `grafana/provisioning/dashboards/dashboards.yml`
+  - Dashboard name: "Visitor Analytics"
+
+**API Metrics (exported by FastAPI):**
+- `api_requests_total` - HTTP request count (labels: method, endpoint, status)
+- `api_request_duration_seconds` - Request latency histogram (labels: method, endpoint)
+- `chatbot_queries_total` - Chat query count (labels: session_id)
+- `chatbot_llm_duration_seconds` - LLM call latency histogram
+- Endpoint: `GET /metrics` (Prometheus format)
+
+**Logging:**
+- Python `logging` module - Backend logging (`backend/main.py`)
+- Logger: `api-gateway` at INFO level
+- Console output via `uvicorn.log` file
 
 ## CI/CD & Deployment
 
-**Hosting:** Static hosting (any HTTP file server)
-- Build output: `dist/` directory
-- No specific platform configured (no Vercel, Netlify, GitHub Actions detected)
+**Hosting:**
+- Frontend: Vercel or Netlify (planned per `ai-portfolio-copilot.md`)
+- Backend: Hugging Face Spaces (planned, free CPU tier)
+- Local: Docker Compose full stack
 
-**CI Pipeline:** None detected
-- No `.github/workflows/` directory
-- No CI configuration files
+**CI Pipeline:**
+- None configured (no `.github/workflows/` or CI config detected)
+
+**Containerization:**
+- Docker Compose: 8 services (qdrant, redis, zookeeper, kafka, prometheus, grafana, backend, frontend)
+- Frontend Dockerfile: Multi-stage build (node:20-alpine → nginx:alpine)
+- Backend Dockerfile: python:3.11-slim with uvicorn
 
 ## Environment Configuration
 
-**Required env vars:** None
-- Static site with no environment-dependent configuration
-- Formspree endpoint hardcoded in `src/data/portfolio-config.js`
-- All social links hardcoded in config
+**Required env vars:**
+- `OPENAI_API_KEY` - OpenAI API authentication
+- `OPENAI_MODEL` - LLM model name (default: `gpt-4o-mini`)
+- `OPENAI_EMBEDDING_MODEL` - Embedding model (default: `text-embedding-3-small`)
+- `QDRANT_HOST` - Qdrant server hostname (default: `localhost`)
+- `QDRANT_VECTOR_DIM` - Vector dimension (default: `1536`)
+- `KAFKA_BOOTSTRAP_SERVERS` - Kafka broker address (default: `localhost:9092`)
+- `REDIS_HOST` - Redis hostname for Feast (from `feature_store.yaml`)
 
-**Secrets location:** None
-- No secrets required for this portfolio site
-- Formspree endpoint is public (designed for public form submissions)
+**Secrets location:**
+- `.env` file at project root (gitignored)
+- Never committed to repository
 
 ## Webhooks & Callbacks
 
-**Incoming:** None
-- No webhook endpoints
+**Incoming:**
+- None configured
 
 **Outgoing:**
-- **Formspree POST:** Contact form submissions sent to `https://formspree.io/f/xvonzndk`
-  - Triggered on form submit in `src/main.js` `setupContactForm()`
-  - JSON payload with form field data
+- Formspree form submission: `POST https://formspree.io/f/xvonzndk` (contact form in `index.html`)
+- OpenAI API: Chat completions and embeddings (server-side)
 
-## RAG Chatbot (Local, No External API)
+## Service Ports (Local Development)
 
-The portfolio includes a **client-side RAG (Retrieval-Augmented Generation) chatbot** that operates entirely locally:
+| Service | Port | Purpose |
+|---------|------|---------|
+| Frontend (nginx) | 80 | Static asset serving |
+| Backend (FastAPI) | 8000 | API gateway |
+| Qdrant | 6333, 6334 | Vector database (HTTP + gRPC) |
+| Redis | 6379 | Feast online store |
+| Kafka | 9092 | Event streaming |
+| Zookeeper | 2181 | Kafka coordination |
+| Prometheus | 9090 | Metrics collection |
+| Grafana | 3000 | Dashboard visualization |
 
-- **Knowledge base:** Built from `portfolioConfig` at runtime (`buildKnowledgeBase()`, `src/main.js` lines 348-432)
-- **Retrieval:** Token-based scoring with Vietnamese + English stop word filtering (`retrieveKnowledge()`, lines 434-462)
-- **Response generation:** Intent-based template matching (`generateChatbotAnswer()`, lines 464-498)
-- **No external LLM API calls** - all processing happens in the browser
-- **No API keys required**
+## External Links Referenced
 
-**Chatbot UI:**
-- Floating toggle button with `smart_toy` icon (`src/main.js` lines 526-529)
-- Chat panel with message history, suggested prompts, and input form
-- Sources displayed as tags below bot responses
-- Accessibility: `aria-label`, `aria-expanded`, `aria-live="polite"`
-
-## Security Considerations
-
-**XSS Protection:**
-- `escapeHtml()` function in `src/main.js` lines 320-324 uses DOM textContent approach
-- Applied to all chatbot user input and source labels
-
-**Link Security:**
-- All external links use `target="_blank" rel="noopener"`
-- No `rel="noreferrer"` (analytics could be tracked by linked sites)
-
-**Form Security:**
-- Formspree handles spam protection server-side
-- No CSRF tokens (Formspree public endpoint)
-- Client-side validation only (no server-side validation)
+- GitHub: `https://github.com/kuokdavinci`
+- LinkedIn: `https://linkedin.com/in/kuokdavinci`
+- EduRAG project: `https://github.com/kuokdavinci/EduRAG`
+- Movie Ticket project: `https://github.com/kuokdavinci/movie-ticket-app-backend`
+- Attendance App project: `https://github.com/kuokdavinci/attendance_app`
 
 ---
 
-*Integration audit: 2026-05-18*
+*Integration audit: 2026-05-29*
