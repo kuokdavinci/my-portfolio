@@ -126,20 +126,25 @@ export async function streamBotResponse(container, text, sources = []) {
   const bubble = document.createElement('div');
   bubble.className = 'rag-chat-bubble';
   const streamContent = document.createElement('div');
+  streamContent.innerHTML = '<span class="streaming-text"></span><span class="streaming-cursor">|</span>';
   bubble.appendChild(streamContent);
   message.appendChild(bubble);
   container.appendChild(message);
+
+  const textSpan = streamContent.querySelector('.streaming-text');
+  const cursorSpan = streamContent.querySelector('.streaming-cursor');
 
   let currentText = '';
   const delay = 15; // ms per character
 
   for (let i = 0; i < text.length; i++) {
     currentText += text[i];
-    streamContent.textContent = currentText;
-    container.scrollTop = container.scrollHeight;
+    textSpan.textContent = currentText;
+    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     await new Promise(resolve => setTimeout(resolve, delay));
   }
 
+  // Streaming complete — render full markdown and remove cursor
   streamContent.innerHTML = parseMarkdown(text);
 
   if (sources.length) {
@@ -160,7 +165,7 @@ export async function streamBotResponse(container, text, sources = []) {
     message.classList.remove('is-entering');
   }, 300);
 
-  container.scrollTop = container.scrollHeight;
+  container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
 }
 
 export function setupPortfolioChatbot(portfolioConfig) {

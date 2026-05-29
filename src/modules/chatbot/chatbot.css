@@ -279,6 +279,20 @@
     }
   }
 
+  /* Streaming text cursor */
+  .streaming-cursor {
+    display: inline-block;
+    animation: cursor-blink 0.8s step-end infinite;
+    font-weight: 100;
+    color: var(--color-on-surface-variant);
+    margin-left: 1px;
+  }
+
+  @keyframes cursor-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
   .rag-chat-prompts {
     padding: 0.75rem 1rem;
     border-top: 1px solid var(--color-outline-variant);
