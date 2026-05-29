@@ -1,10 +1,10 @@
 /**
- * Dashboard Orchestrator — assembles all 5 sections and manages data refresh.
+ * Dashboard Orchestrator — assembles all 4 sections and manages data refresh.
  *
  * Exports: initDashboard(), refreshDashboard(), destroyDashboard()
  *
- * Mounts System Overview, User Behavior, AI Observability, Infrastructure Health,
- * and Live Telemetry sections into the #dashboard-content container.
+ * Mounts System Overview, User Behavior, AI Observability, and Infrastructure Health
+ * sections into the #dashboard-content container.
  * Manages 10s refresh cycles for all sections.
  */
 
@@ -12,21 +12,19 @@ import { renderSystemOverview } from './sections/system-overview.js';
 import { renderUserBehavior } from './sections/user-behavior.js';
 import { renderAIObservability } from './sections/ai-observability.js';
 import { renderInfrastructureHealth } from './sections/infrastructure-health.js';
-import { renderLiveTelemetry } from './sections/live-telemetry.js';
 
-// Import Live Telemetry CSS
+// Import Live Telemetry CSS (for error rate and rate limiting styles)
 import './sections/live-telemetry.css';
 
 let systemOverviewHandle = null;
 let userBehaviorHandle = null;
 let aiObservabilityHandle = null;
 let infrastructureHealthHandle = null;
-let liveTelemetryHandle = null;
 let refreshInterval = null;
 let isInitialized = false;
 
 /**
- * Initialize the dashboard: render all 5 sections into #dashboard-content.
+ * Initialize the dashboard: render all 4 sections into #dashboard-content.
  * Should be called when the user navigates to #dashboard route.
  */
 export async function initDashboard() {
@@ -42,7 +40,7 @@ export async function initDashboard() {
   // Destroy any previous Chart.js instances
   destroyCharts();
 
-  // Render all 5 sections in order
+  // Render all 4 sections in order (Live Telemetry removed)
   const overviewContainer = createSectionContainer(container, 'system-overview');
   systemOverviewHandle = await renderSystemOverview(overviewContainer);
 
@@ -55,20 +53,7 @@ export async function initDashboard() {
   const infraContainer = createSectionContainer(container, 'infrastructure-health');
   infrastructureHealthHandle = await renderInfrastructureHealth(infraContainer);
 
-  const telemetryContainer = createSectionContainer(container, 'live-telemetry');
-  liveTelemetryHandle = await renderLiveTelemetry(telemetryContainer);
-
-  // Set up unified 10s refresh cycle
-  if (refreshInterval) {
-    clearInterval(refreshInterval);
-  }
-  refreshInterval = setInterval(async () => {
-    await refreshDashboard();
-  }, 10000);
-
   isInitialized = true;
-
-  // Update last-refresh timestamp
   updateLastRefresh();
 }
 
@@ -79,7 +64,6 @@ export async function refreshDashboard() {
   const overviewContainer = document.getElementById('section-system-overview');
   const behaviorContainer = document.getElementById('section-user-behavior');
   const aiContainer = document.getElementById('section-ai-observability');
-  const infraContainer = document.getElementById('section-infrastructure-health');
 
   if (overviewContainer && systemOverviewHandle?.refresh) {
     await systemOverviewHandle.refresh();
@@ -90,20 +74,12 @@ export async function refreshDashboard() {
   if (aiContainer && aiObservabilityHandle?.refresh) {
     await aiObservabilityHandle.refresh();
   }
-  if (infraContainer && infrastructureHealthHandle?.refresh) {
-    await infrastructureHealthHandle.refresh();
-  }
-  // Live telemetry updates via SSE, no need to re-render
-  if (liveTelemetryHandle?.refresh) {
-    await liveTelemetryHandle.refresh();
-  }
-
   // Update last-refresh timestamp
   updateLastRefresh();
 }
 
 /**
- * Destroy all dashboard resources: intervals, SSE connections, Chart.js instances.
+ * Destroy all dashboard resources: intervals, Chart.js instances.
  * Called when navigating away from the dashboard.
  */
 export function destroyDashboard() {
@@ -112,12 +88,10 @@ export function destroyDashboard() {
     refreshInterval = null;
   }
 
-  // Stop all section refresh intervals and SSE connections
+  // Stop all section refresh intervals
   if (systemOverviewHandle?.stop) systemOverviewHandle.stop();
   if (userBehaviorHandle?.stop) userBehaviorHandle.stop();
   if (aiObservabilityHandle?.stop) aiObservabilityHandle.stop();
-  if (infrastructureHealthHandle?.stop) infrastructureHealthHandle.stop();
-  if (liveTelemetryHandle?.stop) liveTelemetryHandle.stop();
 
   // Destroy all Chart.js instances
   destroyCharts();
@@ -126,8 +100,6 @@ export function destroyDashboard() {
   systemOverviewHandle = null;
   userBehaviorHandle = null;
   aiObservabilityHandle = null;
-  infrastructureHealthHandle = null;
-  liveTelemetryHandle = null;
 
   isInitialized = false;
 }

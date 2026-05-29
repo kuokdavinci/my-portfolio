@@ -157,13 +157,49 @@ export async function renderAIObservability(container) {
   const grid = document.createElement('div');
   grid.className = 'ai-section';
 
-  // Chart A: AI Intent Categories (Bar Chart)
-  const chartA = createChartSection('chart-intent', 'category', 'AI Intent Categories');
-  grid.appendChild(chartA.section);
+  // Chart A: AI Conversation Intelligence (Doughnut Chart + ASCII block list)
+  const chartASection = document.createElement('div');
+  chartASection.className = 'chart-section';
+  chartASection.id = 'chart-intent';
+  chartASection.innerHTML = `
+    <div class="chart-header">
+      <span class="material-symbols-outlined">psychology</span>
+      <span>AI Conversation Intelligence</span>
+    </div>
+    <div class="intent-flex-layout" style="display: flex; flex-direction: column; gap: 20px; padding-top: 8px;">
+      <div style="height: 160px; position: relative;">
+        <canvas id="chart-intent-canvas"></canvas>
+      </div>
+      <div id="intent-ascii-container" style="padding: 4px 0;"></div>
+    </div>
+  `;
+  grid.appendChild(chartASection);
 
-  // Chart B: LLM Performance (Dual-axis Line Chart)
-  const chartB = createChartSection('chart-llm-performance', 'speed', 'LLM Performance');
-  grid.appendChild(chartB.section);
+  // Chart B: LLM & API Latency Stats (p50, p95, p99 averages)
+  const chartBSection = document.createElement('div');
+  chartBSection.className = 'chart-section';
+  chartBSection.id = 'chart-llm-performance';
+  chartBSection.innerHTML = `
+    <div class="chart-header">
+      <span class="material-symbols-outlined">speed</span>
+      <span>LLM & API Latency</span>
+    </div>
+    <div class="latency-container" style="display: flex; flex-direction: column; gap: 20px; padding: 24px 8px;">
+      <div class="latency-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--color-outline-variant); padding-bottom: 12px;">
+        <span class="latency-label" style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: bold;">p50 Latency (Avg)</span>
+        <span class="latency-val" id="latency-p50" style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: bold; color: #22c55e;">— ms</span>
+      </div>
+      <div class="latency-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--color-outline-variant); padding-bottom: 12px;">
+        <span class="latency-label" style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: bold;">p95 Latency (Avg)</span>
+        <span class="latency-val" id="latency-p95" style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: bold; color: #f59e0b;">— ms</span>
+      </div>
+      <div class="latency-item" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 4px;">
+        <span class="latency-label" style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: bold;">p99 Latency (Avg)</span>
+        <span class="latency-val" id="latency-p99" style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: bold; color: #f43f5e;">— ms</span>
+      </div>
+    </div>
+  `;
+  grid.appendChild(chartBSection);
 
   // Chart C: Token Consumption (Stacked Area Chart)
   const chartC = createChartSection('chart-tokens', 'token', 'Token Consumption');
@@ -200,22 +236,6 @@ export async function renderAIObservability(container) {
   `;
   grid.appendChild(costCard);
 
-  // Chart E: Cache Hit Rate (Gauge Chart)
-  const gaugeSection = document.createElement('div');
-  gaugeSection.className = 'chart-section';
-  gaugeSection.id = 'chart-cache';
-  gaugeSection.innerHTML = `
-    <div class="chart-header">
-      <span class="material-symbols-outlined">cached</span>
-      <span>Cache Hit Rate</span>
-    </div>
-    <div class="gauge-container">
-      <canvas id="chart-cache-canvas"></canvas>
-      <div class="gauge-value" id="gauge-cache-value">—</div>
-    </div>
-  `;
-  grid.appendChild(gaugeSection);
-
   container.appendChild(grid);
 
   // ── Data fetch functions ─────────────────────────────────
@@ -227,138 +247,131 @@ export async function renderAIObservability(container) {
     const c = getChartColors();
     const results = await promQuery('sum by(category) (chatbot_queries_total)');
 
-    if (results.length > 0) {
-      // Ensure we have exactly 5 categories with consistent colors
-      const categoryOrder = ['RAG Retrieval', 'General Info', 'Skills Audit', 'Project Detail', 'Chitchat'];
-      const categoryColors = [c.primary, c.secondary, c.tertiary, c.cyan, c.green];
+    // Map backend categories to display-friendly intent names
+    const categoryDisplayMap = {
+      'project': 'Project Detail',
+      'project_detail': 'Project Detail',
+      'education': 'General Info',
+      'experience': 'General Info',
+      'personal_info': 'General Info',
+      'contact': 'General Info',
+      'skills': 'Skills Audit',
+      'competencies': 'Skills Audit',
+      'greeting': 'Chitchat',
+      'general': 'General Info',
+      'RAG Retrieval': 'RAG Retrieval',
+      'General Info': 'General Info',
+      'Skills Audit': 'Skills Audit',
+      'Project Detail': 'Project Detail',
+      'Chitchat': 'Chitchat',
+    };
 
-      // Build ordered data
+    if (results.length > 0) {
+      const categoryOrder = ['RAG Retrieval', 'Project Detail', 'Skills Audit', 'General Info', 'Chitchat'];
+      const categoryColors = [c.primary, c.cyan, c.tertiary, c.secondary, c.green];
+
+      // Build data map with category mapping
       const dataMap = {};
+      let totalQueries = 0;
       results.forEach(r => {
-        const cat = r.metric.category || 'unknown';
-        dataMap[cat] = parseFloat(r.value[1]);
+        const rawCat = r.metric.category || 'unknown';
+        const displayCat = categoryDisplayMap[rawCat] || rawCat;
+        const val = parseFloat(r.value[1]) || 0;
+        dataMap[displayCat] = (dataMap[displayCat] || 0) + val;
+        totalQueries += val;
       });
 
-      const labels = categoryOrder.filter(cat => cat in dataMap || results.some(r => r.metric.category === cat));
+      // Filter and order labels
+      const labels = categoryOrder.filter(cat => cat in dataMap);
       const data = labels.map(cat => dataMap[cat] || 0);
       const colors = labels.map((_, i) => categoryColors[i % categoryColors.length]);
 
-      safeRenderChart(chartA.canvasId, {
-        type: 'bar',
+      // 1. Render Doughnut Chart
+      safeRenderChart('chart-intent-canvas', {
+        type: 'doughnut',
         data: {
-          labels: labels.map(l => sanitizeLabel(l)),
+          labels: labels,
           datasets: [{
-            label: 'Queries',
             data: data,
             backgroundColor: colors,
-            borderRadius: 6,
             borderWidth: 0,
-          }],
-        },
-        options: chartOptions(c, 'queries', {
-          plugins: { legend: { display: false } },
-        }),
-      });
-    }
-  }
-
-  async function refreshLLMPerformanceChart() {
-    const promRange = window.promRange;
-    if (!promRange) return;
-
-    const c = getChartColors();
-
-    // Fetch p50, p95 API latency and LLM generation time
-    const p50Results = await promRange('histogram_quantile(0.5, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))');
-    const p95Results = await promRange('histogram_quantile(0.95, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))');
-    const llmResults = await promRange('sum(rate(chatbot_llm_duration_seconds_sum[5m])) / sum(rate(chatbot_llm_duration_seconds_count[5m]))');
-
-    const p50Pts = p50Results[0]?.values || [];
-    const p95Pts = p95Results[0]?.values || [];
-    const llmPts = llmResults[0]?.values || [];
-
-    if (p50Pts.length > 0) {
-      safeRenderChart(chartB.canvasId, {
-        type: 'line',
-        data: {
-          labels: p50Pts.map(p => {
-            const d = new Date(p[0] * 1000);
-            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          }),
-          datasets: [
-            {
-              label: 'API p50 Latency',
-              data: p50Pts.map(p => (parseFloat(p[1]) * 1000).toFixed(0)),
-              borderColor: c.green,
-              backgroundColor: c.greenAlpha,
-              yAxisID: 'y',
-              fill: false,
-              tension: 0.3,
-              pointRadius: 1,
-              borderWidth: 2,
-            },
-            {
-              label: 'API p95 Latency',
-              data: p95Pts.map(p => (parseFloat(p[1]) * 1000).toFixed(0)),
-              borderColor: c.amber,
-              backgroundColor: c.amberAlpha,
-              yAxisID: 'y',
-              fill: false,
-              tension: 0.3,
-              pointRadius: 1,
-              borderWidth: 2,
-            },
-            {
-              label: 'LLM Gen Time',
-              data: llmPts.map(p => parseFloat(p[1]).toFixed(2)),
-              borderColor: c.rose,
-              backgroundColor: c.roseAlpha,
-              yAxisID: 'y1',
-              fill: true,
-              tension: 0.3,
-              pointRadius: 1,
-              borderWidth: 2,
-            },
-          ],
+            hoverOffset: 4
+          }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          animation: { duration: 600, easing: 'easeOutQuart' },
           plugins: {
-            legend: { labels: { color: c.text, font: { family: "'JetBrains Mono', monospace", size: 10 } } },
-            tooltip: {
-              backgroundColor: c.text === '#e0e3e5' ? '#16191b' : '#ffffff',
-              titleColor: c.text === '#e0e3e5' ? '#ffffff' : '#16191b',
-              bodyColor: c.text === '#e0e3e5' ? '#e0e3e5' : '#16191b',
-              borderColor: c.grid,
-              borderWidth: 1,
-              cornerRadius: 4,
-              titleFont: { family: "'JetBrains Mono', monospace", size: 11 },
-              bodyFont: { family: "'JetBrains Mono', monospace", size: 11 },
-            },
+            legend: { display: false },
+            tooltip: { enabled: true }
           },
-          scales: {
-            x: { ticks: { color: c.text, font: { size: 9 } }, grid: { color: c.grid } },
-            y: {
-              type: 'linear',
-              position: 'left',
-              beginAtZero: true,
-              ticks: { color: c.text, font: { size: 9 }, callback: v => `${v} ms` },
-              grid: { color: c.grid },
-              title: { display: true, text: 'API Latency (ms)', color: c.text, font: { size: 10 } },
-            },
-            y1: {
-              type: 'linear',
-              position: 'right',
-              beginAtZero: true,
-              ticks: { color: c.text, font: { size: 9 }, callback: v => `${v}s` },
-              grid: { drawOnChartArea: false },
-              title: { display: true, text: 'LLM Gen Time (s)', color: c.text, font: { size: 10 } },
-            },
-          },
-        },
+          cutout: '70%'
+        }
       });
+
+      // 2. Render ASCII-like HTML grid
+      const asciiContainer = document.getElementById('intent-ascii-container');
+      if (asciiContainer) {
+        // Sort items by count descending
+        const items = labels.map((l, idx) => ({
+          label: l,
+          count: data[idx],
+          color: colors[idx]
+        })).sort((a, b) => b.count - a.count);
+
+        const maxTotal = totalQueries > 0 ? totalQueries : 1;
+
+        let rowsHtml = '';
+        items.forEach(item => {
+          const pct = Math.round((item.count / maxTotal) * 100);
+          
+          rowsHtml += `
+            <div style="margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; font-size: 13px;">
+                <span style="font-weight: bold; color: ${item.color};">${sanitizeLabel(item.label)}</span>
+                <span style="font-weight: bold; color: var(--color-primary);">${item.count.toLocaleString()} <span style="opacity: 0.7; font-size: 0.85em;">(${pct}%)</span></span>
+              </div>
+              <div style="width: 100%; height: 24px; border: 2px solid var(--color-primary); background: transparent; box-sizing: border-box; overflow: hidden; position: relative;">
+                <div style="width: ${pct}%; height: 100%; background: ${item.color}; transition: width 0.5s ease;"></div>
+              </div>
+            </div>
+          `;
+        });
+
+        asciiContainer.innerHTML = `
+          <div class="font-code select-none" style="padding-top: 8px;">
+            <div style="display: flex; flex-direction: column;">
+              ${rowsHtml}
+            </div>
+          </div>
+        `;
+      }
+    }
+  }
+
+  async function refreshLLMPerformanceChart() {
+    const promQuery = window.promQuery;
+    if (!promQuery) return;
+
+    try {
+      // Query current average latencies (p50, p95, p99 over the last 5m)
+      const p50Res = await promQuery('histogram_quantile(0.5, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))');
+      const p95Res = await promQuery('histogram_quantile(0.95, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))');
+      const p99Res = await promQuery('histogram_quantile(0.99, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))');
+
+      const p50 = p50Res.length > 0 ? parseFloat(p50Res[0]?.value?.[1]) * 1000 : null;
+      const p95 = p95Res.length > 0 ? parseFloat(p95Res[0]?.value?.[1]) * 1000 : null;
+      const p99 = p99Res.length > 0 ? parseFloat(p99Res[0]?.value?.[1]) * 1000 : null;
+
+      const p50El = document.getElementById('latency-p50');
+      const p95El = document.getElementById('latency-p95');
+      const p99El = document.getElementById('latency-p99');
+
+      if (p50El) p50El.textContent = p50 !== null && !isNaN(p50) ? `${p50.toFixed(0)} ms` : '— ms';
+      if (p95El) p95El.textContent = p95 !== null && !isNaN(p95) ? `${p95.toFixed(0)} ms` : '— ms';
+      if (p99El) p99El.textContent = p99 !== null && !isNaN(p99) ? `${p99.toFixed(0)} ms` : '— ms';
+    } catch (err) {
+      console.error('Latency stats refresh error:', err);
     }
   }
 
@@ -466,71 +479,6 @@ export async function renderAIObservability(container) {
     }
   }
 
-  async function refreshGaugeChart() {
-    const promQuery = window.promQuery;
-    if (!promQuery) return;
-
-    try {
-      const hitsRes = await promQuery('sum(cache_hits_total)');
-      const missesRes = await promQuery('sum(cache_misses_total)');
-
-      const hits = parseFloat(hitsRes[0]?.value?.[1] || '0');
-      const misses = parseFloat(missesRes[0]?.value?.[1] || '0');
-      const total = hits + misses;
-
-      const gaugeValueEl = document.getElementById('gauge-cache-value');
-      if (!gaugeValueEl) return;
-
-      if (total === 0) {
-        // No cache data available
-        gaugeValueEl.textContent = 'N/A';
-        // Clear the chart if it exists
-        if (window.myCharts && window.myCharts['chart-cache-canvas']) {
-          window.myCharts['chart-cache-canvas'].destroy();
-          delete window.myCharts['chart-cache-canvas'];
-        }
-        return;
-      }
-
-      const hitRate = (hits / total) * 100;
-      gaugeValueEl.textContent = `${hitRate.toFixed(1)}%`;
-
-      // Determine gauge color based on hit rate
-      let gaugeColor;
-      if (hitRate < 50) {
-        gaugeColor = '#f43f5e'; // red
-      } else if (hitRate < 80) {
-        gaugeColor = '#f59e0b'; // amber
-      } else {
-        gaugeColor = '#22c55e'; // green
-      }
-
-      safeRenderChart('chart-cache-canvas', {
-        type: 'doughnut',
-        data: {
-          datasets: [{
-            data: [hitRate, 100 - hitRate],
-            backgroundColor: [gaugeColor, 'rgba(255,255,255,0.05)'],
-            borderWidth: 0,
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          rotation: -90,
-          circumference: 180,
-          cutout: '75%',
-          plugins: {
-            legend: { display: false },
-            tooltip: { enabled: false },
-          },
-        },
-      });
-    } catch (err) {
-      console.error('Cache gauge refresh error:', err);
-    }
-  }
-
   // ── Refresh cycle ────────────────────────────────────────
 
   async function refresh() {
@@ -540,7 +488,6 @@ export async function renderAIObservability(container) {
         refreshLLMPerformanceChart(),
         refreshTokenChart(),
         refreshCostCard(),
-        refreshGaugeChart(),
       ]);
     } catch (err) {
       console.error('AI Observability refresh error:', err);
@@ -550,8 +497,5 @@ export async function renderAIObservability(container) {
   // Initial render
   await refresh();
 
-  // Set up 10s refresh interval
-  const intervalId = setInterval(refresh, 10000);
-
-  return { refresh, stop: () => clearInterval(intervalId) };
+  return { refresh, stop: () => {} };
 }
