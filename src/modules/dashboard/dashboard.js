@@ -1,10 +1,10 @@
 /**
- * Dashboard Orchestrator — assembles all sections and manages data refresh.
+ * Dashboard Orchestrator — assembles all 5 sections and manages data refresh.
  *
- * Exports: initDashboard(), refreshDashboard()
+ * Exports: initDashboard(), refreshDashboard(), destroyDashboard()
  *
  * Mounts System Overview, User Behavior, AI Observability, Infrastructure Health,
- * and Live Telemetry sections into the #dashboard container.
+ * and Live Telemetry sections into the #dashboard-content container.
  * Manages 10s refresh cycles for all sections.
  */
 
@@ -22,115 +22,150 @@ let userBehaviorHandle = null;
 let aiObservabilityHandle = null;
 let infrastructureHealthHandle = null;
 let liveTelemetryHandle = null;
+let refreshInterval = null;
 let isInitialized = false;
 
 /**
- * Initialize the dashboard: render all sections into #dashboard.
+ * Initialize the dashboard: render all 5 sections into #dashboard-content.
  * Should be called when the user navigates to #dashboard route.
  */
 export async function initDashboard() {
-  if (isInitialized) {
-    // Already initialized — just refresh
-    await refreshDashboard();
+  const container = document.getElementById('dashboard-content');
+  if (!container) {
+    console.warn('Dashboard content container #dashboard-content not found');
     return;
   }
 
-  const dashboardEl = document.getElementById('dashboard');
-  if (!dashboardEl) {
-    console.warn('Dashboard container #dashboard not found');
-    return;
-  }
+  // Clear existing content
+  container.innerHTML = '';
 
-  // Clear existing dashboard content (keep the header/title area if present)
-  // We replace the inner content with our new structure
-  const existingContent = dashboardEl.querySelector('.dashboard-content');
-  if (existingContent) {
-    existingContent.innerHTML = '';
-  } else {
-    // Create a content wrapper
-    const contentWrapper = document.createElement('div');
-    contentWrapper.className = 'dashboard-content';
-    contentWrapper.style.cssText = 'max-width:7xl;margin:0 auto;padding:0 1rem;';
-    dashboardEl.appendChild(contentWrapper);
-  }
+  // Destroy any previous Chart.js instances
+  destroyCharts();
 
-  const contentEl = dashboardEl.querySelector('.dashboard-content');
-  if (!contentEl) return;
-
-  // Render System Overview
-  const overviewContainer = document.createElement('div');
-  overviewContainer.style.marginBottom = '24px';
-  contentEl.appendChild(overviewContainer);
+  // Render all 5 sections in order
+  const overviewContainer = createSectionContainer(container, 'system-overview');
   systemOverviewHandle = await renderSystemOverview(overviewContainer);
 
-  // Render User Behavior Analytics
-  const behaviorContainer = document.createElement('div');
-  contentEl.appendChild(behaviorContainer);
+  const behaviorContainer = createSectionContainer(container, 'user-behavior');
   userBehaviorHandle = await renderUserBehavior(behaviorContainer);
 
-  // Render AI Observability
-  const aiContainer = document.createElement('div');
-  aiContainer.style.marginTop = '24px';
-  contentEl.appendChild(aiContainer);
+  const aiContainer = createSectionContainer(container, 'ai-observability');
   aiObservabilityHandle = await renderAIObservability(aiContainer);
 
-  // Render Infrastructure Health
-  const infraContainer = document.createElement('div');
-  infraContainer.style.marginTop = '24px';
-  contentEl.appendChild(infraContainer);
+  const infraContainer = createSectionContainer(container, 'infrastructure-health');
   infrastructureHealthHandle = await renderInfrastructureHealth(infraContainer);
 
-  // Render Live Telemetry
-  const telemetryContainer = document.createElement('div');
-  telemetryContainer.style.marginTop = '24px';
-  contentEl.appendChild(telemetryContainer);
+  const telemetryContainer = createSectionContainer(container, 'live-telemetry');
   liveTelemetryHandle = await renderLiveTelemetry(telemetryContainer);
 
+  // Set up unified 10s refresh cycle
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+  }
+  refreshInterval = setInterval(async () => {
+    await refreshDashboard();
+  }, 10000);
+
   isInitialized = true;
+
+  // Update last-refresh timestamp
+  updateLastRefresh();
 }
 
 /**
  * Trigger a manual refresh of all dashboard sections.
  */
 export async function refreshDashboard() {
-  if (systemOverviewHandle && typeof systemOverviewHandle.refresh === 'function') {
+  const overviewContainer = document.getElementById('section-system-overview');
+  const behaviorContainer = document.getElementById('section-user-behavior');
+  const aiContainer = document.getElementById('section-ai-observability');
+  const infraContainer = document.getElementById('section-infrastructure-health');
+
+  if (overviewContainer && systemOverviewHandle?.refresh) {
     await systemOverviewHandle.refresh();
   }
-  if (userBehaviorHandle && typeof userBehaviorHandle.refresh === 'function') {
+  if (behaviorContainer && userBehaviorHandle?.refresh) {
     await userBehaviorHandle.refresh();
   }
-  if (aiObservabilityHandle && typeof aiObservabilityHandle.refresh === 'function') {
+  if (aiContainer && aiObservabilityHandle?.refresh) {
     await aiObservabilityHandle.refresh();
   }
-  if (infrastructureHealthHandle && typeof infrastructureHealthHandle.refresh === 'function') {
+  if (infraContainer && infrastructureHealthHandle?.refresh) {
     await infrastructureHealthHandle.refresh();
   }
-  if (liveTelemetryHandle && typeof liveTelemetryHandle.refresh === 'function') {
+  // Live telemetry updates via SSE, no need to re-render
+  if (liveTelemetryHandle?.refresh) {
     await liveTelemetryHandle.refresh();
+  }
+
+  // Update last-refresh timestamp
+  updateLastRefresh();
+}
+
+/**
+ * Destroy all dashboard resources: intervals, SSE connections, Chart.js instances.
+ * Called when navigating away from the dashboard.
+ */
+export function destroyDashboard() {
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+    refreshInterval = null;
+  }
+
+  // Stop all section refresh intervals and SSE connections
+  if (systemOverviewHandle?.stop) systemOverviewHandle.stop();
+  if (userBehaviorHandle?.stop) userBehaviorHandle.stop();
+  if (aiObservabilityHandle?.stop) aiObservabilityHandle.stop();
+  if (infrastructureHealthHandle?.stop) infrastructureHealthHandle.stop();
+  if (liveTelemetryHandle?.stop) liveTelemetryHandle.stop();
+
+  // Destroy all Chart.js instances
+  destroyCharts();
+
+  // Clear handles
+  systemOverviewHandle = null;
+  userBehaviorHandle = null;
+  aiObservabilityHandle = null;
+  infrastructureHealthHandle = null;
+  liveTelemetryHandle = null;
+
+  isInitialized = false;
+}
+
+/**
+ * Destroy all Chart.js instances registered in window.myCharts.
+ * Prevents memory leaks from orphaned chart canvases (T-05.3-01 mitigation).
+ */
+function destroyCharts() {
+  if (window.myCharts) {
+    Object.values(window.myCharts).forEach(chart => {
+      if (chart && typeof chart.destroy === 'function') {
+        chart.destroy();
+      }
+    });
+    window.myCharts = {};
   }
 }
 
 /**
- * Stop all refresh intervals.
- * Called when navigating away from the dashboard.
+ * Update the #last-refresh element with current time.
  */
-export function stopDashboard() {
-  if (systemOverviewHandle && typeof systemOverviewHandle.stop === 'function') {
-    systemOverviewHandle.stop();
+function updateLastRefresh() {
+  const lastRefresh = document.getElementById('last-refresh');
+  if (lastRefresh) {
+    lastRefresh.textContent = `Last refresh: ${new Date().toLocaleTimeString()}`;
   }
-  if (userBehaviorHandle && typeof userBehaviorHandle.stop === 'function') {
-    userBehaviorHandle.stop();
-  }
-  if (aiObservabilityHandle && typeof aiObservabilityHandle.stop === 'function') {
-    aiObservabilityHandle.stop();
-  }
-  if (infrastructureHealthHandle && typeof infrastructureHealthHandle.stop === 'function') {
-    infrastructureHealthHandle.stop();
-  }
-  if (liveTelemetryHandle && typeof liveTelemetryHandle.stop === 'function') {
-    liveTelemetryHandle.stop();
-  }
-  isInitialized = false;
+}
+
+/**
+ * Create a section container div and append to parent.
+ */
+function createSectionContainer(parent, id) {
+  const section = document.createElement('div');
+  section.id = `section-${id}`;
+  section.className = 'dashboard-section';
+  parent.appendChild(section);
+  return section;
 }
 
 // Expose promQuery and promRange on window for section modules to use

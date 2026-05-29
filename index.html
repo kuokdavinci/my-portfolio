@@ -452,31 +452,23 @@
     </section>
 
     <!-- DASHBOARD -->
-    <section id="dashboard" class="py-20 bg-transparent">
-      <div class="max-w-7xl mx-auto px-4 md:px-12">
-        <div class="text-center mb-12 reveal">
-          <h2 class="section-title">Dashboard</h2>
-          <p class="section-subtitle mx-auto">Real-time portfolio metrics — Prometheus data, live charts, and system health.</p>
-          <div class="flex flex-wrap justify-center gap-3 mt-6">
-            <span class="skill-tag px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium inline-flex items-center gap-1.5" id="prometheus-badge">
-              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" id="prometheus-pulse"></span>
-              <span id="prometheus-status-text">Prometheus Sandbox</span>
+    <section id="dashboard" class="py-8 bg-transparent hidden">
+      <div class="max-w-[1600px] mx-auto px-4 md:px-6">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-white">Observability Dashboard</h2>
+            <p class="text-sm text-white/60 font-code mt-1">Real-time portfolio telemetry · Auto-refresh every 10s</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-400 rounded-full text-xs font-code" id="prometheus-badge">
+              <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse" id="prometheus-pulse"></span>
+              <span id="prometheus-status-text">Prometheus Live</span>
             </span>
-            <span class="skill-tag px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium inline-flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-              Chart.js
-            </span>
-            <span class="skill-tag px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium inline-flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
-              FastAPI Metrics
-            </span>
+            <span class="text-xs text-white/40 font-code" id="last-refresh">Last refresh: --</span>
           </div>
         </div>
-
-        <!-- Dashboard content rendered by dashboard.js modules -->
-        <div id="dashboard-modules"></div>
-
-        <p class="text-center text-on-surface-variant/60 text-sm mt-8 reveal font-code">
+        <div id="dashboard-content"></div>
+        <p class="text-center text-on-surface-variant/60 text-sm mt-8 font-code">
           Data sourced from Prometheus · Auto-refresh every 10s ·
           <a href="http://localhost:9090" target="_blank" rel="noopener" class="text-primary dark:text-primary hover:underline">Open Prometheus ↗</a>
         </p>

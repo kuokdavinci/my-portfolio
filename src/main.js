@@ -4,7 +4,7 @@ import './modules/dashboard/dashboard.css';
 import { portfolioConfig } from './data/portfolio-config.js';
 import { setupPortfolioChatbot } from './modules/chatbot/chatbot-ui.js';
 import { getTracker } from './modules/tracking/tracker.js';
-import { initDashboard as initModularDashboard, refreshDashboard as refreshModularDashboard, stopDashboard } from './modules/dashboard/dashboard.js';
+import { initDashboard, refreshDashboard, destroyDashboard } from './modules/dashboard/dashboard.js';
 
 window.portfolioConfig = portfolioConfig;
 
@@ -42,8 +42,7 @@ function toggleTheme() {
   
   // Re-render dashboard charts immediately when switching modes to update colors
   if (window.location.hash === '#dashboard') {
-    renderCharts();
-    refreshModularDashboard();
+    refreshDashboard();
   }
 }
 
@@ -398,6 +397,7 @@ function handleRoute() {
     mainSections.forEach(section => section.classList.add('hidden'));
     if (dashboardSection) dashboardSection.classList.remove('hidden');
     window.scrollTo({ top: 0, behavior: 'instant' });
+    destroyDashboard();
     initDashboard();
     return;
   } else {
@@ -632,31 +632,6 @@ function handleRoute() {
         </div>
       `;
     }
-  } else if (hash === '#dashboard') {
-    // Hide all main sections except dashboard
-    const mainSections = document.querySelectorAll('main > section:not(#project-details-view):not(#dashboard)');
-    mainSections.forEach(section => {
-      section.classList.add('hidden');
-    });
-
-    // Show dashboard section
-    const dashboardSection = document.getElementById('dashboard');
-    if (dashboardSection) {
-      dashboardSection.classList.remove('hidden');
-    }
-
-    // Hide project details
-    detailsView.classList.add('hidden');
-
-    // Refresh stats on dashboard navigation
-    loadPortfolioStats();
-    refreshModularDashboard();
-
-    // Track page view
-    trackEvent('page_view', { page: 'dashboard' });
-
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'instant' });
   } else {
     // Show main sections (except dashboard — it's a separate page)
     const mainSections = document.querySelectorAll('main > section:not(#project-details-view):not(#dashboard)');
@@ -664,12 +639,12 @@ function handleRoute() {
       section.classList.remove('hidden');
     });
 
-    // Hide dashboard (separate page) and stop refresh intervals
+    // Hide dashboard (separate page) and destroy all dashboard resources
     const dashboardSection = document.getElementById('dashboard');
     if (dashboardSection) {
       dashboardSection.classList.add('hidden');
     }
-    stopDashboard();
+    destroyDashboard();
 
     // Hide project details
     detailsView.classList.add('hidden');
@@ -933,243 +908,4 @@ function safeRenderChart(canvasId, config) {
   if (el) {
     window.myCharts[canvasId] = new Chart(el, config);
   }
-}
-
-async function initDashboard() {
-  // Use new modular dashboard (System Overview + User Behavior)
-  await initModularDashboard();
-
-  // Also load legacy stats for backward compatibility
-  await loadDashboardStats();
-  await renderCharts();
-
-  if (window.dashboardInterval) {
-    clearInterval(window.dashboardInterval);
-    window.dashboardInterval = null;
-  }
-}
-
-async function loadDashboardStats() {
-  const results = await promQuery('sum(chatbot_queries_total)');
-  const queries = results[0]?.value?.[1] || '0';
-  const el1 = document.getElementById('stat-queries');
-  if (el1) el1.textContent = Math.round(parseFloat(queries)).toLocaleString();
-
-  const results2 = await promQuery('sum(api_requests_total)');
-  const requests = results2[0]?.value?.[1] || '0';
-  const el2 = document.getElementById('stat-requests');
-  if (el2) el2.textContent = Math.round(parseFloat(requests)).toLocaleString();
-}
-
-async function renderCharts() {
-  if (typeof Chart === 'undefined') return;
-  const c = chartColors();
-
-  // 1. API Traffic Volume (Line Chart)
-  const reqResults = await promRange('sum(rate(api_requests_total[5m])) * 60');
-  if (reqResults.length > 0) {
-    const pts = reqResults[0].values;
-    safeRenderChart('chart-requests', {
-      type: 'line',
-      data: {
-        labels: pts.map(p => new Date(p[0] * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})),
-        datasets: [{
-          label: 'Requests / min',
-          data: pts.map(p => parseFloat(p[1]).toFixed(1)),
-          borderColor: c.primary,
-          backgroundColor: c.primaryAlpha,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 2,
-          borderWidth: 2,
-        }]
-      },
-      options: chartOpts(c, 'req/min')
-    });
-  }
-
-  // 2. AI Intent Category (Bar Chart)
-  const catResults = await promQuery('sum by (category) (chatbot_queries_total)');
-  if (catResults.length > 0) {
-    const colors = [c.primary, c.secondary, c.tertiary, c.cyan, c.green];
-    safeRenderChart('chart-categories', {
-      type: 'bar',
-      data: {
-        labels: catResults.map(r => r.metric.category || 'general'),
-        datasets: [{
-          label: 'Queries',
-          data: catResults.map(r => parseFloat(r.value[1])),
-          backgroundColor: catResults.map((_, i) => colors[i % colors.length]),
-          borderRadius: 0,
-          borderWidth: 2,
-          borderColor: c.text
-        }]
-      },
-      options: chartOpts(c, 'queries', { plugins: { legend: { display: false } } })
-    });
-  }
-
-  // 3. System Performance Profile (Dual-axis Line Chart: API Latency & LLM Duration)
-  const latResults = await promRange('histogram_quantile(0.5, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))');
-  const lat95Results = await promRange('histogram_quantile(0.95, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))');
-  const llmResults = await promRange('sum(rate(chatbot_llm_duration_seconds_sum[5m])) / sum(rate(chatbot_llm_duration_seconds_count[5m]))');
-  
-  if (latResults.length > 0) {
-    const pts50 = latResults[0]?.values || [];
-    const pts95 = lat95Results[0]?.values || [];
-    const ptsLlm = llmResults[0]?.values || [];
-    
-    safeRenderChart('chart-latency', {
-      type: 'line',
-      data: {
-        labels: pts50.map(p => new Date(p[0] * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})),
-        datasets: [
-          { 
-            label: 'API p50 Latency (L)', 
-            data: pts50.map(p => (parseFloat(p[1]) * 1000).toFixed(0)), 
-            borderColor: c.green, 
-            backgroundColor: c.greenAlpha, 
-            yAxisID: 'y',
-            fill: false, 
-            tension: 0.3, 
-            pointRadius: 2, 
-            borderWidth: 2 
-          },
-          { 
-            label: 'API p95 Latency (L)', 
-            data: pts95.map(p => (parseFloat(p[1]) * 1000).toFixed(0)), 
-            borderColor: c.amber, 
-            backgroundColor: c.amberAlpha, 
-            yAxisID: 'y',
-            fill: false, 
-            tension: 0.3, 
-            pointRadius: 2, 
-            borderWidth: 2 
-          },
-          { 
-            label: 'Avg LLM Gen Time (R)', 
-            data: ptsLlm.map(p => parseFloat(p[1]).toFixed(2)), 
-            borderColor: c.rose, 
-            backgroundColor: c.roseAlpha, 
-            yAxisID: 'y1',
-            fill: true, 
-            tension: 0.3, 
-            pointRadius: 2, 
-            borderWidth: 2 
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { labels: { color: c.text, font: { family: "'JetBrains Mono', monospace", size: 10 } } },
-          tooltip: {
-            backgroundColor: c.text === '#e0e3e5' ? '#16191b' : '#ffffff',
-            titleColor: c.text === '#e0e3e5' ? '#ffffff' : '#16191b',
-            bodyColor: c.text === '#e0e3e5' ? '#e0e3e5' : '#16191b',
-            borderColor: c.grid,
-            borderWidth: 1,
-            cornerRadius: 0
-          }
-        },
-        scales: {
-          x: { ticks: { color: c.text, font: { size: 9 } }, grid: { color: c.grid } },
-          y: { 
-            type: 'linear',
-            position: 'left',
-            ticks: { color: c.text, font: { size: 9 }, callback: v => `${v} ms` },
-            grid: { color: c.grid } 
-          },
-          y1: {
-            type: 'linear',
-            position: 'right',
-            ticks: { color: c.text, font: { size: 9 }, callback: v => `${v}s` },
-            grid: { drawOnChartArea: false }
-          }
-        }
-      }
-    });
-  }
-
-  // 4. Requests by Status Code (Doughnut)
-  const statusResults = await promQuery('sum by (status) (api_requests_total)');
-  if (statusResults.length > 0) {
-    const colors = [c.green, c.secondary, c.amber, c.rose];
-    safeRenderChart('chart-status', {
-      type: 'doughnut',
-      data: {
-        labels: statusResults.map(r => `HTTP ${r.metric.status || 'unknown'}`),
-        datasets: [{
-          data: statusResults.map(r => parseFloat(r.value[1])),
-          backgroundColor: statusResults.map((_, i) => colors[i % colors.length]),
-          borderWidth: 2,
-          borderColor: c.text
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { 
-            position: 'bottom', 
-            labels: { color: c.text, font: { family: "'JetBrains Mono', monospace", size: 9 }, boxWidth: 12 } 
-          }
-        }
-      }
-    });
-  }
-
-  // 5. Requests by Endpoint (Horizontal Bar)
-  const epResults = await promQuery('sum by (endpoint) (api_requests_total)');
-  if (epResults.length > 0) {
-    const colors = [c.primary, c.secondary, c.tertiary, c.cyan];
-    safeRenderChart('chart-endpoints', {
-      type: 'bar',
-      data: {
-        labels: epResults.map(r => r.metric.endpoint || '/'),
-        datasets: [{
-          label: 'Requests',
-          data: epResults.map(r => parseFloat(r.value[1])),
-          backgroundColor: epResults.map((_, i) => colors[i % colors.length]),
-          borderWidth: 2,
-          borderColor: c.text
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        indexAxis: 'y',
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: c.text, font: { size: 8 } }, grid: { color: c.grid } },
-          y: { ticks: { color: c.text, font: { size: 8 } }, grid: { color: c.grid } }
-        }
-      }
-    });
-  }
-}
-
-function chartOpts(c, unit, extra = {}) {
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { labels: { color: c.text, font: { family: "'JetBrains Mono', monospace", size: 10 } } },
-      tooltip: {
-        backgroundColor: c.text === '#e0e3e5' ? '#16191b' : '#ffffff',
-        titleColor: c.text === '#e0e3e5' ? '#ffffff' : '#16191b',
-        bodyColor: c.text === '#e0e3e5' ? '#e0e3e5' : '#16191b',
-        borderColor: c.grid,
-        borderWidth: 1,
-        cornerRadius: 0
-      },
-      ...extra.plugins || {}
-    },
-    scales: {
-      x: { ticks: { color: c.text, font: { size: 9 } }, grid: { color: c.grid } },
-      y: { beginAtZero: true, ticks: { color: c.text, font: { size: 9 }, callback: v => `${v} ${unit}` }, grid: { color: c.grid } },
-    },
-    ...extra
-  };
 }
