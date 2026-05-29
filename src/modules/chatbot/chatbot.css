@@ -422,4 +422,14 @@
     align-items: center;
     min-width: 18px;
   }
+
+  /* Link cursor feedback in chat bubbles */
+  .rag-chat-bubble a {
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  .rag-chat-bubble a:hover {
+    opacity: 0.8;
+  }
 }

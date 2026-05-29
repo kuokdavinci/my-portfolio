@@ -357,10 +357,23 @@ export function setupPortfolioChatbot(portfolioConfig) {
   );
 
   messages.addEventListener('click', (e) => {
-    const link = e.target.closest('.rag-chat-source-link');
-    if (link && link.getAttribute('href').startsWith('#')) {
-      closeChat();
+    const link = e.target.closest('a');
+    if (!link) return;
+
+    const href = link.getAttribute('href');
+    if (!href) return;
+
+    if (href.startsWith('#')) {
+      // Internal link: scroll to section without closing chat
+      e.preventDefault();
+      const targetId = href.substring(1);
+      const targetElement = document.getElementById(targetId);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
+    // External links: already have target="_blank" from parseMarkdown, no action needed
+    // Chat stays open in both cases
   });
 
   toggle.addEventListener('click', () => {
