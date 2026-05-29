@@ -924,10 +924,20 @@ header button.md-hidden {
   display: none;
 }
 
+/* Portfolio stats section */
+#stats .bg-secondary-container {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#stats .bg-secondary-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 @media (max-width: 768px) {
-  #metrics .reveal[style*="height: 70vh"] {
-    height: 60vh !important;
-    min-height: 400px !important;
+  #stats .reveal[style*="height: 60vh"] {
+    height: 50vh !important;
+    min-height: 350px !important;
   }
 }
 

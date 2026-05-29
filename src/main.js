@@ -1,5 +1,7 @@
 import './style.css';
+import './modules/chatbot/chatbot.css';
 import { portfolioConfig } from './data/portfolio-config.js';
+import { setupPortfolioChatbot } from './modules/chatbot/chatbot-ui.js';
 
 window.portfolioConfig = portfolioConfig;
 
@@ -323,353 +325,7 @@ function escapeHtml(value) {
   return div.innerHTML;
 }
 
-function normalizeText(value) {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9+#.\s-]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
-function tokenize(value) {
-  const stopWords = new Set([
-    'about', 'tell', 'what', 'which', 'where', 'when', 'who', 'does', 'with', 'your', 'you',
-    'toi', 'ban', 've', 'cua', 'la', 'gi', 'nhung', 'cac', 'cho', 'biet', 'co', 'khong',
-    'anh', 'quoc', 'le', 'trung', 'portfolio', 'project', 'skill'
-  ]);
-
-  return normalizeText(value)
-    .split(' ')
-    .filter(token => token.length > 1 && !stopWords.has(token));
-}
-
-function buildKnowledgeBase(config) {
-  const { personalInfo, projects, experience, competencies, techStack, languages, contact } = config;
-  const chunks = [
-    {
-      title: 'Profile',
-      category: 'About',
-      text: `${personalInfo.name} is an ${personalInfo.title} based in ${personalInfo.location}. ${personalInfo.description} ${personalInfo.detailedBio}`
-    },
-    {
-      title: 'Current Focus',
-      category: 'About',
-      text: `${personalInfo.name} focuses on AI/ML, backend engineering, web development, software engineering, Spring Boot, Flutter, Python, LangChain, data science, and machine learning.`
-    },
-    {
-      title: 'Tech Stack',
-      category: 'Skills',
-      text: `Main technologies: ${techStack.join(', ')}.`
-    },
-    {
-      title: 'Languages',
-      category: 'Languages',
-      text: `Languages: ${languages.map(language => `${language.name} (${language.level})`).join(', ')}.`
-    },
-    {
-      title: 'Contact',
-      category: 'Contact',
-      text: `Contact email: ${contact.email}. Portfolio email: leanhquoc128@gmail.com. Phone: 0768040802. GitHub: ${personalInfo.socialLinks.github}. LinkedIn: ${personalInfo.socialLinks.linkedin}.`
-    },
-    {
-      title: 'Education at HCMUS',
-      category: 'Journey',
-      text: `${personalInfo.name} started at University of Science, Ho Chi Minh City (HCMUS) in October 2020.`
-    },
-    {
-      title: 'Software Engineer Internship',
-      category: 'Journey',
-      text: `${personalInfo.name} worked as a Software Engineer Intern at Phu An Phuoc Investment Company from March to June 2024.`
-    },
-    {
-      title: 'Graduation',
-      category: 'Journey',
-      text: `${personalInfo.name} graduated from HCMUS in October 2025 with GPA 3.1/4.0.`
-    },
-    {
-      title: 'Self Study',
-      category: 'Journey',
-      text: `${personalInfo.name} focused on self-study from October 2025 to April 2026, covering system design, distributed systems, and Infrastructure as Code.`
-    },
-    {
-      title: 'AI in Action at VinUni',
-      category: 'Journey',
-      text: `${personalInfo.name} is currently enrolled in the AI in Action program at VinUni from April 2026 onward.`
-    }
-  ];
-
-  projects.forEach(project => {
-    chunks.push({
-      title: project.title,
-      category: 'Project',
-      text: `${project.title}: ${project.description} Tags: ${project.tags.join(', ')}. Type: ${project.badge}. Language: ${project.language}. Code: ${project.codeLink}.`
-    });
-  });
-
-  experience.forEach(item => {
-    chunks.push({
-      title: item.role,
-      category: 'Experience',
-      text: `${item.role} at ${item.company}, ${item.duration}. ${item.description} Achievements: ${item.achievements.join(', ')}.`
-    });
-  });
-
-  competencies.forEach(competency => {
-    chunks.push({
-      title: competency.title,
-      category: 'Competency',
-      text: `${competency.title}: ${competency.items.map(item => `${item.name} - ${item.desc}`).join(' ')}`
-    });
-  });
-
-  return chunks.map(chunk => ({
-    ...chunk,
-    normalizedText: normalizeText(`${chunk.title} ${chunk.category} ${chunk.text}`),
-    tokens: tokenize(`${chunk.title} ${chunk.category} ${chunk.text}`)
-  }));
-}
-
-function retrieveKnowledge(question, knowledgeBase) {
-  const queryTokens = tokenize(question);
-  const normalizedQuestion = normalizeText(question);
-
-  if (queryTokens.length === 0) {
-    return [];
-  }
-
-  return knowledgeBase
-    .map(chunk => {
-      const score = queryTokens.reduce((total, token) => {
-        if (chunk.normalizedText.includes(token)) {
-          return total + (chunk.title.toLowerCase().includes(token) ? 3 : 1);
-        }
-
-        return total;
-      }, 0);
-
-      const phraseBoost = normalizedQuestion.includes(normalizeText(chunk.title)) ? 4 : 0;
-
-      return {
-        ...chunk,
-        score: score + phraseBoost
-      };
-    })
-    .filter(chunk => chunk.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3);
-}
-
-function generateChatbotAnswer(question, knowledgeBase) {
-  const matches = retrieveKnowledge(question, knowledgeBase);
-
-  if (matches.length === 0) {
-    return {
-      answer: 'I could not find a reliable match in Quoc\'s portfolio data. Try asking about his projects, tech stack, AI work, backend skills, education, or contact information.',
-      sources: []
-    };
-  }
-
-  const context = matches.map(match => match.text).join(' ');
-  const loweredQuestion = normalizeText(question);
-
-  let answer;
-  if (loweredQuestion.includes('contact') || loweredQuestion.includes('email') || loweredQuestion.includes('lien he')) {
-    answer = portfolioConfig.personalInfo.socialLinks.email
-      ? `You can contact Quoc at ${portfolioConfig.contact.email}, or visit GitHub at ${portfolioConfig.personalInfo.socialLinks.github} and LinkedIn at ${portfolioConfig.personalInfo.socialLinks.linkedin}.`
-      : context;
-  } else if (loweredQuestion.includes('project') || loweredQuestion.includes('du an') || loweredQuestion.includes('repo')) {
-    const projectMatches = matches.filter(match => match.category === 'Project');
-    const projects = projectMatches.length > 0 ? projectMatches : knowledgeBase.filter(chunk => chunk.category === 'Project').slice(0, 3);
-    answer = `Relevant projects: ${projects.map(project => project.text).join(' ')}`;
-  } else if (loweredQuestion.includes('skill') || loweredQuestion.includes('tech') || loweredQuestion.includes('stack') || loweredQuestion.includes('ky nang')) {
-    answer = `Quoc's core stack includes ${portfolioConfig.techStack.join(', ')}. ${context}`;
-  } else if (loweredQuestion.includes('ai') || loweredQuestion.includes('machine') || loweredQuestion.includes('ml') || loweredQuestion.includes('rag')) {
-    answer = `Quoc focuses on AI/ML through Python, data science, machine learning coursework, LangChain, and hands-on AI projects. ${context}`;
-  } else {
-    answer = context;
-  }
-
-  return {
-    answer,
-    sources: matches.map(match => `${match.category}: ${match.title}`)
-  };
-}
-
-function addChatMessage(container, role, content, sources = []) {
-  const message = document.createElement('div');
-  message.className = `rag-chat-message ${role === 'user' ? 'is-user' : 'is-bot'}`;
-
-  const sourceMarkup = sources.length
-    ? `<div class="rag-chat-sources">${sources.map(source => {
-        if (typeof source === 'object' && source.link) {
-          return `<a href="${escapeHtml(source.link)}" class="rag-chat-source-link">${escapeHtml(source.title)}</a>`;
-        }
-        return `<span>${escapeHtml(source)}</span>`;
-      }).join('')}</div>`
-    : '';
-
-  message.innerHTML = `
-    <div class="rag-chat-bubble">
-      <p>${escapeHtml(content)}</p>
-      ${sourceMarkup}
-    </div>
-  `;
-
-  container.appendChild(message);
-  container.scrollTop = container.scrollHeight;
-}
-
-function setupPortfolioChatbot() {
-  if (document.querySelector('.rag-chatbot')) return;
-
-  const knowledgeBase = buildKnowledgeBase(portfolioConfig);
-  const chatbot = document.createElement('section');
-  chatbot.className = 'rag-chatbot';
-  chatbot.setAttribute('aria-label', 'Portfolio RAG chatbot');
-  chatbot.innerHTML = `
-    <button class="rag-chat-toggle" type="button" aria-expanded="false" aria-controls="portfolio-chat-panel">
-      <span class="material-symbols-outlined">smart_toy</span>
-      <span class="rag-chat-toggle-text">Ask Quoc</span>
-    </button>
-    <div class="rag-chat-panel" id="portfolio-chat-panel" hidden>
-      <div class="rag-chat-header">
-        <div>
-          <p class="rag-chat-kicker">Portfolio RAG</p>
-          <h2>Ask about Quoc</h2>
-        </div>
-        <button class="rag-chat-close" type="button" aria-label="Close chatbot">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </div>
-      <div class="rag-chat-messages" aria-live="polite"></div>
-      <div class="rag-chat-prompts" aria-label="Suggested questions">
-        <button type="button">What AI work has Quoc done?</button>
-        <button type="button">Which backend skills does he have?</button>
-        <button type="button">Show relevant projects</button>
-      </div>
-      <form class="rag-chat-form">
-        <label class="sr-only" for="rag-chat-input">Ask a question</label>
-        <input id="rag-chat-input" name="question" autocomplete="off" placeholder="Ask about skills, projects, contact..." />
-        <button type="submit" aria-label="Send question">
-          <span class="material-symbols-outlined">send</span>
-        </button>
-      </form>
-    </div>
-  `;
-
-  document.body.appendChild(chatbot);
-
-  const toggle = chatbot.querySelector('.rag-chat-toggle');
-  const panel = chatbot.querySelector('.rag-chat-panel');
-  const closeButton = chatbot.querySelector('.rag-chat-close');
-  const messages = chatbot.querySelector('.rag-chat-messages');
-  const form = chatbot.querySelector('.rag-chat-form');
-  const input = chatbot.querySelector('#rag-chat-input');
-  const promptButtons = chatbot.querySelectorAll('.rag-chat-prompts button');
-
-  const openChat = () => {
-    panel.hidden = false;
-    toggle.setAttribute('aria-expanded', 'true');
-    requestAnimationFrame(() => input.focus());
-  };
-
-  const closeChat = () => {
-    panel.hidden = true;
-    toggle.setAttribute('aria-expanded', 'false');
-    toggle.focus();
-  };
-
-  const askQuestion = async (question) => {
-    const trimmedQuestion = question.trim();
-    if (!trimmedQuestion) return;
-
-    // Track chat query event
-    trackEvent('chat_query', { query: trimmedQuestion });
-
-    addChatMessage(messages, 'user', trimmedQuestion);
-
-    // 1. Add temporary thinking indicator bubble
-    const thinkingMessage = document.createElement('div');
-    thinkingMessage.className = 'rag-chat-message is-bot is-thinking';
-    thinkingMessage.innerHTML = `
-      <div class="rag-chat-bubble">
-        <div class="thinking-dots">
-          <span></span><span></span><span></span>
-        </div>
-      </div>
-    `;
-    messages.appendChild(thinkingMessage);
-    messages.scrollTop = messages.scrollHeight;
-
-    const removeThinking = () => {
-      if (thinkingMessage.parentNode) {
-        thinkingMessage.parentNode.removeChild(thinkingMessage);
-      }
-    };
-
-    try {
-      const sessionId = getSessionId();
-      // 2. Fetch answer from backend gateway chatbot endpoint
-      const response = await fetch(CHAT_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          session_id: sessionId,
-          message: trimmedQuestion
-        })
-      });
-
-      removeThinking();
-
-      if (response.ok) {
-        const data = await response.json();
-        addChatMessage(messages, 'bot', data.answer, data.sources);
-      } else {
-        throw new Error('API server returned error code ' + response.status);
-      }
-    } catch (error) {
-      console.warn('Backend chatbot API failed, falling back to local generation:', error);
-      removeThinking();
-      
-      // 3. Fallback to client-side rule-based response
-      const localResponse = generateChatbotAnswer(trimmedQuestion, knowledgeBase);
-      addChatMessage(messages, 'bot', localResponse.answer, localResponse.sources);
-    }
-  };
-
-  addChatMessage(
-    messages,
-    'bot',
-    'Hi, I can retrieve information from this portfolio. Ask about Quoc\'s projects, skills, AI focus, journey, or contact details.'
-  );
-
-  toggle.addEventListener('click', () => {
-    if (panel.hidden) {
-      openChat();
-    } else {
-      closeChat();
-    }
-  });
-
-  closeButton.addEventListener('click', closeChat);
-
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    askQuestion(input.value);
-    input.value = '';
-  });
-
-  promptButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      openChat();
-      askQuestion(button.textContent);
-    });
-  });
-}
 
 // JS Tracking SDK Client Implementation
 const TRACKING_API_URL = 'http://localhost:8000/api/v1/track';
@@ -741,6 +397,10 @@ function handleRoute() {
     // Track Case Study View event
     trackEvent('page_view', { page: `project_${projectId}` });
 
+    const boldNumbers = (text) => {
+      return text.replace(/(\d+(?:\.\d+)?%|\b\d+-\d+\b|\b\d+(?:\.\d+)?\b)/g, '<strong>$1</strong>');
+    };
+
     if (project && project.details) {
       detailsView.innerHTML = `
         <div class="max-w-7xl mx-auto px-4 md:px-12 opacity-0 transition-opacity duration-300" id="project-details-content">
@@ -754,97 +414,185 @@ function handleRoute() {
           <!-- Massive Typographic Header -->
           <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b-8 border-primary dark:border-outline-variant pb-6 mb-12 gap-4">
             <div>
-              <span class="font-code text-sm font-bold uppercase tracking-widest text-secondary dark:text-accent-light mb-2 block">Project Case Study</span>
+              <span class="font-code text-sm font-bold uppercase tracking-widest text-secondary dark:text-secondary mb-2 block">Project Case Study</span>
               <h1 class="font-headline text-4xl md:text-7xl font-black uppercase text-primary dark:text-on-background leading-none">${escapeHtml(project.title)}</h1>
-              ${project.duration ? `<p class="font-code text-sm font-bold uppercase tracking-wider text-primary dark:text-accent-light mt-2 inline-flex items-center gap-1.5 bg-primary/10 dark:bg-secondary-container/20 px-3 py-1.5 border border-primary/30 dark:border-secondary/40"><span class="material-symbols-outlined text-base dark:text-accent-light">event</span> ${escapeHtml(project.duration)}</p>` : ''}
+              ${project.duration ? `<p class="font-code text-sm font-bold uppercase tracking-wider text-primary dark:text-primary mt-2 inline-flex items-center gap-1.5 bg-primary/10 dark:bg-primary/10 px-3 py-1.5 border border-primary/30 dark:border-primary/30"><span class="material-symbols-outlined text-base text-primary dark:text-primary">event</span> ${escapeHtml(project.duration)}</p>` : ''}
             </div>
             <a href="${escapeHtml(project.codeLink)}" target="_blank" rel="noopener" class="btn-sourcecode font-code text-sm font-bold bg-primary text-on-primary dark:bg-primary dark:text-on-primary px-6 py-3 border-2 border-primary dark:border-primary hover:bg-transparent hover:text-primary dark:hover:text-primary transition-all rounded-none inline-flex items-center gap-2 cursor-pointer shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_var(--color-primary)] dark:hover:shadow-[6px_6px_0px_0px_var(--color-outline)] active:translate-x-0 active:translate-y-0 active:shadow-[4px_4px_0px_0px_var(--color-primary)]">
               <span class="material-symbols-outlined text-base !text-inherit">code</span> Source Code <span class="material-symbols-outlined text-sm !text-inherit">open_in_new</span>
             </a>
           </div>
 
-          <!-- Feature Highlights (icon + short label grid) -->
-          ${project.featureHighlights && project.featureHighlights.length > 0 ? `
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-            ${project.featureHighlights.map(f => `
-              <div class="border-2 border-primary dark:border-outline-variant p-4 bg-surface-container dark:bg-surface-container-low rounded-none flex flex-col items-center text-center gap-2 shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)]">
-                <span class="material-symbols-outlined text-3xl text-primary dark:text-primary-fixed">${f.icon}</span>
-                <span class="font-code text-xs font-bold uppercase tracking-wider text-on-surface">${escapeHtml(f.label)}</span>
-                <span class="font-body text-xs text-on-surface-variant/70">${escapeHtml(f.desc)}</span>
-              </div>
-            `).join('')}
+          <!-- Tech Stack Row (Horizontal, above Core Features) -->
+          ${project.details && project.details.systemSpecs ? `
+          <div class="mb-12">
+            <h2 class="font-headline text-2xl font-black uppercase text-primary dark:text-primary mb-4">Technology Stack</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              ${Object.entries(project.details.systemSpecs).map(([key, val]) => `
+                <div class="details-card border-2 border-primary dark:border-outline-variant p-4 bg-surface-container dark:bg-surface-container-low rounded-none shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)]">
+                  <span class="font-code text-xs font-bold uppercase tracking-wider text-secondary dark:text-secondary mb-1 block">${escapeHtml(key)}</span>
+                  <span class="font-body text-sm font-semibold text-on-surface dark:text-on-surface-variant">${escapeHtml(val)}</span>
+                </div>
+              `).join('')}
+            </div>
           </div>
           ` : ''}
 
-          <!-- Asymmetric Grid-Shift Layout -->
-          <div class="grid grid-cols-1 lg:grid-cols-4 gap-12 items-start">
-            <!-- Left column: Sidebar (1/4 width) -->
-            <div class="lg:col-span-1 border-4 border-primary dark:border-outline-variant p-6 bg-surface-container dark:bg-surface-container-lowest rounded-none flex flex-col gap-6 shadow-[8px_8px_0px_0px_var(--color-primary)] dark:shadow-[8px_8px_0px_0px_var(--color-outline)]">
-              <div>
-                <h3 class="font-code text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-on-surface-variant mb-3 border-b-2 border-primary dark:border-outline-variant pb-1">Type</h3>
-                <span class="inline-block px-3 py-1 bg-secondary-container text-primary dark:bg-primary-container dark:text-white text-xs font-bold uppercase tracking-wider rounded-none">${escapeHtml(project.badge)}</span>
-              </div>
+          <!-- Overview Section (Pushed to the top) -->
+          <div class="mb-12">
+            <h2 class="font-headline text-2xl font-black uppercase text-primary dark:text-primary mb-4">Project Overview</h2>
+            <p class="font-body text-lg leading-relaxed text-black dark:text-white">${escapeHtml(project.details.overview || project.details.longDescription || project.description)}</p>
+          </div>
 
-              <div>
-                <h3 class="font-code text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-on-surface-variant mb-3 border-b-2 border-primary dark:border-outline-variant pb-1">Primary Tech</h3>
-                <span class="inline-block px-3 py-1 bg-secondary-container text-primary dark:bg-primary-container dark:text-white text-xs font-bold uppercase tracking-wider rounded-none">${escapeHtml(project.language)}</span>
-              </div>
-
-              <div>
-                <h3 class="font-code text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-on-surface-variant mb-3 border-b-2 border-primary dark:border-outline-variant pb-1">Tech Stack</h3>
-                <div class="flex flex-wrap gap-2">
-                  ${project.tags.map(tag => `<span class="px-2.5 py-1 bg-secondary-container text-primary dark:bg-primary-container dark:text-white text-xs font-bold uppercase tracking-wider rounded-none">${escapeHtml(tag)}</span>`).join('')}
-                </div>
-              </div>
-
-              <div>
-                <h3 class="font-code text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-on-surface-variant mb-3 border-b-2 border-primary dark:border-outline-variant pb-1">System Specs</h3>
-                <dl class="flex flex-col gap-3 font-body text-sm">
-                  ${Object.entries(project.details.systemSpecs).map(([key, val]) => `
-                    <div>
-                      <dt class="font-bold text-primary dark:text-white">${escapeHtml(key)}</dt>
-                      <dd class="text-on-surface-variant dark:text-on-surface-variant">${escapeHtml(val)}</dd>
+          <!-- Core Modules -->
+          ${project.details.keyModules && project.details.keyModules.length > 0 ? `
+          <div class="mb-12">
+            <h2 class="font-headline text-2xl font-black uppercase text-primary dark:text-primary mb-4">Core Modules</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+              <!-- Left Column (Even Indices) -->
+              <div class="flex flex-col gap-4">
+                ${project.details.keyModules.filter((_, idx) => idx % 2 === 0).map(module => {
+                  const isObj = typeof module === 'object';
+                  const name = isObj ? module.name : module;
+                  const icon = isObj ? module.icon : '';
+                  const details = isObj ? module.details : '';
+                  return `
+                    <div class="module-accordion-item details-card border-2 border-primary dark:border-outline-variant p-4 bg-surface-container dark:bg-surface-container-low rounded-none shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)] cursor-pointer flex flex-col">
+                      <div class="flex justify-between items-center w-full">
+                        <div class="flex items-center">
+                          ${icon ? `<span class="material-symbols-outlined text-primary dark:text-primary mr-2 text-xl">${escapeHtml(icon)}</span>` : ''}
+                          <h4 class="font-headline text-base font-black uppercase text-primary dark:text-primary">${escapeHtml(name)}</h4>
+                        </div>
+                        ${details ? `<span class="expand-icon material-symbols-outlined text-primary dark:text-primary transition-transform duration-300">chevron_right</span>` : ''}
+                      </div>
+                      ${details ? `
+                        <div class="module-details mt-3 pt-3 border-t border-outline-variant/20 font-body text-sm font-medium text-black dark:text-white leading-relaxed">
+                          ${escapeHtml(details)}
+                        </div>
+                      ` : ''}
                     </div>
-                  `).join('')}
-                </dl>
+                  `;
+                }).join('')}
               </div>
-            </div>
-
-            <!-- Right column: Content narrative (3/4 width) -->
-            <div class="lg:col-span-3 flex flex-col gap-10 border-t-4 lg:border-t-0 lg:border-l-4 border-primary dark:border-outline-variant pt-8 lg:pt-0 lg:pl-10">
-              <!-- Long Description -->
-              <div class="flex flex-col gap-3">
-                <h2 class="font-headline text-2xl font-black uppercase text-primary dark:text-on-background">Project Overview</h2>
-                <p class="font-body text-lg leading-relaxed text-on-surface-variant dark:text-on-surface-variant/90">${escapeHtml(project.details.longDescription)}</p>
-              </div>
-
-              <!-- Challenges & Solutions side by side -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Challenges -->
-                <div class="border-2 border-primary dark:border-outline-variant p-6 bg-rose-50/50 dark:bg-rose-950/10 rounded-none shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)]">
-                  <h3 class="font-headline text-xl font-bold uppercase text-rose-700 dark:text-rose-400 mb-4 inline-flex items-center gap-2">
-                    <span class="material-symbols-outlined">warning</span> Key Challenges
-                  </h3>
-                  <ul class="flex flex-col gap-4 font-body text-base text-on-surface-variant dark:text-on-surface-variant list-disc pl-5">
-                    ${project.details.challenges.map(challenge => `<li>${escapeHtml(challenge)}</li>`).join('')}
-                  </ul>
-                </div>
-
-                <!-- Solutions -->
-                <div class="border-2 border-primary dark:border-outline-variant p-6 bg-emerald-50/50 dark:bg-emerald-950/10 rounded-none shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)]">
-                  <h3 class="font-headline text-xl font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-4 inline-flex items-center gap-2">
-                    <span class="material-symbols-outlined">task_alt</span> Solutions & Engineering
-                  </h3>
-                  <ul class="flex flex-col gap-4 font-body text-base text-on-surface-variant dark:text-on-surface-variant list-disc pl-5">
-                    ${project.details.solutions.map(solution => `<li>${escapeHtml(solution)}</li>`).join('')}
-                  </ul>
-                </div>
+              <!-- Right Column (Odd Indices) -->
+              <div class="flex flex-col gap-4">
+                ${project.details.keyModules.filter((_, idx) => idx % 2 !== 0).map(module => {
+                  const isObj = typeof module === 'object';
+                  const name = isObj ? module.name : module;
+                  const icon = isObj ? module.icon : '';
+                  const details = isObj ? module.details : '';
+                  return `
+                    <div class="module-accordion-item details-card border-2 border-primary dark:border-outline-variant p-4 bg-surface-container dark:bg-surface-container-low rounded-none shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)] cursor-pointer flex flex-col">
+                      <div class="flex justify-between items-center w-full">
+                        <div class="flex items-center">
+                          ${icon ? `<span class="material-symbols-outlined text-primary dark:text-primary mr-2 text-xl">${escapeHtml(icon)}</span>` : ''}
+                          <h4 class="font-headline text-base font-black uppercase text-primary dark:text-primary">${escapeHtml(name)}</h4>
+                        </div>
+                        ${details ? `<span class="expand-icon material-symbols-outlined text-primary dark:text-primary transition-transform duration-300">chevron_right</span>` : ''}
+                      </div>
+                      ${details ? `
+                        <div class="module-details mt-3 pt-3 border-t border-outline-variant/20 font-body text-sm font-medium text-black dark:text-white leading-relaxed">
+                          ${escapeHtml(details)}
+                        </div>
+                      ` : ''}
+                    </div>
+                  `;
+                }).join('')}
               </div>
             </div>
           </div>
+          ` : ''}
+
+            <!-- Challenges & Solutions (Paired Neobrutalist Cards) -->
+            <div class="mb-12">
+              <h2 class="font-headline text-2xl font-black uppercase text-primary dark:text-primary mb-4">Challenges & Solutions</h2>
+              <div class="grid grid-cols-1 gap-4">
+                ${project.details.challenges.map((challenge, idx) => {
+                  const solution = project.details.solutions[idx] || '';
+                  return `
+                    <div class="details-card border-2 border-primary dark:border-outline-variant p-6 bg-surface-container dark:bg-surface-container-low rounded-none shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)] flex flex-col gap-4">
+                      <!-- Challenge -->
+                      <div class="flex gap-3 items-start border-b border-outline-variant/20 pb-4">
+                        <span class="material-symbols-outlined text-rose-500 mt-0.5 icon-filled">error</span>
+                        <div>
+                          <h4 class="font-code text-sm font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-1">Challenge ${idx + 1}</h4>
+                          <p class="font-body text-base leading-relaxed text-on-surface dark:text-on-surface-variant">${boldNumbers(escapeHtml(challenge))}</p>
+                        </div>
+                      </div>
+                      <!-- Solution -->
+                      ${solution ? `
+                      <div class="flex gap-3 items-start pt-2">
+                        <span class="material-symbols-outlined text-emerald-500 mt-0.5 icon-filled">check_circle</span>
+                        <div>
+                          <h4 class="font-code text-sm font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">Engineering Solution</h4>
+                          <p class="font-body text-base leading-relaxed text-on-surface dark:text-on-surface-variant">${boldNumbers(escapeHtml(solution))}</p>
+                        </div>
+                      </div>
+                      ` : ''}
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- System Architecture (At the bottom, with link edges) -->
+            ${project.details.architecture ? `
+              <div class="mb-12">
+                <h2 class="font-headline text-2xl font-black uppercase text-primary dark:text-primary mb-4">System Architecture</h2>
+                <div class="flex flex-col gap-4">
+                  ${typeof project.details.architecture === 'object' ? `
+                    <p class="font-code text-sm font-bold uppercase tracking-wider text-secondary dark:text-secondary bg-surface-container dark:bg-surface-container-low px-4 py-2 border-l-4 border-primary dark:border-accent">
+                      Pattern: ${escapeHtml(project.details.architecture.pattern)}
+                    </p>
+                    <div class="flex flex-col lg:flex-row items-center lg:items-stretch gap-4">
+                      ${project.details.architecture.layers.map((layer, index) => `
+                        ${index > 0 ? `
+                          <div class="flex items-center justify-center text-primary dark:text-primary shrink-0 py-2 lg:py-0 self-center">
+                            <!-- Link line between cards -->
+                            <div class="hidden lg:block h-[3px] bg-primary dark:bg-outline-variant w-6 shrink-0"></div>
+                            <div class="lg:hidden w-[3px] bg-primary dark:bg-outline-variant h-6 shrink-0"></div>
+                          </div>
+                        ` : ''}
+                        <div class="details-card flex-1 border-2 border-primary dark:border-outline-variant p-6 bg-surface-container-lowest dark:bg-surface-container-low/50 rounded-none shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)] w-full">
+                          <h4 class="font-headline text-base font-black uppercase text-primary dark:text-primary mb-3 flex items-center gap-2">
+                            <span class="font-code text-xs px-2 py-0.5 bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent-light border border-primary/20 dark:border-accent/20">0${index + 1}</span>
+                            ${escapeHtml(layer.name)}
+                          </h4>
+                          <p class="font-body text-sm text-black dark:text-white leading-relaxed">${escapeHtml(layer.details)}</p>
+                        </div>
+                      `).join('')}
+                    </div>
+                  ` : `
+                    <p class="font-code text-sm uppercase tracking-wider text-secondary dark:text-secondary">${escapeHtml(project.details.architecture)}</p>
+                  `}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Notes -->
+            ${project.details.notes && project.details.notes.length > 0 ? `
+            <div class="mb-12">
+              <h2 class="font-headline text-2xl font-black uppercase text-primary dark:text-primary mb-4">Implementation Notes</h2>
+              <ul class="flex flex-col gap-3 font-body text-base text-on-surface-variant dark:text-on-surface-variant">
+                ${project.details.notes.map(note => `
+                  <li class="flex items-start gap-2">
+                    <span class="material-symbols-outlined text-primary dark:text-primary text-sm mt-1">info</span>
+                    <span>${escapeHtml(note)}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+            ` : ''}
         </div>
       `;
       
+      // Bind click listeners to accordion modules
+      detailsView.querySelectorAll('.module-accordion-item').forEach(item => {
+        item.addEventListener('click', () => {
+          item.classList.toggle('active');
+        });
+      });
+
       // Trigger opacity fade-in
       setTimeout(() => {
         const content = document.getElementById('project-details-content');
@@ -930,7 +678,32 @@ document.addEventListener('DOMContentLoaded', () => {
   setupTypingEffect();
   animateCounters();
   setupProjectFilters();
-  setupPortfolioChatbot();
+  setupPortfolioChatbot(portfolioConfig);
   setupRouter();
   setupTracking();
+  loadPortfolioStats();
 });
+
+async function loadPortfolioStats() {
+  try {
+    const res = await fetch('http://localhost:9090/api/v1/query?query=sum(chatbot_queries_total)');
+    const data = await res.json();
+    const queries = data?.data?.result?.[0]?.value?.[1] || '0';
+    const el = document.getElementById('stat-queries');
+    if (el) el.textContent = Math.round(parseFloat(queries));
+  } catch {
+    const el = document.getElementById('stat-queries');
+    if (el) el.textContent = '—';
+  }
+
+  try {
+    const res = await fetch('http://localhost:9090/api/v1/query?query=count(count(api_requests_total) by (session_id))');
+    const data = await res.json();
+    const sessions = data?.data?.result?.[0]?.value?.[1] || '0';
+    const el = document.getElementById('stat-sessions');
+    if (el) el.textContent = Math.round(parseFloat(sessions));
+  } catch {
+    const el = document.getElementById('stat-sessions');
+    if (el) el.textContent = '—';
+  }
+}

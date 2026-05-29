@@ -143,7 +143,7 @@ REQUEST_LATENCY = Histogram(
 CHATBOT_QUERIES = Counter(
     "chatbot_queries_total",
     "Total number of chatbot queries sent to API Gateway",
-    ["session_id"]
+    ["session_id", "category"]
 )
 LLM_LATENCY = Histogram(
     "chatbot_llm_duration_seconds",
@@ -324,6 +324,12 @@ async def chat(request: ChatRequest):
     # 2. Retrieve context from Qdrant
     contexts = []
     sources = []
+    route = route_query(request.message)
+    query_category = route.category if route else "general"
+    
+    # Increment chatbot query metric with category
+    CHATBOT_QUERIES.labels(session_id=request.session_id, category=query_category).inc()
+    
     if qdrant_client and openai_client:
         try:
             route = route_query(request.message)
@@ -414,8 +420,7 @@ async def chat(request: ChatRequest):
             logger.error(f"Error searching Qdrant collection: {e}")
             
     if not contexts:
-        route = route_query(request.message)
-        contexts.append(generate_mock_answer(request.message, [], 0, route.category))
+        contexts.append(generate_mock_answer(request.message, [], 0, query_category))
  
     # 3. Call LLM (OpenAI Chat Completions API)
     model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
