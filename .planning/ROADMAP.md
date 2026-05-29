@@ -45,11 +45,11 @@
 - CHAT-05: Agent processing state must be visible — show sequential steps (analyzing, retrieving, generating) with completion indicators
 - CHAT-06: Clicking links in chat messages must navigate without closing the chat panel
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 **Plans:**
 - [x] 03-01-PLAN.md — Chatbot UX Enhancement (fix short circuit + streaming + animations)
-- [ ] 03-02-PLAN.md — Agent state visibility + link behavior (show tool states, links don't close chat)
+- [x] 03-02-PLAN.md — Agent state visibility + link behavior (show tool states, links don't close chat)
 
 ---
 
