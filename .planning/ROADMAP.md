@@ -23,11 +23,12 @@
 
 ---
 
-### Milestone 3: [Future]
-**Status:** Planned
+### Milestone 3: Analytics & Observability
+**Status:** In Progress
 
 **Phases:**
-- Phase 4+: Tracking, analytics, AI backend integration, testing...
+- **Phase 4: Dashboard Page** — Move metrics from homepage to dedicated Dashboard page with theme sync
+- Phase 5+: AI backend integration, testing...
 
 ---
 
@@ -50,6 +51,24 @@
 **Plans:**
 - [x] 03-01-PLAN.md — Chatbot UX Enhancement (fix short circuit + streaming + animations)
 - [x] 03-02-PLAN.md — Agent state visibility + link behavior (show tool states, links don't close chat)
+
+---
+
+### Phase 4: Dashboard Page
+
+**Goal:** Create a dedicated Dashboard page to display portfolio metrics (stat cards + Grafana analytics) that are currently embedded on the homepage, with theme synchronization.
+
+**Requirements:**
+- DASH-01: Dashboard accessible via `#dashboard` hash route
+- DASH-02: Dashboard displays all current metrics (4 stat cards + Grafana iframe)
+- DASH-03: Stats section removed from homepage
+- DASH-04: Theme sync with homepage (dark/light mode)
+- DASH-05: Dashboard link in navigation (desktop + mobile)
+
+**Plans:** 1/1 plan
+
+**Plans:**
+- [x] 04-01-PLAN.md — Create Dashboard page, update navigation, wire routing
 
 ---
 
