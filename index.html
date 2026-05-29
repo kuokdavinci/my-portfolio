@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="/src/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
   <script type="module" src="/src/main.js"></script>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
@@ -452,23 +453,34 @@
     <!-- DASHBOARD -->
     <section id="dashboard" class="py-20 bg-transparent">
       <div class="max-w-7xl mx-auto px-4 md:px-12">
-        <div class="text-center mb-16 reveal">
+        <div class="text-center mb-12 reveal">
           <h2 class="section-title">Dashboard</h2>
-          <p class="section-subtitle mx-auto">Real-time portfolio metrics and observability.</p>
+          <p class="section-subtitle mx-auto">Real-time portfolio metrics — Prometheus data, live charts, and system health.</p>
+          <div class="flex flex-wrap justify-center gap-3 mt-6">
+            <span class="skill-tag px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium inline-flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Prometheus
+            </span>
+            <span class="skill-tag px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium inline-flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Chart.js
+            </span>
+            <span class="skill-tag px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium inline-flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>FastAPI Metrics
+            </span>
+          </div>
         </div>
         <!-- Stat Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 reveal">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 reveal">
           <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
             <div class="text-3xl font-bold text-primary counter" data-target="41">0</div>
             <div class="text-sm text-on-surface-variant mt-1">GitHub Repos</div>
           </div>
           <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
-            <div class="text-3xl font-bold text-primary" id="stat-queries">0</div>
-            <div class="text-sm text-on-surface-variant mt-1">Chat Queries</div>
+            <div class="text-3xl font-bold text-primary" id="stat-queries">—</div>
+            <div class="text-sm text-on-surface-variant mt-1">Total Chat Queries</div>
           </div>
           <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
-            <div class="text-3xl font-bold text-primary" id="stat-sessions">0</div>
-            <div class="text-sm text-on-surface-variant mt-1">Active Sessions</div>
+            <div class="text-3xl font-bold text-primary" id="stat-requests">—</div>
+            <div class="text-sm text-on-surface-variant mt-1">Total API Requests</div>
           </div>
           <div class="bg-secondary-container rounded-xl p-4 text-center card-hover">
             <div class="text-3xl font-bold text-green-500">
@@ -477,21 +489,58 @@
             <div class="text-sm text-on-surface-variant mt-1">All Systems Online</div>
           </div>
         </div>
-        <!-- Grafana Embed -->
-        <div class="reveal rounded-xl overflow-hidden border border-outline-variant/30 shadow-2xl" style="height: 60vh; min-height: 400px;">
-          <iframe
-            id="grafana-iframe"
-            src="http://localhost:3000/d/visitor_analytics/visitor-and-chatbot-analytics?kiosk=tv&theme=dark"
-            frameborder="0"
-            allowfullscreen
-            style="width: 100%; height: 100%; border: none;"
-            loading="lazy"
-            title="Grafana Metrics Dashboard"
-          ></iframe>
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 reveal">
+          <div class="bg-secondary-container rounded-xl p-6">
+            <h3 class="font-headline text-base font-bold text-primary mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">trending_up</span>
+              API Requests Over Time
+            </h3>
+            <canvas id="chart-requests" height="250"></canvas>
+          </div>
+          <div class="bg-secondary-container rounded-xl p-6">
+            <h3 class="font-headline text-base font-bold text-primary mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">category</span>
+              Chat Queries by Category
+            </h3>
+            <canvas id="chart-categories" height="250"></canvas>
+          </div>
         </div>
-        <p class="text-center text-on-surface-variant/60 text-sm mt-4 reveal">
-          Real-time observability · Prometheus + Grafana · Auto-refresh 30s · 
-          <a href="http://localhost:3000/d/visitor_analytics/visitor-and-chatbot-analytics" target="_blank" rel="noopener" class="text-primary hover:underline">Open in Grafana ↗</a>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 reveal">
+          <div class="bg-secondary-container rounded-xl p-6">
+            <h3 class="font-headline text-base font-bold text-primary mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">speed</span>
+              Request Latency (p50 / p95)
+            </h3>
+            <canvas id="chart-latency" height="250"></canvas>
+          </div>
+          <div class="bg-secondary-container rounded-xl p-6">
+            <h3 class="font-headline text-base font-bold text-primary mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">smart_toy</span>
+              LLM Response Time (seconds)
+            </h3>
+            <canvas id="chart-llm" height="250"></canvas>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 reveal">
+          <div class="bg-secondary-container rounded-xl p-6">
+            <h3 class="font-headline text-base font-bold text-primary mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">http</span>
+              Requests by Endpoint
+            </h3>
+            <canvas id="chart-endpoints" height="250"></canvas>
+          </div>
+          <div class="bg-secondary-container rounded-xl p-6">
+            <h3 class="font-headline text-base font-bold text-primary mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">pie_chart</span>
+              Requests by Status Code
+            </h3>
+            <canvas id="chart-status" height="250"></canvas>
+          </div>
+        </div>
+        <p class="text-center text-on-surface-variant/60 text-sm mt-8 reveal">
+          Data sourced from Prometheus · Auto-refresh every 30s · 
+          <a href="http://localhost:9090" target="_blank" rel="noopener" class="text-primary hover:underline">Open Prometheus ↗</a>
         </p>
       </div>
     </section>

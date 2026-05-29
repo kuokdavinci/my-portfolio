@@ -380,6 +380,22 @@ function handleRoute() {
   scrolled50 = false;
   scrolled90 = false;
 
+  // Show/hide dashboard based on route
+  const dashboardSection = document.getElementById('dashboard');
+  const mainSections = document.querySelectorAll('main > section:not(#project-details-view):not(#dashboard)');
+
+  if (hash === '#dashboard') {
+    // Show dashboard, hide other main sections
+    mainSections.forEach(section => section.classList.add('hidden'));
+    if (dashboardSection) dashboardSection.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    initDashboard();
+    return;
+  } else {
+    // Hide dashboard on other routes
+    if (dashboardSection) dashboardSection.classList.add('hidden');
+  }
+
   if (projectMatch) {
     const projectId = projectMatch[1];
     const project = portfolioConfig.projects.find(p => p.id === projectId);
@@ -711,29 +727,219 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPortfolioChatbot(portfolioConfig);
   setupRouter();
   setupTracking();
-  loadPortfolioStats();
 });
 
-async function loadPortfolioStats() {
-  try {
-    const res = await fetch('http://localhost:9090/api/v1/query?query=sum(chatbot_queries_total)');
-    const data = await res.json();
-    const queries = data?.data?.result?.[0]?.value?.[1] || '0';
-    const el = document.getElementById('stat-queries');
-    if (el) el.textContent = Math.round(parseFloat(queries));
-  } catch {
-    const el = document.getElementById('stat-queries');
-    if (el) el.textContent = '—';
+const PROMETHEUS = 'http://localhost:9090/api/v1';
+
+async function promQuery(query) {
+  const res = await fetch(`${PROMETHEUS}/query?query=${encodeURIComponent(query)}`);
+  const json = await res.json();
+  return json.data?.result || [];
+}
+
+async function promRange(query, step = '5m') {
+  const res = await fetch(`${PROMETHEUS}/query_range?query=${encodeURIComponent(query)}&start=${Math.floor(Date.now()/1000)-3600}&end=${Math.floor(Date.now()/1000)}&step=${step}`);
+  const json = await res.json();
+  return json.data?.result || [];
+}
+
+function chartColors() {
+  const isDark = document.documentElement.classList.contains('dark');
+  return {
+    text: isDark ? '#e2e8f0' : '#1e293b',
+    grid: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+    primary: '#6366f1',
+    primaryAlpha: 'rgba(99,102,241,0.15)',
+    green: '#22c55e',
+    greenAlpha: 'rgba(34,197,94,0.15)',
+    amber: '#f59e0b',
+    amberAlpha: 'rgba(245,158,11,0.15)',
+    rose: '#f43f5e',
+    roseAlpha: 'rgba(244,63,94,0.15)',
+    cyan: '#06b6d4',
+    cyanAlpha: 'rgba(6,182,212,0.15)',
+  };
+}
+
+async function initDashboard() {
+  await loadDashboardStats();
+  await renderCharts();
+  setInterval(async () => {
+    await loadDashboardStats();
+    await renderCharts();
+  }, 30000);
+}
+
+async function loadDashboardStats() {
+  const results = await promQuery('sum(chatbot_queries_total)');
+  const queries = results[0]?.value?.[1] || '0';
+  const el1 = document.getElementById('stat-queries');
+  if (el1) el1.textContent = Math.round(parseFloat(queries)).toLocaleString();
+
+  const results2 = await promQuery('sum(api_requests_total)');
+  const requests = results2[0]?.value?.[1] || '0';
+  const el2 = document.getElementById('stat-requests');
+  if (el2) el2.textContent = Math.round(parseFloat(requests)).toLocaleString();
+}
+
+async function renderCharts() {
+  if (typeof Chart === 'undefined') return;
+  const c = chartColors();
+
+  // 1. API Requests Over Time (line chart)
+  const reqResults = await promRange('sum(rate(api_requests_total[5m])) * 60');
+  const reqChart = document.getElementById('chart-requests');
+  if (reqChart && reqResults.length > 0) {
+    const pts = reqResults[0].values;
+    new Chart(reqChart, {
+      type: 'line',
+      data: {
+        labels: pts.map(p => new Date(p[0] * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})),
+        datasets: [{
+          label: 'Requests/min',
+          data: pts.map(p => parseFloat(p[1]).toFixed(1)),
+          borderColor: c.primary,
+          backgroundColor: c.primaryAlpha,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          borderWidth: 2,
+        }]
+      },
+      options: chartOpts(c, 'req/min')
+    });
   }
 
-  try {
-    const res = await fetch('http://localhost:9090/api/v1/query?query=count(count(api_requests_total) by (session_id))');
-    const data = await res.json();
-    const sessions = data?.data?.result?.[0]?.value?.[1] || '0';
-    const el = document.getElementById('stat-sessions');
-    if (el) el.textContent = Math.round(parseFloat(sessions));
-  } catch {
-    const el = document.getElementById('stat-sessions');
-    if (el) el.textContent = '—';
+  // 2. Chat Queries by Category (bar chart)
+  const catResults = await promQuery('sum by (category) (chatbot_queries_total)');
+  const catChart = document.getElementById('chart-categories');
+  if (catChart && catResults.length > 0) {
+    const colors = [c.primary, c.green, c.amber, c.rose, c.cyan];
+    new Chart(catChart, {
+      type: 'bar',
+      data: {
+        labels: catResults.map(r => r.metric.category || 'general'),
+        datasets: [{
+          label: 'Queries',
+          data: catResults.map(r => parseFloat(r.value[1])),
+          backgroundColor: catResults.map((_, i) => colors[i % colors.length]),
+          borderRadius: 6,
+        }]
+      },
+      options: chartOpts(c, 'queries', {legend: {display: false}})
+    });
   }
+
+  // 3. Request Latency p50/p95 (line chart)
+  const latResults = await promRange('histogram_quantile(0.5, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))');
+  const lat95Results = await promRange('histogram_quantile(0.95, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))');
+  const latChart = document.getElementById('chart-latency');
+  if (latChart && latResults.length > 0) {
+    const pts50 = latResults[0]?.values || [];
+    const pts95 = lat95Results[0]?.values || [];
+    new Chart(latChart, {
+      type: 'line',
+      data: {
+        labels: pts50.map(p => new Date(p[0] * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})),
+        datasets: [
+          { label: 'p50', data: pts50.map(p => (parseFloat(p[1]) * 1000).toFixed(0)), borderColor: c.green, backgroundColor: c.greenAlpha, fill: false, tension: 0.4, pointRadius: 0, borderWidth: 2 },
+          { label: 'p95', data: pts95.map(p => (parseFloat(p[1]) * 1000).toFixed(0)), borderColor: c.amber, backgroundColor: c.amberAlpha, fill: false, tension: 0.4, pointRadius: 0, borderWidth: 2 },
+        ]
+      },
+      options: chartOpts(c, 'ms')
+    });
+  }
+
+  // 4. LLM Response Time (line chart)
+  const llmResults = await promRange('sum(rate(chatbot_llm_duration_seconds_sum[5m])) / sum(rate(chatbot_llm_duration_seconds_count[5m]))');
+  const llmChart = document.getElementById('chart-llm');
+  if (llmChart && llmResults.length > 0) {
+    const pts = llmResults[0].values;
+    new Chart(llmChart, {
+      type: 'line',
+      data: {
+        labels: pts.map(p => new Date(p[0] * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})),
+        datasets: [{
+          label: 'Avg LLM Latency',
+          data: pts.map(p => parseFloat(p[1]).toFixed(2)),
+          borderColor: c.rose,
+          backgroundColor: c.roseAlpha,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          borderWidth: 2,
+        }]
+      },
+      options: chartOpts(c, 'seconds')
+    });
+  }
+
+  // 5. Requests by Endpoint (horizontal bar)
+  const epResults = await promQuery('sum by (endpoint) (api_requests_total)');
+  const epChart = document.getElementById('chart-endpoints');
+  if (epChart && epResults.length > 0) {
+    const colors = [c.primary, c.green, c.amber, c.rose, c.cyan];
+    new Chart(epChart, {
+      type: 'bar',
+      data: {
+        labels: epResults.map(r => r.metric.endpoint || '/'),
+        datasets: [{
+          label: 'Total Requests',
+          data: epResults.map(r => parseFloat(r.value[1])),
+          backgroundColor: epResults.map((_, i) => colors[i % colors.length]),
+          borderRadius: 6,
+        }]
+      },
+      options: chartOpts(c, 'requests', {legend: {display: false}, indexAxis: 'y'})
+    });
+  }
+
+  // 6. Requests by Status Code (doughnut)
+  const statusResults = await promQuery('sum by (status) (api_requests_total)');
+  const statusChart = document.getElementById('chart-status');
+  if (statusChart && statusResults.length > 0) {
+    const colors = [c.green, c.amber, c.rose, c.primary, c.cyan];
+    new Chart(statusChart, {
+      type: 'doughnut',
+      data: {
+        labels: statusResults.map(r => r.metric.status || 'unknown'),
+        datasets: [{
+          data: statusResults.map(r => parseFloat(r.value[1])),
+          backgroundColor: statusResults.map((_, i) => colors[i % colors.length]),
+          borderWidth: 0,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right', labels: { color: c.text, font: { family: "'JetBrains Mono', monospace", size: 11 } } }
+        }
+      }
+    });
+  }
+}
+
+function chartOpts(c, unit, extra = {}) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: c.text, font: { family: "'JetBrains Mono', monospace", size: 11 } } },
+      tooltip: {
+        backgroundColor: c.text === '#e2e8f0' ? '#1e293b' : '#ffffff',
+        titleColor: c.text === '#e2e8f0' ? '#ffffff' : '#1e293b',
+        bodyColor: c.text === '#e2e8f0' ? '#e2e8f0' : '#1e293b',
+        borderColor: c.grid,
+        borderWidth: 1,
+        cornerRadius: 8,
+      },
+      ...extra.plugins || {}
+    },
+    scales: {
+      x: { ticks: { color: c.text, font: { size: 10 }, maxRotation: 45 }, grid: { color: c.grid } },
+      y: { beginAtZero: true, ticks: { color: c.text, font: { size: 10 }, callback: v => `${v} ${unit}` }, grid: { color: c.grid } },
+    },
+    ...extra
+  };
 }
