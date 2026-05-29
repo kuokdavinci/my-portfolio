@@ -607,16 +607,46 @@ function handleRoute() {
         </div>
       `;
     }
+  } else if (hash === '#dashboard') {
+    // Hide all main sections except dashboard
+    const mainSections = document.querySelectorAll('main > section:not(#project-details-view):not(#dashboard)');
+    mainSections.forEach(section => {
+      section.classList.add('hidden');
+    });
+
+    // Show dashboard section
+    const dashboardSection = document.getElementById('dashboard');
+    if (dashboardSection) {
+      dashboardSection.classList.remove('hidden');
+    }
+
+    // Hide project details
+    detailsView.classList.add('hidden');
+
+    // Refresh stats on dashboard navigation
+    loadPortfolioStats();
+
+    // Track page view
+    trackEvent('page_view', { page: 'dashboard' });
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'instant' });
   } else {
-    // Show main sections
-    const mainSections = document.querySelectorAll('main > section:not(#project-details-view)');
+    // Show main sections (except dashboard — it's a separate page)
+    const mainSections = document.querySelectorAll('main > section:not(#project-details-view):not(#dashboard)');
     mainSections.forEach(section => {
       section.classList.remove('hidden');
     });
-    
+
+    // Hide dashboard (separate page)
+    const dashboardSection = document.getElementById('dashboard');
+    if (dashboardSection) {
+      dashboardSection.classList.add('hidden');
+    }
+
     // Hide project details
     detailsView.classList.add('hidden');
-    
+
     // Track Page View Event for standard hash route
     trackEvent('page_view', { page: hash.substring(1) || 'home' });
 
