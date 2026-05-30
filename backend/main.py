@@ -137,20 +137,31 @@ async def init_ai_components():
     global openai_client, qdrant_client
     try:
         api_key = os.getenv("OPENAI_API_KEY")
-        openai_client = AsyncOpenAI(api_key=api_key)
+        logger.info(f"OPENAI_API_KEY present: {bool(api_key)}")
+        if api_key:
+            openai_client = AsyncOpenAI(api_key=api_key)
+            logger.info("AsyncOpenAI client initialized successfully.")
+        else:
+            logger.warning("OPENAI_API_KEY not set, OpenAI client will be None.")
         
         qdrant_url = os.getenv("QDRANT_URL")
         qdrant_api_key = os.getenv("QDRANT_API_KEY")
+        logger.info(f"QDRANT_URL present: {bool(qdrant_url)}, QDRANT_API_KEY present: {bool(qdrant_api_key)}")
+        
         if qdrant_url:
+            logger.info(f"Connecting to Qdrant Cloud: {qdrant_url[:30]}...")
             qdrant_client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
-            logger.info("QdrantClient connected to remote Qdrant Cloud instance.")
+            # Test connection
+            collections = qdrant_client.get_collections()
+            logger.info(f"Qdrant Cloud connected. Collections: {[c.name for c in collections.collections]}")
         else:
-            qdrant_client = QdrantClient(host=os.getenv("QDRANT_HOST", "localhost"), port=6333)
+            qdrant_host = os.getenv("QDRANT_HOST", "localhost")
+            logger.info(f"QDRANT_URL not set, falling back to local Qdrant at {qdrant_host}:6333")
+            qdrant_client = QdrantClient(host=qdrant_host, port=6333)
             logger.info("QdrantClient connected to local Qdrant server.")
             
-        logger.info("AsyncOpenAI client initialized successfully.")
     except Exception as e:
-        logger.error(f"Error initializing AI components: {e}")
+        logger.error(f"Error initializing AI components: {e}", exc_info=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
