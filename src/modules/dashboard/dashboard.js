@@ -1,9 +1,9 @@
 /**
- * Dashboard Orchestrator — assembles all 4 sections and manages data refresh.
+ * Dashboard Orchestrator — assembles all 3 sections and manages data refresh.
  *
  * Exports: initDashboard(), refreshDashboard(), destroyDashboard()
  *
- * Mounts System Overview, User Behavior, AI Observability, and Infrastructure Health
+ * Mounts System Overview, User Behavior, and AI Observability
  * sections into the #dashboard-content container.
  * Manages 10s refresh cycles for all sections.
  */
@@ -11,7 +11,7 @@
 import { renderSystemOverview } from './sections/system-overview.js';
 import { renderUserBehavior } from './sections/user-behavior.js';
 import { renderAIObservability } from './sections/ai-observability.js';
-import { renderInfrastructureHealth } from './sections/infrastructure-health.js';
+
 
 // Import Live Telemetry CSS (for error rate and rate limiting styles)
 import './sections/live-telemetry.css';
@@ -19,7 +19,7 @@ import './sections/live-telemetry.css';
 let systemOverviewHandle = null;
 let userBehaviorHandle = null;
 let aiObservabilityHandle = null;
-let infrastructureHealthHandle = null;
+
 let refreshInterval = null;
 let isInitialized = false;
 
@@ -40,7 +40,7 @@ export async function initDashboard() {
   // Destroy any previous Chart.js instances
   destroyCharts();
 
-  // Render all 4 sections in order (Live Telemetry removed)
+  // Render all 3 sections in order
   const overviewContainer = createSectionContainer(container, 'system-overview');
   systemOverviewHandle = await renderSystemOverview(overviewContainer);
 
@@ -49,9 +49,6 @@ export async function initDashboard() {
 
   const aiContainer = createSectionContainer(container, 'ai-observability');
   aiObservabilityHandle = await renderAIObservability(aiContainer);
-
-  const infraContainer = createSectionContainer(container, 'infrastructure-health');
-  infrastructureHealthHandle = await renderInfrastructureHealth(infraContainer);
 
   isInitialized = true;
   updateLastRefresh();

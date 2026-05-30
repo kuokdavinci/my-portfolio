@@ -1,45 +1,107 @@
-# [Tên Dự Án hoặc Tên Chủ Đề Chính]
+# [Project Name]
 
-> Đây là phần tóm tắt (Summary / Introduction) của tài liệu này. 
-> Toàn bộ khối văn bản giới thiệu/trích dẫn này (nằm dưới tiêu đề `#` và trước tiêu đề `###` đầu tiên) 
-> sẽ được hệ thống parser tự động tách thành một chunk độc lập mang tính tổng quát.
-> - **Metadata được gán:** 
->   - `category`: `summary` hoặc `project_detail`
->   - `doc_title`: "[Tên Dự Án hoặc Tên Chủ Đề Chính]"
->   - `section_title`: "summary"
->   - `chunk_title`: "Overview & Summary"
+> [One-sentence project summary.]
+> [Who this project is for and what problem it solves.]
 
-## [Tên Phần Lớn 1 - Ví dụ: Tính Năng Cốt Lõi]
+## Overview
 
-### [Tên Chunk 1.1 - Ví dụ: Quản Lý Người Dùng]
-Viết nội dung chi tiết cho tính năng quản lý người dùng ở đây.
-Mỗi nội dung nằm dưới tiêu đề cấp 3 `###` sẽ được coi là một chunk văn bản riêng biệt được lưu vào Vector Database.
-- **Metadata tự động trích xuất:**
-  - `doc_title`: Lấy từ `#` đầu file.
-  - `section_title`: "[Tên Phần Lớn 1 - Ví dụ: Tính Năng Cốt Lõi]" (Lấy từ `##` gần nhất phía trên).
-  - `chunk_title`: "[Tên Chunk 1.1 - Ví dụ: Quản Lý Người Dùng]" (Lấy từ `###` hiện tại).
+### Summary
+[Write 1 short paragraph that can answer broad questions about the project.]
 
-### [Tên Chunk 1.2 - Ví dụ: Quét Mã QR Xác Thực]
-Nội dung chi tiết cho tính năng quét mã QR...
+### Metadata
+- `category`: `project`
+- `doc_title`: `[Project Name]`
+- `section_title`: `Overview`
+- `chunk_title`: `Summary`
+- `project_id`: `[stable-slug]`
+- `chunk_type`: `overview`
 
----
+## Problem & Goals
 
-## [Tên Phần Lớn 2 - Ví dụ: Kiến Trúc Kỹ Thuật]
+### Problem Statement
+[Describe the concrete problem, pain point, or user need.]
 
-### [Tên Chunk 2.1 - Ví dụ: Thiết Kế Cơ Sở Dữ Liệu]
-Viết chi tiết về cơ sở dữ liệu (PostgreSQL, Redis, Qdrant...) dùng trong dự án.
-- **Metadata tự động trích xuất:**
-  - `doc_title`: Lấy từ `#` đầu file.
-  - `section_title`: "[Tên Phần Lớn 2 - Ví dụ: Kiến Trúc Kỹ Thuật]"
-  - `chunk_title`: "[Tên Chunk 2.1 - Ví dụ: Thiết Kế Cơ Sở Dữ Liệu]"
+### Goals
+[List the main goals in concise bullets.]
 
-### [Tên Chunk 2.2 - Ví dụ: Cơ Chế Đồng Bộ Offline-first]
-Nội dung chi tiết về cơ chế đồng bộ...
+### Metadata
+- `category`: `project_detail`
+- `doc_title`: `[Project Name]`
+- `section_title`: `Problem & Goals`
+- `chunk_title`: `Problem Statement`
+- `project_id`: `[stable-slug]`
+- `chunk_type`: `detail`
 
----
+## Architecture & Stack
 
-## 💡 Hướng Dẫn Viết Tài Liệu Nhất Quán
-1. **Tiêu đề `#` (Cấp 1):** Chỉ xuất hiện duy nhất **1 lần** ở đầu tệp để định danh tên dự án hoặc chủ đề lớn.
-2. **Tiêu đề `##` (Cấp 2):** Sử dụng để phân nhóm các chủ đề lớn (như Tổng quan, Kỹ thuật, Tính năng, Thách thức).
-3. **Tiêu đề `###` (Cấp 3):** Sử dụng để phân chia các khối thông tin nhỏ, tập trung (khoảng 100 - 400 từ). Đây là ranh giới phân tách các chunk để lưu vào Vector DB.
-4. **Tránh bỏ trống:** Không để các tiêu đề `##` hoặc `###` mà không có nội dung văn bản đi kèm.
+### Tech Stack
+[List exact technologies by layer if relevant.]
+
+### System Design
+[Describe the architecture, major components, and data flow.]
+
+### Metadata
+- `category`: `project_detail`
+- `doc_title`: `[Project Name]`
+- `section_title`: `Architecture & Stack`
+- `chunk_title`: `System Design`
+- `project_id`: `[stable-slug]`
+- `chunk_type`: `detail`
+
+## Core Workflows
+
+### Workflow 1
+[Describe one end-to-end workflow with clear steps if needed.]
+
+### Workflow 2
+[Describe the next workflow in the same style.]
+
+### Metadata
+- `category`: `project_detail`
+- `doc_title`: `[Project Name]`
+- `section_title`: `Core Workflows`
+- `chunk_title`: `Workflow 1`
+- `project_id`: `[stable-slug]`
+- `chunk_type`: `detail`
+
+## Key Details
+
+### Important Constraints
+[Capture performance, reliability, security, or consistency facts.]
+
+### Tradeoffs
+[Document decisions, tradeoffs, or limitations that matter.]
+
+### Metadata
+- `category`: `project_detail`
+- `doc_title`: `[Project Name]`
+- `section_title`: `Key Details`
+- `chunk_title`: `Important Constraints`
+- `project_id`: `[stable-slug]`
+- `chunk_type`: `detail`
+
+## Notes
+
+### Known Issues
+[Only include real issues that help retrieval or maintenance.]
+
+### Maintainer Notes
+[Add alignment rules, naming conventions, or operational notes.]
+
+### Metadata
+- `category`: `project_detail`
+- `doc_title`: `[Project Name]`
+- `section_title`: `Notes`
+- `chunk_title`: `Known Issues`
+- `project_id`: `[stable-slug]`
+- `chunk_type`: `detail`
+
+## Writing Rules
+
+1. Keep each `###` chunk focused on one retrieval idea.
+2. Prefer 80-200 words per chunk.
+3. Use one `#` title per file.
+4. Use `##` for stable section grouping.
+5. Keep `project_id` consistent across all docs for the same project.
+6. Use the same term for the same concept everywhere.
+7. Avoid mixing unrelated topics inside one chunk.

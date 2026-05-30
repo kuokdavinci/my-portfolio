@@ -77,12 +77,23 @@
   
   body {
     font-family: "Inter", system-ui, -apple-system, sans-serif;
+    background-color: var(--color-background);
+    @apply bg-background text-on-background antialiased min-h-screen flex flex-col transition-colors duration-300;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     background-image: var(--bg-image);
     background-size: 100% 100%;
     background-position: top center;
     background-repeat: no-repeat;
-    background-color: var(--color-background);
-    @apply bg-background text-on-background antialiased min-h-screen flex flex-col transition-colors duration-300;
+    filter: brightness(100%) blur(3px);
+    z-index: -1;
+    pointer-events: none;
+    transition: background-image 0.3s ease;
   }
 
   ::selection {
@@ -289,8 +300,8 @@
   }
 
   .section-title {
-    font-family: "Geist", "Inter", sans-serif;
-    @apply text-4xl md:text-5xl font-bold text-primary mb-4;
+    font-family: 'JetBrains Mono', monospace;
+    @apply text-3xl md:text-5xl font-black uppercase text-primary dark:text-primary mb-3 tracking-tight;
   }
 
   .section-subtitle {
@@ -783,8 +794,7 @@ header button.md-hidden {
 }
 
 /* Glassmorphic header card for section titles to maximize contrast against the waterfall background */
-.text-center.mb-16.reveal,
-.text-center.mb-12.reveal {
+.section-header-card {
   background: rgba(255, 255, 255, 0.3) !important; /* Transparent white in light mode (reduced by 10%) */
   backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
@@ -792,13 +802,10 @@ header button.md-hidden {
   border-radius: 1.25rem !important;
   border: 1px solid rgba(99, 102, 241, 0.15) !important; /* Light indigo border */
   max-width: max-content !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
   box-shadow: 0 10px 30px rgba(99, 102, 241, 0.05) !important;
 }
 
-.dark .text-center.mb-16.reveal,
-.dark .text-center.mb-12.reveal {
+.dark .section-header-card {
   background: rgba(16, 20, 21, 0.45) !important;
   border: 1px solid rgba(206, 189, 255, 0.15) !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
@@ -855,25 +862,29 @@ header button.md-hidden {
   border: none;
 }
 
-/* Specific styling for the Source Code button to prevent card bg overrides */
+/* Specific styling for the Demo and Source Code buttons to prevent card bg overrides */
+.btn-demo,
 .btn-sourcecode {
   background-color: var(--color-primary) !important;
   color: var(--color-on-primary) !important;
-  border: none !important;
+  border: 2px solid var(--color-primary) !important;
 }
 
+.dark .btn-demo,
 .dark .btn-sourcecode {
   background-color: var(--color-primary) !important;
   color: var(--color-on-primary) !important;
-  border: none !important;
+  border: 2px solid var(--color-primary) !important;
 }
 
+.btn-demo:hover,
 .btn-sourcecode:hover {
   background-color: transparent !important;
   color: var(--color-primary) !important;
   border: 2px solid var(--color-primary) !important;
 }
 
+.dark .btn-demo:hover,
 .dark .btn-sourcecode:hover {
   background-color: transparent !important;
   color: var(--color-primary) !important;
@@ -892,14 +903,14 @@ header button.md-hidden {
 
 /* Custom GitHub Profile button background styling */
 .btn-github {
-  background-color: transparent !important;
-  color: var(--color-primary) !important;
+  background-color: var(--color-primary) !important;
+  color: var(--color-on-primary) !important;
   border: 2px solid var(--color-primary) !important;
 }
 
 .btn-github:hover {
-  background-color: var(--color-primary) !important;
-  color: var(--color-on-primary) !important;
+  background-color: transparent !important;
+  color: var(--color-primary) !important;
 }
 
 .dark .btn-github {

@@ -1,59 +1,118 @@
-# Project: Movie Ticket Booking System
+# Movie Ticket Booking System
 
-> Movie Ticket Booking System là một nền tảng đặt vé xem phim toàn diện (Full-stack) được xây dựng trên kiến trúc Client-Server. 
-> Hệ thống sử dụng Spring Boot REST API làm backend xử lý các logic nghiệp vụ phức tạp, kết hợp với cơ sở dữ liệu PostgreSQL và cache Redis để đảm bảo hiệu năng tối đa. 
-> Phía client được phát triển bằng Flutter, mang lại trải nghiệm ứng dụng di động mượt mà, hỗ trợ đặt vé, chọn ghế ngồi thời gian thực và quản lý tài khoản bảo mật.
+> Nền tảng đặt vé xem phim full-stack cho client mobile và backend REST API.
+> Dự án tập trung vào đặt ghế thời gian thực, hiệu năng cache, và quản lý phân quyền bằng `Spring Boot`, `PostgreSQL`, `Redis`, `Flutter`.
 
----
+## Overview
 
-## Optimizations & Concurrency Control
+### Summary
+Movie Ticket Booking System là nền tảng đặt vé xem phim hỗ trợ người dùng chọn phim, chọn ghế, đặt vé và theo dõi lịch sử giao dịch. Hệ thống được thiết kế để xử lý cạnh tranh cao ở bước chọn ghế và tối ưu trải nghiệm mobile.
 
-### Pessimistic Locking với `@Lock` trong Spring Data JPA
-Để giải quyết triệt để bài toán đặt trùng ghế (double-booking) khi có hàng ngàn người dùng truy cập đồng thời vào cùng một suất chiếu, hệ thống áp dụng cơ chế **Khóa bi quan (Pessimistic Locking)** ở mức cơ sở dữ liệu.
-Trong lớp Repository của Spring Data JPA, phương thức đặt chỗ được bổ sung annotation `@Lock(LockModeType.PESSIMISTIC_WRITE)`. 
-Cơ chế này sẽ khóa dòng dữ liệu của ghế/suất chiếu tương ứng ngay khi giao dịch bắt đầu, ngăn chặn các luồng dữ liệu khác đọc hoặc ghi đè cho đến khi giao dịch hiện tại hoàn tất (commit hoặc rollback), đảm bảo tính toàn vẹn dữ liệu tuyệt đối.
+### Metadata
+- `category`: `project`
+- `doc_title`: `Movie Ticket Booking System`
+- `section_title`: `Overview`
+- `chunk_title`: `Summary`
+- `project_id`: `movie-ticket`
+- `chunk_type`: `overview`
 
-### Tối Ưu Hóa Hiệu Năng Bằng Redis Cache
-Hệ thống sử dụng **Redis** làm lớp đệm bộ nhớ đệm (caching layer) cho các tài nguyên ít thay đổi nhưng có tần suất truy cập cực kỳ cao như danh sách phim đang chiếu, thông tin chi tiết phim, và lịch chiếu của các rạp.
-Bằng cách lưu trữ dữ liệu đã được xử lý dưới dạng Key-Value trong bộ nhớ RAM của Redis thay vì truy vấn trực tiếp vào PostgreSQL, hệ thống đã giảm thiểu đáng kể số lượng truy vấn I/O. 
-Kết quả thực tế cho thấy cơ chế này giúp tối ưu hóa và giảm tới **15% độ trễ (latency)** của các API lấy danh sách phim và suất chiếu.
+## Problem & Goals
 
-### Cơ Chế Phân Trang (Pagination) Cho API
-Đối với các tài nguyên có dung lượng lớn như danh mục lịch sử đặt vé của người dùng hoặc danh sách phim cũ, hệ thống áp dụng cơ chế **phân trang (pagination)** ở cấp độ API thông qua `Pageable` và `Page` của Spring Data.
-Thay vì trả về toàn bộ hàng ngàn bản ghi trong một request duy nhất (gây quá tải đường truyền mạng và bộ nhớ client), hệ thống giới hạn lượng dữ liệu trả về theo từng trang (ví dụ: 10-20 bản ghi mỗi trang).
-Giải pháp này giúp giảm tải đáng kể cho hệ thống backend, tăng tốc độ phản hồi và tiết kiệm dung lượng mạng cho thiết bị di động của người dùng.
+### Problem Statement
+Đặt vé xem phim có rủi ro trùng ghế khi nhiều người thao tác đồng thời, đồng thời danh sách phim và suất chiếu thường được truy vấn rất nhiều nên cần cơ chế giảm độ trễ và giữ trải nghiệm ổn định.
 
----
+### Goals
+- Ngăn double-booking.
+- Giảm latency cho dữ liệu truy cập nhiều.
+- Hỗ trợ phân quyền user/admin rõ ràng.
+- Tối ưu trải nghiệm đặt vé trên mobile.
 
-## Architecture & Tech Stack
+### Metadata
+- `category`: `project_detail`
+- `doc_title`: `Movie Ticket Booking System`
+- `section_title`: `Problem & Goals`
+- `chunk_title`: `Problem Statement`
+- `project_id`: `movie-ticket`
+- `chunk_type`: `detail`
 
-### Công Nghệ Sử Dụng (Tech Stack) Trong Dự Án Movie Ticket Booking System
-Dự án Movie Ticket Booking System sử dụng các công nghệ chính: Java, Spring Boot, Spring Data JPA, PostgreSQL, Redis Cache, Spring Security, JWT và Flutter.
+## Architecture & Stack
 
-### Stateless Authentication với JWT
-Hệ thống áp dụng phương pháp xác thực không trạng thái (stateless authentication) sử dụng **JSON Web Token (JWT)** để tăng tính mở rộng (scalability) của backend.
-Khi người dùng đăng nhập thành công, Server sẽ tạo ra một token ký số chứa các thông tin định danh và quyền hạn của họ. 
-Phía ứng dụng di động Flutter nhận JWT và lưu trữ an toàn trong bộ nhớ cục bộ (Local Storage). 
-Mỗi khi gửi yêu cầu tới các API cần bảo mật, client sẽ đính kèm token này trong Header của HTTP Request (`Authorization: Bearer <Token>`) để Server giải mã và xác thực.
+### Tech Stack
+- Backend: `Java`, `Spring Boot`, `Spring Data JPA`, `Spring Security`
+- Database: `PostgreSQL`
+- Cache: `Redis`
+- Auth: `JWT`
+- Client: `Flutter`
 
-### Phân Quyền Vai Trò ADMIN và USER
-Hệ thống phân quyền truy cập nghiêm ngặt dựa trên vai trò (Role-based Access Control) bằng cách sử dụng Spring Security:
-- **Role USER:** Dành cho khách hàng phổ thông, có quyền xem danh sách phim, tìm kiếm suất chiếu, thực hiện đặt vé và xem lại lịch sử giao dịch cá nhân.
-- **Role ADMIN:** Dành cho người quản trị hệ thống, có toàn quyền truy cập các API quản lý như thêm/sửa/xóa phim, tạo mới các phòng chiếu, điều chỉnh lịch chiếu, và theo dõi doanh thu toàn hệ thống.
+### System Design
+Backend xử lý logic nghiệp vụ và bảo mật, PostgreSQL lưu dữ liệu chính, Redis cache các tài nguyên truy cập cao như danh sách phim và suất chiếu. Client Flutter giao tiếp qua REST API để chọn ghế, đặt vé và quản lý tài khoản.
 
----
+### Metadata
+- `category`: `project_detail`
+- `doc_title`: `Movie Ticket Booking System`
+- `section_title`: `Architecture & Stack`
+- `chunk_title`: `System Design`
+- `project_id`: `movie-ticket`
+- `chunk_type`: `detail`
 
-## Core Features & Workflows
+## Core Workflows
 
-### Luồng Chọn Ghế Và Đặt Vé Thời Gian Thực
-Luồng đặt vé được thiết kế tối ưu trải nghiệm người dùng:
-1. Người dùng chọn phim, rạp chiếu, và suất chiếu mong muốn.
-2. Ứng dụng hiển thị sơ đồ ghế ngồi dưới dạng lưới (Grid View) tương ứng với cấu trúc phòng chiếu.
-3. Khi người dùng click chọn ghế, hệ thống sẽ gửi một request kiểm tra và tạo trạng thái giữ ghế tạm thời.
-4. Quá trình thanh toán giả lập được thực hiện, sau khi thành công, trạng thái ghế sẽ chính thức chuyển sang "đã đặt" và hóa đơn vé (Ticket) được tạo trong cơ sở dữ liệu.
+### Workflow 1
+Luồng đặt vé thời gian thực:
+1. Người dùng chọn phim, rạp và suất chiếu.
+2. UI hiển thị sơ đồ ghế.
+3. Hệ thống kiểm tra và giữ ghế tạm thời.
+4. Sau thanh toán thành công, vé được tạo và ghế chuyển sang trạng thái đã đặt.
 
-### Quản Lý Danh Mục Phim Và Suất Chiếu Cho Admin
-Trang quản trị (Admin Dashboard) hỗ trợ các chức năng quản lý quan trọng:
-- Quản trị viên có giao diện thuận tiện để cập nhật thông tin phim (poster, trailer, mô tả, thời lượng).
-- Hệ thống hỗ trợ lên lịch chiếu linh hoạt bằng cách kiểm tra xung đột thời gian chiếu giữa các phim trong cùng một phòng chiếu.
-- Giao diện Admin hiển thị trực quan các báo cáo về tỷ lệ lấp đầy ghế ngồi của từng suất chiếu để Admin có kế hoạch phân bổ suất chiếu tối ưu.
+### Workflow 2
+Luồng quản trị:
+1. Admin cập nhật phim, trailer, mô tả và thời lượng.
+2. Admin lên lịch chiếu theo phòng.
+3. Hệ thống kiểm tra xung đột thời gian.
+4. Admin theo dõi tỷ lệ lấp đầy ghế để tối ưu suất chiếu.
+
+### Metadata
+- `category`: `project_detail`
+- `doc_title`: `Movie Ticket Booking System`
+- `section_title`: `Core Workflows`
+- `chunk_title`: `Workflow 1`
+- `project_id`: `movie-ticket`
+- `chunk_type`: `detail`
+
+## Key Details
+
+### Important Constraints
+- `@Lock(LockModeType.PESSIMISTIC_WRITE)` được dùng để giảm nguy cơ đặt trùng ghế.
+- Redis giúp giảm tới `15%` độ trễ cho các API truy vấn phim và suất chiếu.
+- Pagination giới hạn dữ liệu trả về theo trang, thường khoảng `10-20` bản ghi mỗi trang.
+- JWT dùng cho xác thực không trạng thái.
+
+### Tradeoffs
+Pessimistic locking giúp an toàn hơn khi tải cao nhưng có thể làm tăng thời gian chờ trong các phiên đặt vé cạnh tranh. Redis cải thiện tốc độ nhưng cần chiến lược cache hợp lý để tránh dữ liệu cũ.
+
+### Metadata
+- `category`: `project_detail`
+- `doc_title`: `Movie Ticket Booking System`
+- `section_title`: `Key Details`
+- `chunk_title`: `Important Constraints`
+- `project_id`: `movie-ticket`
+- `chunk_type`: `detail`
+
+## Notes
+
+### Known Issues
+- Tải cao ở cùng một suất chiếu có thể gây tranh chấp lock.
+- Dữ liệu cache cần TTL hoặc invalidate hợp lý để tránh stale data.
+
+### Maintainer Notes
+- Giữ thống nhất `movie-ticket` làm `project_id`.
+- Nếu thêm tính năng thanh toán thật, tách riêng một chunk cho payment flow.
+- Không trộn các chi tiết JPA lock với phần auth trong cùng một chunk nếu muốn retrieval sắc hơn.
+
+### Metadata
+- `category`: `project_detail`
+- `doc_title`: `Movie Ticket Booking System`
+- `section_title`: `Notes`
+- `chunk_title`: `Known Issues`
+- `project_id`: `movie-ticket`
+- `chunk_type`: `detail`

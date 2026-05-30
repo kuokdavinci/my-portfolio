@@ -1,14 +1,13 @@
 /**
- * AI Observability — 5 charts demonstrating LLMOps capability.
+ * AI Observability — 4 charts demonstrating LLMOps capability.
  *
  * Exports: renderAIObservability(container)
  *
  * Charts:
- *   A. AI Intent Categories — Bar chart (5 categories)
+ *   A. AI Intent Categories — Total count + horizontal bar list (5 categories)
  *   B. LLM Performance Profile — Dual-axis line chart (p50, p95, gen time)
  *   C. Token Consumption — Stacked area chart (input vs output)
  *   D. Estimated AI Cost — Financial metric card
- *   E. Cache Hit Rate — Gauge chart (doughnut)
  *
  * Data refresh: every 10s via setInterval
  */
@@ -157,7 +156,7 @@ export async function renderAIObservability(container) {
   const grid = document.createElement('div');
   grid.className = 'ai-section';
 
-  // Chart A: AI Conversation Intelligence (Doughnut Chart + ASCII block list)
+  // Chart A: AI Conversation Intelligence (Total + Bar list)
   const chartASection = document.createElement('div');
   chartASection.className = 'chart-section';
   chartASection.id = 'chart-intent';
@@ -167,8 +166,9 @@ export async function renderAIObservability(container) {
       <span>AI Conversation Intelligence</span>
     </div>
     <div class="intent-flex-layout" style="display: flex; flex-direction: column; gap: 20px; padding-top: 8px;">
-      <div style="height: 160px; position: relative;">
-        <canvas id="chart-intent-canvas"></canvas>
+      <div id="intent-total-display" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 0 8px;">
+        <div id="intent-total-value" style="font-family: 'JetBrains Mono', monospace; font-size: 48px; font-weight: 800; color: var(--color-primary); line-height: 1; letter-spacing: -2px;">0</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.5; margin-top: 6px;">total queries</div>
       </div>
       <div id="intent-ascii-container" style="padding: 4px 0;"></div>
     </div>
@@ -286,30 +286,13 @@ export async function renderAIObservability(container) {
       const data = labels.map(cat => dataMap[cat] || 0);
       const colors = labels.map((_, i) => categoryColors[i % categoryColors.length]);
 
-      // 1. Render Doughnut Chart
-      safeRenderChart('chart-intent-canvas', {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: data,
-            backgroundColor: colors,
-            borderWidth: 0,
-            hoverOffset: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: { enabled: true }
-          },
-          cutout: '70%'
-        }
-      });
+      // 1. Render Total display (replaces doughnut)
+      const totalValueEl = document.getElementById('intent-total-value');
+      if (totalValueEl) {
+        totalValueEl.textContent = Math.round(totalQueries).toLocaleString();
+      }
 
-      // 2. Render ASCII-like HTML grid
+      // 2. Render bar list
       const asciiContainer = document.getElementById('intent-ascii-container');
       if (asciiContainer) {
         // Sort items by count descending
@@ -355,9 +338,9 @@ export async function renderAIObservability(container) {
 
     try {
       // Query current average latencies (p50, p95, p99 over the last 5m)
-      const p50Res = await promQuery('histogram_quantile(0.5, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))');
-      const p95Res = await promQuery('histogram_quantile(0.95, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))');
-      const p99Res = await promQuery('histogram_quantile(0.99, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))');
+      const p50Res = await promQuery('histogram_quantile(0.5, sum(api_request_duration_seconds_bucket) by (le))');
+      const p95Res = await promQuery('histogram_quantile(0.95, sum(api_request_duration_seconds_bucket) by (le))');
+      const p99Res = await promQuery('histogram_quantile(0.99, sum(api_request_duration_seconds_bucket) by (le))');
 
       const p50 = p50Res.length > 0 ? parseFloat(p50Res[0]?.value?.[1]) * 1000 : null;
       const p95 = p95Res.length > 0 ? parseFloat(p95Res[0]?.value?.[1]) * 1000 : null;

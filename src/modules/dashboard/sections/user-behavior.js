@@ -187,8 +187,23 @@ export async function renderUserBehavior(container) {
   grid.appendChild(chartA.section);
 
   // Chart B: Most Viewed Projects
-  const chartB = createChartSection('chart-projects', 'visibility', 'Most Viewed Projects');
-  grid.appendChild(chartB.section);
+  const chartBSection = document.createElement('div');
+  chartBSection.className = 'chart-section';
+  chartBSection.id = 'chart-projects';
+  chartBSection.innerHTML = `
+    <div class="chart-header">
+      <span class="material-symbols-outlined">visibility</span>
+      <span>Most Viewed Projects</span>
+    </div>
+    <div class="projects-flex-layout" style="display: flex; flex-direction: column; gap: 20px; padding-top: 8px;">
+      <div id="projects-total-display" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 0 8px;">
+        <div id="projects-total-value" style="font-family: 'JetBrains Mono', monospace; font-size: 48px; font-weight: 800; color: var(--color-primary); line-height: 1; letter-spacing: -2px;">0</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.5; margin-top: 6px;">total project views</div>
+      </div>
+      <div id="projects-container" style="padding: 8px 0;"></div>
+    </div>
+  `;
+  grid.appendChild(chartBSection);
 
   // Chart C: Scroll Depth Funnel
   const chartCSection = document.createElement('div');
@@ -197,15 +212,17 @@ export async function renderUserBehavior(container) {
   chartCSection.innerHTML = `
     <div class="chart-header">
       <span class="material-symbols-outlined">filter_alt</span>
-      <span>Scroll Depth Funnel</span>
+      <span>Scroll Engagement Funnel</span>
     </div>
-    <div id="funnel-container" style="padding: 8px 0;"></div>
+    <div class="funnel-flex-layout" style="display: flex; flex-direction: column; gap: 20px; padding-top: 8px;">
+      <div id="funnel-total-display" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 0 8px;">
+        <div id="funnel-total-value" style="font-family: 'JetBrains Mono', monospace; font-size: 48px; font-weight: 800; color: var(--color-primary); line-height: 1; letter-spacing: -2px;">0</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.5; margin-top: 6px;">total visitors</div>
+      </div>
+      <div id="funnel-container" style="padding: 8px 0;"></div>
+    </div>
   `;
   grid.appendChild(chartCSection);
-
-  // Chart D: Session Duration
-  const chartD = createChartSection('chart-duration', 'hourglass_top', 'Session Duration');
-  grid.appendChild(chartD.section);
 
   container.appendChild(grid);
 
@@ -258,32 +275,54 @@ export async function renderUserBehavior(container) {
     const promQuery = window.promQuery;
     if (!promQuery) return;
 
+    const container = document.getElementById('projects-container');
+    if (!container) return;
+
     const c = getChartColors();
     const results = await promQuery('sum by(project) (project_view_total)');
 
     if (results.length > 0) {
       const colors = [c.primary, c.secondary, c.tertiary, c.cyan, c.green, c.amber, c.rose];
-      safeRenderChart(chartB.canvasId, {
-        type: 'bar',
-        data: {
-          labels: results.map(r => sanitizeLabel(r.metric.project || 'unknown')),
-          datasets: [{
-            label: 'Views',
-            data: results.map(r => parseFloat(r.value[1])),
-            backgroundColor: results.map((_, i) => colors[i % colors.length]),
-            borderRadius: 4,
-            borderWidth: 0,
-          }],
-        },
-        options: chartOptions(c, 'views', {
-          indexAxis: 'y',
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { beginAtZero: true, ticks: { color: c.text, font: { size: 9 } }, grid: { color: c.grid } },
-            y: { ticks: { color: c.text, font: { size: 10 } }, grid: { color: c.grid } },
-          },
-        }),
+      
+      // Sort by value descending
+      results.sort((a, b) => parseFloat(b.value[1]) - parseFloat(a.value[1]));
+
+      const totalViews = results.reduce((sum, r) => sum + (parseFloat(r.value[1]) || 0), 0);
+      const totalValueEl = document.getElementById('projects-total-value');
+      if (totalValueEl) {
+        totalValueEl.textContent = Math.round(totalViews).toLocaleString();
+      }
+
+      const maxViews = Math.max(...results.map(r => parseFloat(r.value[1])));
+      const safeMax = maxViews > 0 ? maxViews : 1;
+
+      let rowsHtml = '';
+      results.forEach((r, idx) => {
+        const label = r.metric.project || 'unknown';
+        const views = parseFloat(r.value[1]);
+        const pct = Math.round((views / safeMax) * 100);
+        const color = colors[idx % colors.length];
+
+        rowsHtml += `
+          <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; font-size: 14px;">
+              <span style="font-weight: bold; color: ${color};">${sanitizeLabel(label)}</span>
+              <span style="font-weight: bold; color: var(--color-primary);">${views.toLocaleString()}</span>
+            </div>
+            <div style="width: 100%; height: 26px; border: 2px solid var(--color-primary); background: transparent; box-sizing: border-box; overflow: hidden; position: relative;">
+              <div style="width: ${pct}%; height: 100%; background: ${color}; transition: width 0.5s ease;"></div>
+            </div>
+          </div>
+        `;
       });
+
+      container.innerHTML = `
+        <div class="font-code select-none" style="padding-top: 16px; padding-bottom: 8px;">
+          <div style="display: flex; flex-direction: column;">
+            ${rowsHtml}
+          </div>
+        </div>
+      `;
     }
   }
 
@@ -291,88 +330,75 @@ export async function renderUserBehavior(container) {
     const promQuery = window.promQuery;
     if (!promQuery) return;
 
-    const results = await promQuery('sum by(depth) (scroll_depth_total)');
     const container = document.getElementById('funnel-container');
     if (!container) return;
 
-    const depths = [25, 50, 75, 100];
-    const colors = ['#cebdff', '#a4c9ff', '#c4c1fb', '#22c55e'];
+    // 1. Fetch total visitors
+    let totalVisitors = 0;
+    try {
+      const visitorsRes = await promQuery('sum(portfolio_sessions_total)');
+      if (visitorsRes.length > 0) {
+        totalVisitors = parseInt(visitorsRes[0].value[1], 10);
+      }
+    } catch (e) {
+      console.error("Failed to query total visitors", e);
+    }
+    if (isNaN(totalVisitors) || totalVisitors <= 0) {
+      totalVisitors = 1; // Prevent division by zero
+    }
 
-    // Build a map of depth → count
-    const depthMap = {};
-    results.forEach(r => {
-      const depth = parseInt(r.metric.depth, 10);
-      if (!isNaN(depth)) depthMap[depth] = parseFloat(r.value[1]);
-    });
+    // 2. Fetch scroll depth buckets
+    let count50 = 0;
+    let count90 = 0;
+    try {
+      const results = await promQuery('sum by(depth_percentile) (scroll_depth_reached_bucket)');
+      results.forEach(r => {
+        const depth = parseInt(r.metric.depth_percentile, 10);
+        const val = parseFloat(r.value[1]) || 0;
+        if (depth === 50) count50 = val;
+        if (depth === 90) count90 = val;
+      });
+    } catch (e) {
+      console.error("Failed to query scroll depth", e);
+    }
 
-    const maxVal = Math.max(...depths.map(d => depthMap[d] || 0), 1);
+    // Ensure logic constraints remain valid
+    if (count50 > totalVisitors) totalVisitors = Math.round(count50 * 1.2);
+    if (count90 > count50) count50 = count90;
 
-    container.innerHTML = '';
-    depths.forEach((depth, idx) => {
-      const count = depthMap[depth] || 0;
-      const pct = ((count / maxVal) * 100).toFixed(0);
+    const completionRate = totalVisitors > 0 ? Math.round((count90 / totalVisitors) * 100) : 0;
 
-      const bar = document.createElement('div');
-      bar.className = 'funnel-bar';
-      bar.innerHTML = `
-        <span class="funnel-label">${depth}%</span>
-        <div class="funnel-track">
-          <div class="funnel-fill" style="width:${pct}%;background:${colors[idx]}40;">
-            <span class="funnel-value">${count.toLocaleString()}</span>
+    const ratio50 = totalVisitors > 0 ? count50 / totalVisitors : 0;
+    const ratio90 = totalVisitors > 0 ? count90 / totalVisitors : 0;
+
+    const renderFunnelItem = (label, pct, color, countVal, labelColor) => {
+      return `
+        <div style="margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; font-size: 14px;">
+            <span style="font-weight: bold; color: ${labelColor || 'var(--color-primary)'};">${label}</span>
+            <span style="font-weight: bold; color: var(--color-primary);">${countVal} <span style="opacity: 0.7; font-size: 0.85em;">(${pct}%)</span></span>
+          </div>
+          <div style="width: 100%; height: 26px; border: 2px solid var(--color-primary); background: transparent; box-sizing: border-box; overflow: hidden; position: relative;">
+            <div style="width: ${pct}%; height: 100%; background: ${color}; transition: width 0.5s ease;"></div>
           </div>
         </div>
       `;
-      container.appendChild(bar);
-    });
-  }
+    };
 
-  async function refreshDurationChart() {
-    const promRange = window.promRange;
-    if (!promRange) return;
-
-    const c = getChartColors();
-
-    // Fetch p50 and p95 session duration
-    const p50Results = await promRange('histogram_quantile(0.5, sum(rate(session_duration_seconds_bucket[5m])) by (le))');
-    const p95Results = await promRange('histogram_quantile(0.95, sum(rate(session_duration_seconds_bucket[5m])) by (le))');
-
-    const p50Pts = p50Results[0]?.values || [];
-    const p95Pts = p95Results[0]?.values || [];
-
-    if (p50Pts.length > 0) {
-      safeRenderChart(chartD.canvasId, {
-        type: 'line',
-        data: {
-          labels: p50Pts.map(p => {
-            const d = new Date(p[0] * 1000);
-            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          }),
-          datasets: [
-            {
-              label: 'p50 Duration',
-              data: p50Pts.map(p => parseFloat(p[1]).toFixed(1)),
-              borderColor: c.green,
-              backgroundColor: c.greenAlpha,
-              fill: true,
-              tension: 0.3,
-              pointRadius: 1,
-              borderWidth: 2,
-            },
-            {
-              label: 'p95 Duration',
-              data: p95Pts.map(p => parseFloat(p[1]).toFixed(1)),
-              borderColor: c.amber,
-              backgroundColor: c.amberAlpha,
-              fill: true,
-              tension: 0.3,
-              pointRadius: 1,
-              borderWidth: 2,
-            },
-          ],
-        },
-        options: chartOptions(c, 's'),
-      });
+    const totalValueEl = document.getElementById('funnel-total-value');
+    if (totalValueEl) {
+      totalValueEl.textContent = totalVisitors.toLocaleString();
     }
+
+    container.innerHTML = `
+      <div class="font-code select-none" style="padding-top: 16px; padding-bottom: 8px;">
+        <div style="display: flex; flex-direction: column;">
+          ${renderFunnelItem('Visitors', 100, 'var(--color-primary)', totalVisitors.toLocaleString(), 'var(--color-primary)')}
+          ${renderFunnelItem('Reached 50%', Math.round(ratio50 * 100), 'var(--color-secondary)', count50.toLocaleString(), 'var(--color-secondary)')}
+          ${renderFunnelItem('Reached 90%', completionRate, 'var(--color-tertiary)', count90.toLocaleString(), 'var(--color-tertiary)')}
+        </div>
+      </div>
+    `;
   }
 
   // ── Refresh cycle ────────────────────────────────────────
@@ -383,7 +409,6 @@ export async function renderUserBehavior(container) {
         refreshTrafficChart(),
         refreshProjectsChart(),
         refreshFunnelChart(),
-        refreshDurationChart(),
       ]);
     } catch (err) {
       console.error('User Behavior refresh error:', err);
@@ -393,8 +418,5 @@ export async function renderUserBehavior(container) {
   // Initial render
   await refresh();
 
-  // Set up 10s refresh interval
-  const intervalId = setInterval(refresh, 10000);
-
-  return { refresh, stop: () => clearInterval(intervalId) };
+  return { refresh, stop: () => {} };
 }

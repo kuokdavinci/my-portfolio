@@ -41,9 +41,16 @@ if not api_key:
 print("Initializing OpenAI client...")
 openai_client = OpenAI(api_key=api_key)
 
-print("Connecting to local Qdrant container at localhost:6333...")
+print("Connecting to Qdrant...")
 try:
-    qdrant_client = QdrantClient(host="localhost", port=6333)
+    qdrant_url = os.getenv("QDRANT_URL")
+    qdrant_api_key = os.getenv("QDRANT_API_KEY")
+    if qdrant_url:
+        print(f"Connecting to remote Qdrant Cloud at {qdrant_url}...")
+        qdrant_client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
+    else:
+        print("Connecting to local Qdrant container at localhost:6333...")
+        qdrant_client = QdrantClient(host="localhost", port=6333)
     qdrant_client.get_collections()
 except Exception as e:
     print(f"Error connecting to Qdrant: {e}")

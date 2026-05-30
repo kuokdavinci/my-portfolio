@@ -49,7 +49,7 @@
       <div class="max-w-7xl mx-auto px-4 md:px-12 py-20 md:py-28 relative z-10">
         <div class="grid md:grid-cols-2 gap-16 items-center">
           <div class="space-y-6 reveal">
-            <div class="inline-flex items-center gap-2 px-4 py-2 bg-secondary-container rounded-full text-on-secondary-fixed-variant font-medium text-sm">
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-secondary-container rounded-full text-on-secondary-fixed-variant dark:bg-black dark:text-primary font-medium text-sm">
               <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
               AVAILABLE FOR WORK
             </div>
@@ -121,68 +121,160 @@
     <!-- JOURNEY -->
     <section id="journey" class="py-20 bg-transparent">
       <div class="max-w-7xl mx-auto px-4 md:px-12">
-        <div class="text-center mb-16 reveal">
+        <div class="section-header-card mb-16 reveal">
           <h2 class="section-title">My Journey</h2>
-          <p class="section-subtitle mx-auto">A timeline of my growth as a developer.</p>
+          <p class="section-subtitle">A timeline of my growth as a developer.</p>
         </div>
-        <div class="max-w-7xl mx-auto reveal">
-          <div class="relative flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div class="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-outline-variant -translate-y-1/2 z-0"></div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 w-full relative z-10">
-              <div class="bg-primary rounded-xl p-6 card-hover relative overflow-hidden text-on-primary">
-                <div class="relative">
+        <div class="max-w-7xl mx-auto reveal mt-12">
+          <!-- Desktop Horizontal Timeline -->
+          <div class="hidden lg:block relative mb-16">
+            <!-- Main Horizontal Line (below cards, centered on the dots - thicker, indigo in lightmode, black in darkmode) -->
+            <div class="absolute bottom-[56px] left-[10%] right-[10%] h-[6px] bg-primary dark:bg-black z-0"></div>
+            
+            <!-- Timeline Nodes & Cards Grid -->
+            <div class="grid grid-cols-5 gap-6 relative">
+              <!-- Item 1 -->
+              <div class="flex flex-col items-center">
+                <!-- Card at the top (flex-grow for equal height) -->
+                <div class="bg-primary rounded-xl p-6 card-hover relative overflow-hidden text-on-primary w-full flex-grow">
                   <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mb-4 mx-auto">
                     <span class="material-symbols-outlined text-on-primary text-xl">school</span>
                   </div>
-                  <span class="block w-fit mx-auto px-3 py-1 bg-white/20 text-on-primary rounded-full text-xs font-medium mb-3 text-center">Oct 2020</span>
                   <h3 class="font-headline text-base font-bold text-on-primary text-center mb-2">HCMUS</h3>
                   <p class="text-on-primary/70 text-sm text-center">Started my journey at University of Science — Ho Chi Minh City.</p>
                 </div>
+                <!-- Timeline Dot -->
+                <div class="w-4 h-4 rounded-full bg-primary border-4 border-surface dark:border-surface-container shadow-[0_0_0_4px_rgba(55,48,163,0.15)] dark:shadow-[0_0_0_4px_rgba(206,189,255,0.15)] mt-6 mb-4 z-10"></div>
+                <!-- Date / Time indicator below -->
+                <span class="font-code text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-white text-indigo-900 border border-indigo-100 dark:bg-surface-container dark:text-primary dark:border-outline-variant/30 shadow-sm z-10">Oct 2020</span>
               </div>
 
-              <div class="bg-primary rounded-xl p-6 card-hover relative overflow-hidden text-on-primary">
-                <div class="relative">
+              <!-- Item 2 -->
+              <div class="flex flex-col items-center">
+                <!-- Card at the top (flex-grow for equal height) -->
+                <div class="bg-primary rounded-xl p-6 card-hover relative overflow-hidden text-on-primary w-full flex-grow">
                   <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mb-4 mx-auto">
                     <span class="material-symbols-outlined text-on-primary text-xl">work</span>
                   </div>
-                  <span class="block w-fit mx-auto px-3 py-1 bg-white/20 text-on-primary rounded-full text-xs font-medium mb-3 text-center">Mar – Jun 2024</span>
-                  <h3 class="font-headline text-base font-bold text-on-primary text-center mb-2">Software Engineer Intern</h3>
+                  <h3 class="font-headline text-base font-bold text-on-primary text-center mb-2">Software Intern</h3>
                   <p class="text-on-primary/70 text-sm text-center">Phu An Phuoc Investment Company. Gained hands-on industry experience.</p>
                 </div>
+                <!-- Timeline Dot -->
+                <div class="w-4 h-4 rounded-full bg-primary border-4 border-surface dark:border-surface-container shadow-[0_0_0_4px_rgba(55,48,163,0.15)] dark:shadow-[0_0_0_4px_rgba(206,189,255,0.15)] mt-6 mb-4 z-10"></div>
+                <!-- Date / Time indicator below -->
+                <span class="font-code text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-white text-indigo-900 border border-indigo-100 dark:bg-surface-container dark:text-primary dark:border-outline-variant/30 shadow-sm z-10">Mar – Jun 2024</span>
               </div>
 
-              <div class="bg-primary rounded-xl p-6 card-hover relative overflow-hidden text-on-primary">
-                <div class="relative">
+              <!-- Item 3 -->
+              <div class="flex flex-col items-center">
+                <!-- Card at the top (flex-grow for equal height) -->
+                <div class="bg-primary rounded-xl p-6 card-hover relative overflow-hidden text-on-primary w-full flex-grow">
                   <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mb-4 mx-auto">
                     <span class="material-symbols-outlined text-on-primary text-xl">emoji_events</span>
                   </div>
-                  <span class="block w-fit mx-auto px-3 py-1 bg-white/20 text-on-primary rounded-full text-xs font-medium mb-3 text-center">Oct 2025</span>
                   <h3 class="font-headline text-base font-bold text-on-primary text-center mb-2">Graduated</h3>
                   <p class="text-on-primary/70 text-sm text-center">Graduated from HCMUS with GPA 3.1/4.0.</p>
                 </div>
+                <!-- Timeline Dot -->
+                <div class="w-4 h-4 rounded-full bg-primary border-4 border-surface dark:border-surface-container shadow-[0_0_0_4px_rgba(55,48,163,0.15)] dark:shadow-[0_0_0_4px_rgba(206,189,255,0.15)] mt-6 mb-4 z-10"></div>
+                <!-- Date / Time indicator below -->
+                <span class="font-code text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-white text-indigo-900 border border-indigo-100 dark:bg-surface-container dark:text-primary dark:border-outline-variant/30 shadow-sm z-10">Oct 2025</span>
               </div>
 
-              <div class="bg-primary rounded-xl p-6 card-hover relative overflow-hidden text-on-primary">
-                <div class="relative">
+              <!-- Item 4 -->
+              <div class="flex flex-col items-center">
+                <!-- Card at the top (flex-grow for equal height) -->
+                <div class="bg-primary rounded-xl p-6 card-hover relative overflow-hidden text-on-primary w-full flex-grow">
                   <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mb-4 mx-auto">
                     <span class="material-symbols-outlined text-on-primary text-xl">menu_book</span>
                   </div>
-                  <span class="block w-fit mx-auto px-3 py-1 bg-white/20 text-on-primary rounded-full text-xs font-medium mb-3 text-center">Oct 2025 – Apr 2026</span>
                   <h3 class="font-headline text-base font-bold text-on-primary text-center mb-2">Self-Study</h3>
                   <p class="text-on-primary/70 text-sm text-center">System Design, Distributed Systems, and Infrastructure as Code.</p>
                 </div>
+                <!-- Timeline Dot -->
+                <div class="w-4 h-4 rounded-full bg-primary border-4 border-surface dark:border-surface-container shadow-[0_0_0_4px_rgba(55,48,163,0.15)] dark:shadow-[0_0_0_4px_rgba(206,189,255,0.15)] mt-6 mb-4 z-10"></div>
+                <!-- Date / Time indicator below -->
+                <span class="font-code text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-white text-indigo-900 border border-indigo-100 dark:bg-surface-container dark:text-primary dark:border-outline-variant/30 shadow-sm z-10">Oct 2025 – Apr 2026</span>
               </div>
 
-              <div class="bg-primary rounded-xl p-6 card-hover relative overflow-hidden text-on-primary">
-                <div class="absolute top-3 right-3 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <div class="relative">
+              <!-- Item 5 -->
+              <div class="flex flex-col items-center">
+                <!-- Card at the top (flex-grow for equal height) -->
+                <div class="bg-primary rounded-xl p-6 card-hover relative overflow-hidden text-on-primary w-full flex-grow">
                   <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mb-4 mx-auto">
                     <span class="material-symbols-outlined text-on-primary text-xl">psychology</span>
                   </div>
-                  <span class="block w-fit mx-auto px-3 py-1 bg-white/20 text-on-primary rounded-full text-xs font-medium mb-3 text-center">Apr 2026 – Present</span>
                   <h3 class="font-headline text-base font-bold text-on-primary text-center mb-2">AI in Action</h3>
                   <p class="text-on-primary/70 text-sm text-center">Currently enrolled in AI in Action program at VinUni.</p>
                 </div>
+                <!-- Timeline Dot -->
+                <div class="w-4 h-4 rounded-full bg-green-500 border-4 border-surface dark:border-surface-container shadow-[0_0_0_4px_rgba(34,197,94,0.3)] mt-6 mb-4 z-10"></div>
+                <!-- Date / Time indicator below -->
+                <span class="font-code text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-white text-indigo-900 border border-indigo-100 dark:bg-surface-container dark:text-primary dark:border-outline-variant/30 shadow-sm z-10">Apr 2026 – Present</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mobile Vertical Timeline (fallback) -->
+          <div class="lg:hidden relative pl-8 border-l-2 border-primary/20 dark:border-outline-variant/30 flex flex-col gap-8">
+            <!-- Mobile Item 1 -->
+            <div class="relative">
+              <div class="absolute -left-[41px] top-6 w-4 h-4 rounded-full bg-primary border-4 border-surface dark:border-surface-container shadow-[0_0_0_4px_rgba(55,48,163,0.15)] dark:shadow-[0_0_0_4px_rgba(206,189,255,0.15)]"></div>
+              <span class="font-code text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-white text-indigo-900 border border-indigo-100 dark:bg-surface-container dark:text-primary dark:border-outline-variant/30 shadow-sm inline-block mb-3">Oct 2020</span>
+              <div class="bg-primary rounded-xl p-6 text-on-primary">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="material-symbols-outlined text-xl">school</span>
+                  <h3 class="font-headline text-base font-bold">HCMUS</h3>
+                </div>
+                <p class="text-on-primary/70 text-sm">Started my journey at University of Science — Ho Chi Minh City.</p>
+              </div>
+            </div>
+            <!-- Mobile Item 2 -->
+            <div class="relative">
+              <div class="absolute -left-[41px] top-6 w-4 h-4 rounded-full bg-primary border-4 border-surface dark:border-surface-container shadow-[0_0_0_4px_rgba(55,48,163,0.15)] dark:shadow-[0_0_0_4px_rgba(206,189,255,0.15)]"></div>
+              <span class="font-code text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-white text-indigo-900 border border-indigo-100 dark:bg-surface-container dark:text-primary dark:border-outline-variant/30 shadow-sm inline-block mb-3">Mar – Jun 2024</span>
+              <div class="bg-primary rounded-xl p-6 text-on-primary">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="material-symbols-outlined text-xl">work</span>
+                  <h3 class="font-headline text-base font-bold">Software Intern</h3>
+                </div>
+                <p class="text-on-primary/70 text-sm">Phu An Phuoc Investment Company. Gained hands-on industry experience.</p>
+              </div>
+            </div>
+            <!-- Mobile Item 3 -->
+            <div class="relative">
+              <div class="absolute -left-[41px] top-6 w-4 h-4 rounded-full bg-primary border-4 border-surface dark:border-surface-container shadow-[0_0_0_4px_rgba(55,48,163,0.15)] dark:shadow-[0_0_0_4px_rgba(206,189,255,0.15)]"></div>
+              <span class="font-code text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-white text-indigo-900 border border-indigo-100 dark:bg-surface-container dark:text-primary dark:border-outline-variant/30 shadow-sm inline-block mb-3">Oct 2025</span>
+              <div class="bg-primary rounded-xl p-6 text-on-primary">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="material-symbols-outlined text-xl">emoji_events</span>
+                  <h3 class="font-headline text-base font-bold">Graduated</h3>
+                </div>
+                <p class="text-on-primary/70 text-sm">Graduated from HCMUS with GPA 3.1/4.0.</p>
+              </div>
+            </div>
+            <!-- Mobile Item 4 -->
+            <div class="relative">
+              <div class="absolute -left-[41px] top-6 w-4 h-4 rounded-full bg-primary border-4 border-surface dark:border-surface-container shadow-[0_0_0_4px_rgba(55,48,163,0.15)] dark:shadow-[0_0_0_4px_rgba(206,189,255,0.15)]"></div>
+              <span class="font-code text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-white text-indigo-900 border border-indigo-100 dark:bg-surface-container dark:text-primary dark:border-outline-variant/30 shadow-sm inline-block mb-3">Oct 2025 – Apr 2026</span>
+              <div class="bg-primary rounded-xl p-6 text-on-primary">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="material-symbols-outlined text-xl">menu_book</span>
+                  <h3 class="font-headline text-base font-bold">Self-Study</h3>
+                </div>
+                <p class="text-on-primary/70 text-sm">System Design, Distributed Systems, and Infrastructure as Code.</p>
+              </div>
+            </div>
+            <!-- Mobile Item 5 -->
+            <div class="relative">
+              <div class="absolute -left-[41px] top-6 w-4 h-4 rounded-full bg-green-500 border-4 border-surface dark:border-surface-container shadow-[0_0_0_4px_rgba(34,197,94,0.3)]"></div>
+              <span class="font-code text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-white text-indigo-900 border border-indigo-100 dark:bg-surface-container dark:text-primary dark:border-outline-variant/30 shadow-sm inline-block mb-3">Apr 2026 – Present</span>
+              <div class="bg-primary rounded-xl p-6 text-on-primary relative">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="material-symbols-outlined text-xl">psychology</span>
+                  <h3 class="font-headline text-base font-bold">AI in Action</h3>
+                </div>
+                <p class="text-on-primary/70 text-sm">Currently enrolled in AI in Action program at VinUni.</p>
               </div>
             </div>
           </div>
@@ -193,93 +285,105 @@
     <!-- PROJECTS -->
     <section id="projects" class="py-20 bg-transparent">
       <div class="max-w-7xl mx-auto px-4 md:px-12">
-        <div class="text-center mb-16 reveal">
+        <div class="section-header-card mb-16 reveal">
           <h2 class="section-title">Repos</h2>
-          <p class="section-subtitle mx-auto">A showcase of my recent work across web, mobile, and AI.</p>
+          <p class="section-subtitle">A showcase of my recent work across web, mobile, and AI.</p>
         </div>
         <div class="grid md:grid-cols-2 gap-8 stagger-children">
           <a href="#/project/edurag" class="project-card block group">
-            <article class="bg-primary rounded-xl overflow-hidden shadow-md card-hover h-full text-on-primary relative flex flex-col">
-              <div class="h-56 flex items-center justify-center relative bg-gradient-to-br from-primary/10 to-secondary/10 flex-shrink-0">
-                <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <span class="material-symbols-outlined text-on-primary/80 text-8xl">gavel</span>
+            <div class="p-2 rounded-[2rem] bg-surface-container/30 dark:bg-surface-container-low/20 shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.2)] h-full">
+              <article class="bg-primary rounded-[calc(2rem-0.5rem)] overflow-hidden h-full text-on-primary relative flex flex-col">
+                <div class="h-56 flex items-center justify-center relative bg-gradient-to-br from-primary/10 to-secondary/10 flex-shrink-0">
+                  <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-on-primary/80 text-8xl">gavel</span>
+                  </div>
+                  <span class="absolute top-4 right-4 badge bg-secondary-container text-primary">AI/ML</span>
                 </div>
-                <span class="absolute top-4 right-4 badge bg-secondary-container text-primary">AI/ML</span>
-              </div>
-              <div class="p-8 flex flex-col flex-1">
-                <h3 class="font-headline text-2xl font-bold text-on-primary mb-3 group-hover:text-primary transition-colors">EduRAG — Vietnamese Education Law RAG</h3>
-                <p class="text-on-primary/70 text-base mb-5">A high-fidelity RAG system for Vietnamese Education Law, powered by LangChain Agent + Hybrid Search (Vector + Graph) + Qdrant.</p>
-                <div class="flex flex-wrap gap-2">
-                  <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Python</span>
-                  <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">LangChain</span>
-                  <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Qdrant</span>
-                  <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Neo4j</span>
+                <div class="p-8 flex flex-col flex-1">
+                  <h3 class="font-headline text-2xl font-bold text-on-primary mb-3 group-hover:text-primary transition-colors">EduRAG — Vietnamese Education Law RAG</h3>
+                  <p class="text-on-primary/70 text-base mb-5">A high-fidelity RAG system for Vietnamese Education Law, powered by LangChain Agent + Hybrid Search (Vector + Graph) + Qdrant.</p>
+                  <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Python</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">LangChain</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Qdrant</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Neo4j</span>
+                  </div>
+                  <div class="flex items-center justify-between mt-auto pt-5 border-t border-white/10 font-code text-sm font-bold uppercase tracking-wider">
+                    <span class="inline-flex items-center gap-2 text-on-primary/70 font-normal normal-case"><span class="material-symbols-outlined text-sm">circle</span> Python</span>
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors">
+                      Read Details
+                      <div class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center group-hover:translate-x-1 group-hover:-translate-y-[1px] transition-transform duration-300">
+                        <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="grid grid-cols-2 items-center text-sm text-on-primary/70 pt-5 border-t border-outline-variant/30 mt-auto">
-                  <span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-sm">circle</span> Python</span>
-                  <span class="inline-flex items-center gap-1.5 font-medium text-primary justify-self-end group-hover:gap-3 transition-all">
-                    Read Details
-                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                  </span>
-                </div>
-              </div>
-            </article>
+              </article>
+            </div>
           </a>
 
           <a href="#/project/movie-ticket" class="project-card block group">
-            <article class="bg-primary rounded-xl overflow-hidden shadow-md card-hover h-full text-on-primary relative flex flex-col">
-              <div class="h-56 flex items-center justify-center relative bg-gradient-to-br from-primary/10 to-secondary/10 flex-shrink-0">
-                <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <span class="material-symbols-outlined text-on-primary/80 text-8xl">local_movies</span>
+            <div class="p-2 rounded-[2rem] bg-surface-container/30 dark:bg-surface-container-low/20 shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.2)] h-full">
+              <article class="bg-primary rounded-[calc(2rem-0.5rem)] overflow-hidden h-full text-on-primary relative flex flex-col">
+                <div class="h-56 flex items-center justify-center relative bg-gradient-to-br from-primary/10 to-secondary/10 flex-shrink-0">
+                  <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-on-primary/80 text-8xl">local_movies</span>
+                  </div>
+                  <span class="absolute top-4 right-4 badge bg-secondary-container text-primary">FULL-STACK</span>
                 </div>
-                <span class="absolute top-4 right-4 badge bg-secondary-container text-primary">FULL-STACK</span>
-              </div>
-              <div class="p-8 flex flex-col flex-1">
-                <h3 class="font-headline text-2xl font-bold text-on-primary mb-3 group-hover:text-primary transition-colors">Movie Ticket Booking System</h3>
-                <p class="text-on-primary/70 text-base mb-5">A full-stack cinema reservation platform with Spring Boot REST API backend and Flutter mobile frontend. Authentication, seat selection, payment, and real-time booking management.</p>
-                <div class="flex flex-wrap gap-2">
-                  <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Java</span>
-                  <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Spring Boot</span>
-                  <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">PostgreSQL</span>
-                  <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Flutter</span>
+                <div class="p-8 flex flex-col flex-1">
+                  <h3 class="font-headline text-2xl font-bold text-on-primary mb-3 group-hover:text-primary transition-colors">Movie Ticket Booking System</h3>
+                  <p class="text-on-primary/70 text-base mb-5">A full-stack cinema reservation platform with Spring Boot REST API backend and Flutter mobile frontend. Authentication, seat selection, payment, and real-time booking management.</p>
+                  <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Java</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Spring Boot</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">PostgreSQL</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Flutter</span>
+                  </div>
+                  <div class="flex items-center justify-between mt-auto pt-5 border-t border-white/10 font-code text-sm font-bold uppercase tracking-wider">
+                    <span class="inline-flex items-center gap-2 text-on-primary/70 font-normal normal-case"><span class="material-symbols-outlined text-sm">circle</span> Java</span>
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors">
+                      Read Details
+                      <div class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center group-hover:translate-x-1 group-hover:-translate-y-[1px] transition-transform duration-300">
+                        <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="grid grid-cols-2 items-center text-sm text-on-primary/70 pt-5 border-t border-outline-variant/30 mt-auto">
-                  <span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-sm">circle</span> Java</span>
-                  <span class="inline-flex items-center gap-1.5 font-medium text-primary justify-self-end group-hover:gap-3 transition-all">
-                    Read Details
-                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                  </span>
-                </div>
-              </div>
-            </article>
+              </article>
+            </div>
           </a>
 
           <a href="#/project/attendance-app" class="project-card block group">
-            <article class="bg-primary rounded-xl overflow-hidden shadow-md card-hover h-full text-on-primary relative flex flex-col">
-              <div class="h-56 flex items-center justify-center relative bg-gradient-to-br from-primary/10 to-secondary/10 flex-shrink-0">
-                <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <span class="material-symbols-outlined text-on-primary/80 text-8xl">badge</span>
+            <div class="p-2 rounded-[2rem] bg-surface-container/30 dark:bg-surface-container-low/20 shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.2)] h-full">
+              <article class="bg-primary rounded-[calc(2rem-0.5rem)] overflow-hidden h-full text-on-primary relative flex flex-col">
+                <div class="h-56 flex items-center justify-center relative bg-gradient-to-br from-primary/10 to-secondary/10 flex-shrink-0">
+                  <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-on-primary/80 text-8xl">badge</span>
+                  </div>
+                  <span class="absolute top-4 right-4 badge bg-secondary-container text-primary">MOBILE</span>
                 </div>
-                <span class="absolute top-4 right-4 badge bg-secondary-container text-primary">MOBILE</span>
-              </div>
-              <div class="p-8 flex flex-col flex-1">
-                <h3 class="font-headline text-2xl font-bold text-on-primary mb-3 group-hover:text-primary transition-colors">Attendance Tracking App</h3>
-                <p class="text-on-primary/70 text-base mb-5">Cross-platform mobile application for automated attendance check-ins using Flutter. Firebase auth, QR code scanning, real-time sync, and an offline-first approach.</p>
-                <div class="flex flex-wrap gap-2">
-                  <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Dart</span>
-                  <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Flutter</span>
-                  <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Firebase</span>
-                  <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">QR Code</span>
+                <div class="p-8 flex flex-col flex-1">
+                  <h3 class="font-headline text-2xl font-bold text-on-primary mb-3 group-hover:text-primary transition-colors">Attendance Tracking App</h3>
+                  <p class="text-on-primary/70 text-base mb-5">Cross-platform mobile application for automated attendance check-ins using Flutter. Firebase auth, QR code scanning, real-time sync, and an offline-first approach.</p>
+                  <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Dart</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Flutter</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Firebase</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">QR Code</span>
+                  </div>
+                  <div class="flex items-center justify-between mt-auto pt-5 border-t border-white/10 font-code text-sm font-bold uppercase tracking-wider">
+                    <span class="inline-flex items-center gap-2 text-on-primary/70 font-normal normal-case"><span class="material-symbols-outlined text-sm">circle</span> Dart</span>
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors">
+                      Read Details
+                      <div class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center group-hover:translate-x-1 group-hover:-translate-y-[1px] transition-transform duration-300">
+                        <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="grid grid-cols-2 items-center text-sm text-on-primary/70 pt-5 border-t border-outline-variant/30 mt-auto">
-                  <span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-sm">circle</span> Dart</span>
-                  <span class="inline-flex items-center gap-1.5 font-medium text-primary justify-self-end group-hover:gap-3 transition-all">
-                    Read Details
-                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                  </span>
-                </div>
-              </div>
-            </article>
+              </article>
+            </div>
           </a>
         </div>
 
@@ -295,9 +399,9 @@
     <!-- SKILLS -->
     <section id="skills" class="py-20 bg-transparent">
       <div class="max-w-7xl mx-auto px-4 md:px-12">
-        <div class="text-center mb-16 reveal">
+        <div class="section-header-card mb-16 reveal">
           <h2 class="section-title">Skills</h2>
-          <p class="section-subtitle mx-auto">Technologies and languages I use across my GitHub repos.</p>
+          <p class="section-subtitle">Technologies and languages I use across my GitHub repos.</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 reveal">
           <!-- Programming Languages -->
@@ -451,25 +555,28 @@
       </div>
     </section>
 
-    <!-- DASHBOARD -->
     <section id="dashboard" class="py-8 bg-transparent hidden">
-      <div class="max-w-[1600px] mx-auto px-4 md:px-6">
-        <div class="flex items-center justify-between mb-6">
+      <div class="max-w-7xl mx-auto px-4 md:px-12">
+        <!-- Massive Typographic Header (Matching Project Details) -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b-8 border-primary dark:border-outline-variant pb-6 mb-12 gap-4">
           <div>
-            <h2 class="text-2xl font-bold text-white">Observability Dashboard</h2>
-            <p class="text-sm text-white/60 font-code mt-1">Real-time portfolio telemetry · Auto-refresh every 10s</p>
+            <span class="font-code text-sm font-bold uppercase tracking-widest text-secondary dark:text-secondary mb-2 block">System Telemetry</span>
+            <h1 class="font-headline text-4xl md:text-7xl font-black uppercase text-primary dark:text-on-background leading-none">Observability</h1>
+            <button id="manual-refresh-btn" class="font-code text-sm font-bold uppercase tracking-wider text-primary dark:text-primary mt-3 inline-flex items-center gap-1.5 bg-primary/10 dark:bg-primary/10 px-3 py-1.5 border border-primary/30 dark:border-primary/30 hover:bg-primary/20 transition-all cursor-pointer">
+              <span class="material-symbols-outlined text-base">sync</span> Refresh Telemetry
+            </button>
           </div>
-          <div class="flex items-center gap-3">
-            <span class="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-400 rounded-full text-xs font-code" id="prometheus-badge">
+          <div class="flex flex-wrap items-center gap-3 md:mb-1">
+            <span class="flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-400 border border-green-500/30 text-xs font-code uppercase font-bold tracking-wider" id="prometheus-badge" style="border-radius: 0;">
               <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse" id="prometheus-pulse"></span>
               <span id="prometheus-status-text">Prometheus Live</span>
             </span>
-            <span class="text-xs text-white/40 font-code" id="last-refresh">Last refresh: --</span>
+            <span class="text-xs text-primary dark:text-primary font-code uppercase font-bold tracking-wider px-3 py-2 bg-primary/10 border border-primary/30" id="last-refresh" style="border-radius: 0;">Last refresh: --</span>
           </div>
         </div>
         <div id="dashboard-content"></div>
         <p class="text-center text-on-surface-variant/60 text-sm mt-8 font-code">
-          Data sourced from Prometheus · Auto-refresh every 10s ·
+          Data sourced from Prometheus · Manual Refresh ·
           <a href="http://localhost:9090" target="_blank" rel="noopener" class="text-primary dark:text-primary hover:underline">Open Prometheus ↗</a>
         </p>
       </div>
@@ -477,10 +584,10 @@
 
     <!-- CONTACT -->
     <section id="contact" class="py-20 bg-transparent">
-      <div class="max-w-4xl mx-auto px-4 md:px-12">
-        <div class="text-center mb-12 reveal">
+      <div class="max-w-7xl mx-auto px-4 md:px-12">
+        <div class="section-header-card mb-12 reveal">
           <h2 class="section-title">Get In Touch</h2>
-          <p class="section-subtitle mx-auto">Have a project in mind or want to collaborate? I'd love to hear from you.</p>
+          <p class="section-subtitle">Have a project in mind or want to collaborate? I'd love to hear from you.</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 reveal">
           <a href="mailto:leanhquoc128@gmail.com" class="bg-secondary-container rounded-xl p-6 text-center card-hover block group">

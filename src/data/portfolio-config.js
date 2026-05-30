@@ -31,7 +31,18 @@ export const portfolioConfig = {
       language: "Python",
       stars: 0,
       forks: 0,
-      duration: "Apr 2026 — Present",
+       duration: "Apr 2026 — May 2026",
+      demoVideo: "/edurag_screenshot/YTDown_YouTube_AI-thuc-chien-VinUni-Khoa-1-App-036-EduL_Media_ubfQrLvbXWw_001_720p.mp4",
+      demoScreenshots: [
+        { url: "/edurag_screenshot/chat.png", label: "RAG Chat Interface & Citations" },
+        { url: "/edurag_screenshot/latency_trace.png", label: "Langfuse Latency Bottleneck Trace" },
+        { url: "/edurag_screenshot/eval.png", label: "Retrieval & Response Quality Evaluation" },
+        { url: "/edurag_screenshot/admin_dashboard.png", label: "EduRAG Admin Management Console" },
+        { url: "/edurag_screenshot/feedback.png", label: "User Response & Hallucination Feedback" },
+        { url: "/edurag_screenshot/metrics.png", label: "Observability Telemetry Dashboard" },
+        { url: "/edurag_screenshot/request_log.png", label: "Real-time API Request Logging" },
+        { url: "/edurag_screenshot/session.png", label: "User Session Analytics" }
+      ],
       featureHighlights: [
         { icon: "route", label: "Semantic Routing", desc: "4-tier query intent classification" },
         { icon: "hub", label: "Hybrid Search", desc: "Qdrant Vector + Neo4j Graph RRF fusion" },
@@ -52,17 +63,24 @@ export const portfolioConfig = {
         challenges: [
           "Information overload and conflicting rules in Vietnamese education circulars and decrees.",
           "Recall was low in a legacy vector-only RAG setup.",
-          "Maintaining query speed and low latency across multiple routing, retrieval, and reranking gates."
+          "Maintaining query speed and low latency across multiple routing, retrieval, and reranking gates.",
+          "Poor embedding quality due to lack of specialized legal domain vocabulary.",
+          "Difficulty tracing latency bottlenecks across complex, multi-stage retrieval pipelines.",
+          "User queries are often colloquial and do not align with formal legal terminology."
         ],
         solutions: [
           "Semantic router reduces unnecessary retrieval work and cuts average latency by about 30%.",
           "GraphRAG combines Qdrant vector retrieval with Neo4j graph traversal to improve legal recall.",
-          "Dynamic top-k tuning raises recall from roughly 54% to about 80% (Recall@1 reaching 84%) with better retrieval selection."
+          "Dynamic top-k tuning raises recall from roughly 54% to about 80% (Recall@1 reaching 84%) with better retrieval selection.",
+          "Leveraged an embedding model fine-tuned specifically on the Vietnamese legal domain.",
+          "Integrated Langfuse tracing to monitor step-by-step latencies and isolate performance bottlenecks.",
+          "Implemented query rewriting to map user intents to domain-specific legal vocabulary."
         ],
         benchmark: [
           "Baseline recall: ~54%",
           "Optimized recall (Recall@1 / Recall@10): ~84%",
-          "Average latency improvement: ~30%"
+          "Retrieval average latency: 2.6s",
+          "Average response latency: 8s"
         ],
         keyModules: [
           { 

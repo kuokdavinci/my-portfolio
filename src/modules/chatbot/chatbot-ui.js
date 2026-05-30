@@ -57,13 +57,28 @@ function parseMarkdown(text) {
     return `<a href="${url}" ${targetAttr} class="rag-chat-inline-link" style="color: var(--color-primary); text-decoration: underline;">${text}</a>`;
   });
   
-  // Convert lines to lists or paragraphs
+  // Convert lines to lists, headers, or paragraphs
   const lines = html.split('\n');
   let result = [];
   let inList = false;
   
   for (let line of lines) {
     let trimmed = line.trim();
+    
+    // Check for headers (e.g. # H1, ## H2, ##Header)
+    const headerMatch = trimmed.match(/^(#{1,6})\s*(.+)$/);
+    if (headerMatch) {
+      if (inList) {
+        result.push('</ul>');
+        inList = false;
+      }
+      const level = headerMatch[1].length;
+      const content = headerMatch[2].trim();
+      // Apply different size styling based on header level
+      const fontSize = level === 1 ? '1.25rem' : level === 2 ? '1.1rem' : '1rem';
+      result.push(`<h${level} class="rag-chat-header-${level}" style="font-weight: 800; font-size: ${fontSize}; margin: 1rem 0 0.5rem 0; font-family: var(--font-headline); text-transform: uppercase; color: var(--color-primary);">${content}</h${level}>`);
+      continue;
+    }
     
     // Check for bullet list
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {

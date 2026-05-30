@@ -336,10 +336,18 @@ function escapeHtml(value) {
 
 
 // JS Tracking SDK Client Implementation
-const TRACKING_API_URL = 'http://localhost:8000/api/v1/track';
-const CHAT_API_URL = 'http://localhost:8000/api/v1/chat';
-let scrolled50 = false;
-let scrolled90 = false;
+const getBackendUrl = () => {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
+  // Replace this with your production FastAPI backend deployment URL
+  return 'https://kuokdavinci-portfolio-api.onrender.com';
+};
+
+const BACKEND_URL = getBackendUrl();
+const TRACKING_API_URL = `${BACKEND_URL}/api/v1/track`;
+const CHAT_API_URL = `${BACKEND_URL}/api/v1/chat`;
+const scrollReached = new Set();
 
 function getSessionId() {
   let sessionId = sessionStorage.getItem('portfolio_session_id');
@@ -352,6 +360,12 @@ function getSessionId() {
 }
 
 async function trackEvent(eventType, payload = {}) {
+  // Use tracker.js instance if initialized to benefit from queuing/batching
+  if (window.trackEvent && typeof window.trackEvent === 'function') {
+    window.trackEvent(eventType, payload);
+    return;
+  }
+
   const sessionId = getSessionId();
   const event = {
     session_id: sessionId,
@@ -385,8 +399,7 @@ function handleRoute() {
   const projectMatch = hash.match(/^#\/project\/([a-zA-Z0-9_-]+)$/);
   
   // Reset scroll flags for the new view/page
-  scrolled50 = false;
-  scrolled90 = false;
+  scrollReached.clear();
 
   // Show/hide dashboard based on route
   const dashboardSection = document.getElementById('dashboard');
@@ -396,9 +409,23 @@ function handleRoute() {
     // Show dashboard, hide other main sections
     mainSections.forEach(section => section.classList.add('hidden'));
     if (dashboardSection) dashboardSection.classList.remove('hidden');
+    if (detailsView) detailsView.classList.add('hidden');
     window.scrollTo({ top: 0, behavior: 'instant' });
     destroyDashboard();
     initDashboard();
+
+    // Bind manual refresh button click
+    const refreshBtn = document.getElementById('manual-refresh-btn');
+    if (refreshBtn) {
+      refreshBtn.onclick = async () => {
+        const icon = refreshBtn.querySelector('.material-symbols-outlined');
+        if (icon) icon.classList.add('animate-spin');
+        refreshBtn.disabled = true;
+        await refreshDashboard();
+        if (icon) icon.classList.remove('animate-spin');
+        refreshBtn.disabled = false;
+      };
+    }
     return;
   } else {
     // Hide dashboard on other routes
@@ -437,28 +464,39 @@ function handleRoute() {
           </div>
 
           <!-- Massive Typographic Header -->
-          <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b-8 border-primary dark:border-outline-variant pb-6 mb-12 gap-4">
-            <div>
-              <span class="font-code text-sm font-bold uppercase tracking-widest text-secondary dark:text-secondary mb-2 block">Project Case Study</span>
-              <h1 class="font-headline text-4xl md:text-7xl font-black uppercase text-primary dark:text-on-background leading-none">${escapeHtml(project.title)}</h1>
-              ${project.duration ? `<p class="font-code text-sm font-bold uppercase tracking-wider text-primary dark:text-primary mt-2 inline-flex items-center gap-1.5 bg-primary/10 dark:bg-primary/10 px-3 py-1.5 border border-primary/30 dark:border-primary/30"><span class="material-symbols-outlined text-base text-primary dark:text-primary">event</span> ${escapeHtml(project.duration)}</p>` : ''}
+          <div class="border-b-8 border-primary pb-6 mb-12">
+            <span class="font-code text-sm font-bold uppercase tracking-widest text-secondary dark:text-secondary mb-2 block">Project Case Study</span>
+            <h1 class="font-headline text-4xl md:text-7xl font-black uppercase text-primary dark:text-on-background leading-tight mb-4">${escapeHtml(project.title)}</h1>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mt-4">
+              <div>
+                ${project.duration ? `<p class="font-code text-sm font-bold uppercase tracking-wider text-primary dark:text-primary inline-flex items-center gap-1.5 bg-primary/10 dark:bg-primary/10 px-3 py-1.5 border border-primary/30 dark:border-primary/30"><span class="material-symbols-outlined text-base text-primary dark:text-primary">event</span> ${escapeHtml(project.duration)}</p>` : ''}
+              </div>
+              <div class="flex flex-row items-center gap-3 flex-nowrap mt-4 md:mt-0">
+                <button id="open-demo-btn" class="btn-demo font-code text-sm font-bold bg-primary text-on-primary dark:bg-primary dark:text-on-primary px-6 py-3 border-2 border-primary dark:border-primary hover:bg-transparent hover:text-primary dark:hover:text-primary transition-all rounded-none inline-flex items-center gap-2 cursor-pointer shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_var(--color-primary)] dark:hover:shadow-[6px_6px_0px_0px_var(--color-outline)] active:translate-x-0 active:translate-y-0 active:shadow-[4px_4px_0px_0px_var(--color-primary)] whitespace-nowrap">
+                  <span class="material-symbols-outlined text-base !text-inherit">play_circle</span> Watch Demo
+                </button>
+                <a href="${escapeHtml(project.codeLink)}" target="_blank" rel="noopener" class="btn-sourcecode font-code text-sm font-bold bg-primary text-on-primary dark:bg-primary dark:text-on-primary px-6 py-3 border-2 border-primary dark:border-primary hover:bg-transparent hover:text-primary dark:hover:text-primary transition-all rounded-none inline-flex items-center gap-2 cursor-pointer shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_var(--color-primary)] dark:hover:shadow-[6px_6px_0px_0px_var(--color-outline)] active:translate-x-0 active:translate-y-0 active:shadow-[4px_4px_0px_0px_var(--color-primary)] whitespace-nowrap">
+                  <span class="material-symbols-outlined text-base !text-inherit">code</span> Source Code <span class="material-symbols-outlined text-sm !text-inherit">open_in_new</span>
+                </a>
+              </div>
             </div>
-            <a href="${escapeHtml(project.codeLink)}" target="_blank" rel="noopener" class="btn-sourcecode font-code text-sm font-bold bg-primary text-on-primary dark:bg-primary dark:text-on-primary px-6 py-3 border-2 border-primary dark:border-primary hover:bg-transparent hover:text-primary dark:hover:text-primary transition-all rounded-none inline-flex items-center gap-2 cursor-pointer shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_var(--color-primary)] dark:hover:shadow-[6px_6px_0px_0px_var(--color-outline)] active:translate-x-0 active:translate-y-0 active:shadow-[4px_4px_0px_0px_var(--color-primary)]">
-              <span class="material-symbols-outlined text-base !text-inherit">code</span> Source Code <span class="material-symbols-outlined text-sm !text-inherit">open_in_new</span>
-            </a>
           </div>
 
-          <!-- Tech Stack Row (Horizontal, above Core Features) -->
+          <!-- Tech Stack Row (Asymmetric Editorial Style) -->
           ${project.details && project.details.systemSpecs ? `
-          <div class="mb-12">
-            <h2 class="font-headline text-2xl font-black uppercase text-primary dark:text-primary mb-4">Technology Stack</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              ${Object.entries(project.details.systemSpecs).map(([key, val]) => `
-                <div class="details-card border-2 border-primary dark:border-outline-variant p-4 bg-surface-container dark:bg-surface-container-low rounded-none shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)]">
-                  <span class="font-code text-xs font-bold uppercase tracking-wider text-secondary dark:text-secondary mb-1 block">${escapeHtml(key)}</span>
-                  <span class="font-body text-sm font-semibold text-on-surface dark:text-on-surface-variant">${escapeHtml(val)}</span>
+          <div class="mb-12 relative overflow-hidden group/tech pb-4">
+            <h2 class="font-headline text-2xl font-black uppercase text-primary dark:text-primary mb-6 tracking-tight">Technology Stack</h2>
+            <div class="flex flex-wrap gap-x-8 gap-y-4 items-end relative z-10">
+              ${Object.entries(project.details.systemSpecs).map(([key, val], idx) => `
+                <div class="tech-item-editorial transition-all duration-300 hover:translate-y-[-2px] cursor-default ${idx % 2 === 0 ? 'mt-0' : 'md:mt-4'}">
+                  <span class="font-code text-xs font-bold uppercase tracking-widest text-primary dark:text-primary block mb-0.5">/ 0${idx + 1} ${escapeHtml(key)}</span>
+                  <span class="font-headline text-lg md:text-xl font-extrabold uppercase tracking-tight text-on-background dark:text-white transition-colors duration-300 hover:text-primary dark:hover:text-primary">${escapeHtml(val)}</span>
                 </div>
               `).join('')}
+            </div>
+            <!-- Giant background watermark -->
+            <div class="absolute right-0 bottom-0 select-none pointer-events-none opacity-[0.02] dark:opacity-[0.015] font-headline text-6xl md:text-[90px] font-black uppercase leading-none tracking-tighter text-on-background dark:text-white transition-transform duration-700 group-hover/tech:scale-105 origin-bottom-right">
+              STACK
             </div>
           </div>
           ` : ''}
@@ -469,87 +507,90 @@ function handleRoute() {
             <p class="font-body text-lg leading-relaxed text-black dark:text-white">${escapeHtml(project.details.overview || project.details.longDescription || project.description)}</p>
           </div>
 
-          <!-- Core Modules -->
+          <!-- Core Modules (Interactive Control Board) -->
           ${project.details.keyModules && project.details.keyModules.length > 0 ? `
-          <div class="mb-12">
-            <h2 class="font-headline text-2xl font-black uppercase text-primary dark:text-primary mb-4">Core Modules</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-              <!-- Left Column (Even Indices) -->
-              <div class="flex flex-col gap-4">
-                ${project.details.keyModules.filter((_, idx) => idx % 2 === 0).map(module => {
+          <div class="mb-16">
+            <h2 class="font-headline text-2xl font-black uppercase text-primary dark:text-primary mb-6 tracking-tight">Core Modules</h2>
+            <div class="border-2 border-primary dark:border-primary flex flex-col md:flex-row h-auto md:h-[400px] bg-surface-container dark:bg-surface-container-lowest overflow-hidden">
+              
+              <!-- Left Sidebar: Tabs List -->
+              <div class="w-full md:w-2/5 border-b-2 md:border-b-0 md:border-r-2 border-primary dark:border-primary flex flex-col divide-y-2 divide-primary dark:divide-primary justify-start">
+                ${project.details.keyModules.map((module, idx) => {
                   const isObj = typeof module === 'object';
                   const name = isObj ? module.name : module;
                   const icon = isObj ? module.icon : '';
+                  return `
+                    <button class="module-tab-btn flex items-center justify-between cursor-pointer hover:bg-primary/5 dark:hover:bg-primary/5 transition-all duration-300 text-left outline-none py-[21px] px-4 ${idx === 0 ? 'bg-primary/10 dark:bg-primary/10 flex-1' : 'flex-none'}" data-index="${idx}">
+                      <div class="flex items-center gap-3">
+                        ${icon ? `<span class="material-symbols-outlined text-primary dark:text-primary text-xl">${escapeHtml(icon)}</span>` : ''}
+                        <span class="font-headline text-sm font-bold uppercase tracking-tight text-on-surface dark:text-white">${escapeHtml(name)}</span>
+                      </div>
+                      <span class="active-indicator flex items-center gap-1.5 font-code text-xs text-emerald-500 font-bold ${idx === 0 ? 'opacity-100' : 'opacity-0'} transition-opacity">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        [ACTIVE]
+                      </span>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+
+              <!-- Right Display Panel: Content Terminal -->
+              <div class="w-full md:w-3/5 min-h-[250px] md:min-h-0 relative bg-surface-container-lowest dark:bg-surface-container-lowest/40 overflow-y-auto">
+                ${project.details.keyModules.map((module, idx) => {
+                  const isObj = typeof module === 'object';
+                  const name = isObj ? module.name : module;
                   const details = isObj ? module.details : '';
                   return `
-                    <div class="module-accordion-item details-card border-2 border-primary dark:border-outline-variant p-4 bg-surface-container dark:bg-surface-container-low rounded-none shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)] cursor-pointer flex flex-col">
-                      <div class="flex justify-between items-center w-full">
-                        <div class="flex items-center">
-                          ${icon ? `<span class="material-symbols-outlined text-primary dark:text-primary mr-2 text-xl">${escapeHtml(icon)}</span>` : ''}
-                          <h4 class="font-headline text-base font-black uppercase text-primary dark:text-primary">${escapeHtml(name)}</h4>
+                    <div class="module-console-detail absolute inset-0 p-6 md:p-8 flex flex-col justify-start transition-all duration-300 ${idx === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}" data-index="${idx}">
+                      <div class="w-full">
+                        <div class="flex items-center justify-between border-b border-primary/20 pb-4 mb-6">
+                          <span class="font-code text-xs text-secondary">SYSTEM CORE MODULE // 0${idx + 1}</span>
+                          <span class="font-code text-xs text-emerald-500 bg-emerald-500/10 px-2 py-0.5 border border-emerald-500/20 rounded-sm">ONLINE</span>
                         </div>
-                        ${details ? `<span class="expand-icon material-symbols-outlined text-primary dark:text-primary transition-transform duration-300">chevron_right</span>` : ''}
+                        <h3 class="font-headline text-2xl font-black uppercase text-primary dark:text-primary mb-4">${escapeHtml(name)}</h3>
+                        <p class="font-body text-base leading-relaxed text-black dark:text-white font-medium">${boldNumbers(escapeHtml(details))}</p>
                       </div>
-                      ${details ? `
-                        <div class="module-details mt-3 pt-3 border-t border-outline-variant/20 font-body text-sm font-medium text-black dark:text-white leading-relaxed">
-                          ${escapeHtml(details)}
-                        </div>
-                      ` : ''}
                     </div>
                   `;
                 }).join('')}
               </div>
-              <!-- Right Column (Odd Indices) -->
-              <div class="flex flex-col gap-4">
-                ${project.details.keyModules.filter((_, idx) => idx % 2 !== 0).map(module => {
-                  const isObj = typeof module === 'object';
-                  const name = isObj ? module.name : module;
-                  const icon = isObj ? module.icon : '';
-                  const details = isObj ? module.details : '';
-                  return `
-                    <div class="module-accordion-item details-card border-2 border-primary dark:border-outline-variant p-4 bg-surface-container dark:bg-surface-container-low rounded-none shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)] cursor-pointer flex flex-col">
-                      <div class="flex justify-between items-center w-full">
-                        <div class="flex items-center">
-                          ${icon ? `<span class="material-symbols-outlined text-primary dark:text-primary mr-2 text-xl">${escapeHtml(icon)}</span>` : ''}
-                          <h4 class="font-headline text-base font-black uppercase text-primary dark:text-primary">${escapeHtml(name)}</h4>
-                        </div>
-                        ${details ? `<span class="expand-icon material-symbols-outlined text-primary dark:text-primary transition-transform duration-300">chevron_right</span>` : ''}
-                      </div>
-                      ${details ? `
-                        <div class="module-details mt-3 pt-3 border-t border-outline-variant/20 font-body text-sm font-medium text-black dark:text-white leading-relaxed">
-                          ${escapeHtml(details)}
-                        </div>
-                      ` : ''}
-                    </div>
-                  `;
-                }).join('')}
-              </div>
+
             </div>
           </div>
           ` : ''}
 
-            <!-- Challenges & Solutions (Paired Neobrutalist Cards) -->
-            <div class="mb-12">
-              <h2 class="font-headline text-2xl font-black uppercase text-primary dark:text-primary mb-4">Challenges & Solutions</h2>
-              <div class="grid grid-cols-1 gap-4">
+            <!-- Challenges & Solutions (Asymmetric Layered Deck) -->
+            <div class="mb-16">
+              <h2 class="font-headline text-3xl font-black uppercase text-primary dark:text-primary mb-8 tracking-tight">Key Challenges & Solutions</h2>
+              <div class="flex flex-col gap-8">
                 ${project.details.challenges.map((challenge, idx) => {
                   const solution = project.details.solutions[idx] || '';
                   return `
-                    <div class="details-card border-2 border-primary dark:border-outline-variant p-6 bg-surface-container dark:bg-surface-container-low rounded-none shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)] flex flex-col gap-4">
-                      <!-- Challenge -->
-                      <div class="flex gap-3 items-start border-b border-outline-variant/20 pb-4">
-                        <span class="material-symbols-outlined text-rose-500 mt-0.5 icon-filled">error</span>
+                    <div class="group/challenge relative flex flex-col lg:flex-row border-2 border-primary dark:border-primary bg-surface-container dark:bg-surface-container-lowest overflow-hidden transition-all duration-300 hover:shadow-[8px_8px_0px_0px_var(--color-primary)]">
+                      <!-- Big index background watermark -->
+                      <div class="absolute right-4 bottom-[-20px] select-none pointer-events-none opacity-[0.05] dark:opacity-[0.03] font-headline text-9xl font-black italic transition-transform duration-500 group-hover/challenge:translate-y-[-10px]">
+                        0${idx + 1}
+                      </div>
+
+                      <!-- Left Column: Challenge (Problem) -->
+                      <div class="flex-1 p-8 lg:border-r-2 border-primary dark:border-primary flex flex-col justify-between">
                         <div>
-                          <h4 class="font-code text-sm font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-1">Challenge ${idx + 1}</h4>
-                          <p class="font-body text-base leading-relaxed text-on-surface dark:text-on-surface-variant">${boldNumbers(escapeHtml(challenge))}</p>
+                          <div class="flex items-center gap-2 mb-4">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+                            <span class="font-code text-xs font-bold uppercase tracking-widest text-rose-500">PROBLEM // 0${idx + 1}</span>
+                          </div>
+                          <p class="font-body text-lg font-bold leading-relaxed text-black dark:text-white">${boldNumbers(escapeHtml(challenge))}</p>
                         </div>
                       </div>
-                      <!-- Solution -->
+
+                      <!-- Right Column: Solution -->
                       ${solution ? `
-                      <div class="flex gap-3 items-start pt-2">
-                        <span class="material-symbols-outlined text-emerald-500 mt-0.5 icon-filled">check_circle</span>
+                      <div class="flex-1 p-8 bg-primary/5 dark:bg-primary/5 flex flex-col justify-between">
                         <div>
-                          <h4 class="font-code text-sm font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">Engineering Solution</h4>
+                          <div class="flex items-center gap-2 mb-4">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            <span class="font-code text-xs font-bold uppercase tracking-widest text-emerald-500">ENGINEERING RESOLUTION</span>
+                          </div>
                           <p class="font-body text-base leading-relaxed text-on-surface dark:text-on-surface-variant">${boldNumbers(escapeHtml(solution))}</p>
                         </div>
                       </div>
@@ -611,12 +652,53 @@ function handleRoute() {
         </div>
       `;
       
-      // Bind click listeners to accordion modules
-      detailsView.querySelectorAll('.module-accordion-item').forEach(item => {
-        item.addEventListener('click', () => {
-          item.classList.toggle('active');
+      // Bind click listeners to interactive console tabs
+      const tabBtns = detailsView.querySelectorAll('.module-tab-btn');
+      const consoleDetails = detailsView.querySelectorAll('.module-console-detail');
+      
+      tabBtns.forEach((btn, idx) => {
+        btn.addEventListener('click', () => {
+          // Deactivate all tabs (remove active styling and set to flex-none)
+          tabBtns.forEach(b => {
+            b.classList.remove('bg-primary/10', 'dark:bg-primary/10', 'flex-1');
+            b.classList.add('flex-none');
+            const indicator = b.querySelector('.active-indicator');
+            if (indicator) {
+              indicator.classList.remove('opacity-100');
+              indicator.classList.add('opacity-0');
+            }
+          });
+          // Hide all details (opacity 0, z-index 0, block clicks)
+          consoleDetails.forEach(d => {
+            d.classList.remove('opacity-100', 'z-10');
+            d.classList.add('opacity-0', 'z-0', 'pointer-events-none');
+          });
+          
+          // Activate clicked tab (set to flex-1 and add active styling)
+          btn.classList.remove('flex-none');
+          btn.classList.add('bg-primary/10', 'dark:bg-primary/10', 'flex-1');
+          const indicator = btn.querySelector('.active-indicator');
+          if (indicator) {
+            indicator.classList.remove('opacity-0');
+            indicator.classList.add('opacity-100');
+          }
+          
+          // Fade in corresponding detail (opacity 100, z-index 10, enable clicks)
+          const detail = detailsView.querySelector(`.module-console-detail[data-index="${idx}"]`);
+          if (detail) {
+            detail.classList.remove('opacity-0', 'z-0', 'pointer-events-none');
+            detail.classList.add('opacity-100', 'z-10');
+          }
         });
       });
+
+      // Bind Watch Demo click
+      const openDemoBtn = detailsView.querySelector('#open-demo-btn');
+      if (openDemoBtn) {
+        openDemoBtn.addEventListener('click', () => {
+          openDemoDrawer(project);
+        });
+      }
 
       // Trigger opacity fade-in
       setTimeout(() => {
@@ -684,9 +766,8 @@ function setupTracking() {
     });
   });
 
-  // 2. Scroll depth tracking at 25%, 50%, 75%, 100%
-  const scrollThresholds = [25, 50, 75, 100];
-  const scrollReached = new Set();
+  // 2. Scroll depth tracking at 50% and 90%
+  const scrollThresholds = [50, 90];
 
   window.addEventListener('scroll', () => {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
@@ -713,10 +794,11 @@ document.addEventListener('DOMContentLoaded', () => {
   setupProjectFilters();
   setupPortfolioChatbot(portfolioConfig);
   setupRouter();
+  setupTracking();
   getTracker().init();
 });
 
-const PROMETHEUS = 'http://localhost:9090/api/v1';
+const PROMETHEUS = `${BACKEND_URL}/api/v1/telemetry`;
 let prometheusOffline = false;
 
 // Mock database results generator for Prometheus offline/sandbox mode
@@ -761,6 +843,25 @@ function getMockQueryResult(query) {
       { metric: { status: '400' }, value: [nowSec, '12'] },
       { metric: { status: '500' }, value: [nowSec, '3'] }
     ];
+  }
+  if (query.includes('project_case_study_views_total') || query.includes('project_view_total')) {
+    return [
+      { metric: { project: 'edurag' }, value: [nowSec, '248'] },
+      { metric: { project: 'movie-ticket' }, value: [nowSec, '142'] },
+      { metric: { project: 'attendance-app' }, value: [nowSec, '95'] }
+    ];
+  }
+  if (query.includes('scroll_depth_reached_bucket') || query.includes('scroll_depth_total')) {
+    return [
+      { metric: { depth_percentile: '50', depth: '50' }, value: [nowSec, '420'] },
+      { metric: { depth_percentile: '90', depth: '90' }, value: [nowSec, '195'] }
+    ];
+  }
+  if (query.includes('api_request_duration_seconds_bucket') || query.includes('histogram_quantile')) {
+    const isP99 = query.includes('0.99');
+    const isP95 = query.includes('0.95');
+    const val = isP99 ? '1.85' : (isP95 ? '1.24' : '0.45');
+    return [{ value: [nowSec, val] }];
   }
   if (query.includes('api_requests_total')) {
     return [{ value: [nowSec, '5849'] }];
@@ -909,3 +1010,182 @@ function safeRenderChart(canvasId, config) {
     window.myCharts[canvasId] = new Chart(el, config);
   }
 }
+
+// Expose tracking verification test helper to browser window console
+window.testTracking = function() {
+  console.log("🚀 [Tracker Test] Simulating Portfolio Activity Events...");
+  
+  // 1. Simulating Project Views
+  console.log("   👉 Simulating project clicks: 'edurag' and 'movie-ticket'...");
+  window.trackEvent('project_click', { project_id: 'edurag' });
+  window.trackEvent('project_click', { project_id: 'movie-ticket' });
+  
+  // 2. Simulating Scroll Depths
+  console.log("   👉 Simulating page scrolls: 50% and 90%...");
+  window.trackEvent('scroll_depth', { percent: 50 });
+  window.trackEvent('scroll_depth', { percent: 90 });
+  
+  // 3. Simulating Resume Download
+  console.log("   👉 Simulating resume downloads...");
+  window.trackEvent('resume_download', { session_id: sessionStorage.getItem('portfolio_session_id') });
+
+  // 4. Force Flush Event Queue Immediately (skipping default 5s buffer)
+  import('./modules/tracking/tracker.js').then(({ getTracker }) => {
+    const tracker = getTracker();
+    if (tracker && typeof tracker.flush === 'function') {
+      tracker.flush();
+      console.log("✅ [Tracker Test] Successfully flushed event queue to api/v1/track!");
+    } else {
+      console.warn("⚠️ [Tracker Test] Tracker instance or flush method not found.");
+    }
+  }).catch(err => {
+    console.error("❌ [Tracker Test] Failed to dynamically load tracker module: ", err);
+  });
+};
+
+
+function openDemoDrawer(project) {
+  let drawer = document.querySelector('.demo-media-drawer');
+  let backdrop = document.querySelector('.demo-media-backdrop');
+
+  if (!drawer) {
+    drawer = document.createElement('div');
+    drawer.className = 'demo-media-drawer fixed inset-y-0 right-0 z-50 w-full sm:max-w-2xl bg-surface-container dark:bg-background border-l-2 border-primary p-6 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col gap-6 overflow-y-auto';
+    document.body.appendChild(drawer);
+  }
+
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.className = 'demo-media-backdrop fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300';
+    document.body.appendChild(backdrop);
+
+    backdrop.addEventListener('click', closeDemoDrawer);
+  }
+
+  const videoHtml = project.demoVideo 
+    ? `
+      <div class="mb-4">
+        <span class="font-code text-xs font-bold uppercase tracking-widest text-secondary mb-2 block">// DEMO VIDEO PLAYBACK</span>
+        <div class="border border-outline-variant dark:border-outline rounded-md overflow-hidden bg-black aspect-video relative flex items-center justify-center">
+          <video src="${escapeHtml(project.demoVideo)}" controls autoplay loop muted playsinline class="w-full h-full object-contain"></video>
+        </div>
+      </div>
+    `
+    : `
+      <div class="mb-4 p-8 border-2 border-dashed border-primary/25 rounded-md text-center bg-surface-container-low dark:bg-surface-container-lowest">
+        <span class="material-symbols-outlined text-4xl text-primary/40 mb-2">videocam_off</span>
+        <p class="font-code text-xs text-on-surface-variant">// NO DEMO VIDEO CONFIGURED</p>
+      </div>
+    `;
+
+  const screenshotsHtml = project.demoScreenshots && project.demoScreenshots.length > 0
+    ? `
+      <div>
+        <span class="font-code text-xs font-bold uppercase tracking-widest text-secondary mb-3 block">// SCREENSHOT GALLERY</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          ${project.demoScreenshots.map((shot, idx) => `
+            <div class="group relative border border-outline-variant dark:border-outline rounded-md overflow-hidden bg-surface-container-lowest dark:bg-surface-container-lowest/50 shadow-sm hover:border-primary transition-all">
+              <img src="${escapeHtml(shot.url)}" alt="${escapeHtml(shot.label)}" class="demo-screenshot-img w-full aspect-video object-cover cursor-zoom-in hover:scale-105 transition-transform duration-300" data-url="${escapeHtml(shot.url)}">
+              <div class="p-2 border-t border-outline-variant/20 bg-surface-container-low dark:bg-surface-container-lowest">
+                <span class="font-code text-[10px] text-secondary font-bold">SHOT 0${idx + 1} // ${escapeHtml(shot.label)}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `
+    : `
+      <div class="p-8 border-2 border-dashed border-primary/25 rounded-md text-center bg-surface-container-low dark:bg-surface-container-lowest">
+        <span class="material-symbols-outlined text-4xl text-primary/40 mb-2">image_not_supported</span>
+        <p class="font-code text-xs text-on-surface-variant">// NO SCREENSHOTS CONFIGURED</p>
+      </div>
+    `;
+
+  drawer.innerHTML = `
+    <div class="flex justify-between items-center border-b border-primary/20 pb-4">
+      <div>
+        <span class="font-code text-xs font-bold uppercase tracking-widest text-secondary block mb-0.5">/ DEMO CENTER</span>
+        <h2 class="font-headline text-lg font-black uppercase text-primary dark:text-white">${escapeHtml(project.title)}</h2>
+      </div>
+      <button class="close-demo-btn font-code text-xs font-bold bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 border border-primary/30 cursor-pointer">
+        [ CLOSE ]
+      </button>
+    </div>
+    <div class="flex-1 flex flex-col gap-6">
+      ${videoHtml}
+      ${screenshotsHtml}
+    </div>
+  `;
+
+  drawer.querySelector('.close-demo-btn').addEventListener('click', closeDemoDrawer);
+
+  // Bind click listener for screenshots to open lightbox overlay
+  drawer.querySelectorAll('.demo-screenshot-img').forEach(img => {
+    img.addEventListener('click', () => {
+      openLightbox(img.getAttribute('data-url'));
+    });
+  });
+
+  // Slide in
+  drawer.classList.remove('translate-x-full');
+  backdrop.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    backdrop.classList.add('opacity-100');
+  });
+}
+
+function closeDemoDrawer() {
+  const drawer = document.querySelector('.demo-media-drawer');
+  const backdrop = document.querySelector('.demo-media-backdrop');
+
+  if (drawer) {
+    // Pause any playing videos to stop audio in background
+    const video = drawer.querySelector('video');
+    if (video) video.pause();
+    
+    drawer.classList.add('translate-x-full');
+  }
+
+  if (backdrop) {
+    backdrop.classList.remove('opacity-100');
+    setTimeout(() => {
+      backdrop.classList.add('hidden');
+    }, 300);
+  }
+}
+
+function openLightbox(src) {
+  let lightbox = document.querySelector('.demo-lightbox');
+  if (!lightbox) {
+    lightbox = document.createElement('div');
+    lightbox.className = 'demo-lightbox fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center cursor-zoom-out opacity-0 transition-opacity duration-300';
+    lightbox.innerHTML = `
+      <img class="max-w-[90%] max-h-[90%] object-contain border-2 border-primary/50 shadow-2xl transform scale-95 transition-transform duration-300" src="">
+      <button class="absolute top-6 right-6 font-code text-xs font-bold bg-primary/20 text-primary px-3 py-1.5 border border-primary/30 cursor-pointer">[ CLOSE ]</button>
+    `;
+    document.body.appendChild(lightbox);
+    
+    const closeLightbox = () => {
+      lightbox.classList.add('opacity-0');
+      lightbox.querySelector('img').classList.add('scale-95');
+      setTimeout(() => {
+        lightbox.remove();
+      }, 300);
+    };
+    
+    lightbox.addEventListener('click', closeLightbox);
+  }
+  
+  lightbox.querySelector('img').src = src;
+  
+  // Show lightbox with animation
+  requestAnimationFrame(() => {
+    lightbox.classList.remove('opacity-0');
+    lightbox.classList.add('opacity-100');
+    setTimeout(() => {
+      lightbox.querySelector('img').classList.remove('scale-95');
+      lightbox.querySelector('img').classList.add('scale-100');
+    }, 50);
+  });
+}
+

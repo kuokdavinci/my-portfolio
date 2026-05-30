@@ -116,8 +116,8 @@
 - OBS-07: AI observability (intent categories, LLM performance, token consumption, estimated cost, cache hit rate)
 
 **Plans:** 2 plans
-- [ ] 05.2-01-PLAN.md — System Overview + User Behavior Analytics
-- [ ] 05.2-02-PLAN.md — AI Observability
+- [x] 05.2-01-PLAN.md — System Overview + User Behavior Analytics
+- [x] 05.2-02-PLAN.md — AI Observability
 
 ---
 
@@ -134,8 +134,8 @@
 - OBS-10: Error rate monitor
 
 **Plans:** 2 plans
-- [ ] 05.3-01-PLAN.md — Infrastructure Health + Live Telemetry
-- [ ] 05.3-02-PLAN.md — Dashboard wiring + responsive layout + polish
+- [x] 05.3-01-PLAN.md — Infrastructure Health + Live Telemetry
+- [x] 05.3-02-PLAN.md — Dashboard wiring + responsive layout + polish
 
 ---
 

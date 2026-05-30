@@ -292,8 +292,5 @@ export async function renderSystemOverview(container) {
   // Initial refresh
   await refresh();
 
-  // Set up 10s refresh interval
-  const intervalId = setInterval(refresh, 10000);
-
-  return { refresh, stop: () => clearInterval(intervalId) };
+  return { refresh, stop: () => {} };
 }

@@ -29,6 +29,16 @@ class RetrievalBoost:
     best_rule: Optional[BoostRule] = None
 
 
+@dataclass
+class RouteDecision:
+    """Normalized routing result for portfolio chatbot queries."""
+    category: str = "general"
+    project_id: Optional[str] = None
+    intent: str = "general"
+    confidence: float = 0.0
+    matched_rules: list[str] = field(default_factory=list)
+
+
 # ── Rule definitions ──────────────────────────────────────────────
 BOOST_RULES: list[BoostRule] = [
     # ── Project: Attendance Tracking App ──
@@ -62,9 +72,9 @@ BOOST_RULES: list[BoostRule] = [
         boost_factor=1.2,
     ),
 
-    # ── Project: Legal Education RAG ──
+    # ── Project: EduRAG (Legal Education) ──
     BoostRule(
-        name="project:legal_edu",
+        name="project:edurag",
         keywords=[
             "luật", "pháp luật", "văn bản", "pháp lý", "legal",
             "giáo dục", "education", "thông tư", "nghị định", "quyết định",
@@ -74,9 +84,9 @@ BOOST_RULES: list[BoostRule] = [
             "citation", "trích dẫn", "hiệu lực", "văn bản pháp luật",
             "giảng viên", "cán bộ", "quản lý giáo dục",
             "Langfuse", "LangChain", "LangGraph", "streaming", "SSE",
-            "guardrail", "toxicity", "audit", "API key",
+            "guardrail", "toxicity", "audit", "API key", "edurag",
         ],
-        filter_condition={"key": "metadata.project_id", "match": {"value": "legal-edu"}},
+        filter_condition={"key": "metadata.project_id", "match": {"value": "edurag-app"}},
         boost_factor=1.2,
     ),
 
@@ -113,6 +123,8 @@ BOOST_RULES: list[BoostRule] = [
             "AI", "machine learning", "deep learning", "data science",
             "pandas", "numpy", "LangChain", "RAG",
             "backend", "frontend", "mobile", "full-stack",
+            "distributed system", "distributed systems", "microservice", "microservices",
+            "fintech", "financial technology", "system design",
         ],
         filter_condition={"key": "category", "match": {"value": "competencies"}},
         boost_factor=1.3,
@@ -147,6 +159,7 @@ BOOST_RULES: list[BoostRule] = [
             "tech stack", "công nghệ", "technology", "framework",
             "Spring Boot", "Flutter", "Dart", "Python", "Java",
             "dùng gì", "sử dụng gì", "gồm những gì",
+            "distributed systems", "microservices", "fintech",
         ],
         filter_condition={"key": "category", "match": {"value": "skills"}},
         boost_factor=1.5,
@@ -180,7 +193,7 @@ def detect_boost(query: str) -> RetrievalBoost:
     priority = {
         "project:attendance": 10,
         "project:movie_ticket": 10,
-        "project:legal_edu": 10,
+        "project:edurag": 10,
         "category:contact": 7,
         "category:education": 7,
         "category:experience": 7,
@@ -200,6 +213,108 @@ def build_qdrant_filter(boost: RetrievalBoost) -> Optional[dict]:
     if not boost.best_rule:
         return None
     return {"must": [boost.best_rule.filter_condition]}
+
+
+def route_query(query: str) -> RouteDecision:
+    """Route a portfolio query to a category and optional project target."""
+    query_lower = query.lower()
+    boost = detect_boost(query)
+
+    route = RouteDecision()
+    route.matched_rules = [rule.name for rule in boost.matched_rules]
+
+    project_priority = [
+        ("attendance-app", "attendance"),
+        ("movie-ticket", "movie"),
+        ("edurag-app", "edurag"),
+    ]
+
+    category_priority = [
+        ("contact", "category:contact"),
+        ("education", "category:education"),
+        ("experience", "category:experience"),
+        ("skills", "category:skills"),
+        ("competencies", "category:competencies"),
+        ("project", "category:project"),
+        ("personal_info", "category:personal_info"),
+    ]
+
+    if any(token in query_lower for token in ["distributed system", "distributed systems", "microservice", "microservices", "fintech", "financial technology", "system design"]):
+        route.category = "competencies"
+        route.intent = "category:competencies"
+        route.confidence = 0.9
+        return route
+
+    if any(word in query_lower for word in ["liên hệ", "contact", "email", "phone", "số điện thoại", "github", "linkedin", "hire", "thuê", "gặp"]):
+        route.category = "contact"
+        route.intent = "category:contact"
+        route.confidence = 0.88
+        return route
+
+    if any(word in query_lower for word in ["đại học", "truong", "trường", "tốt nghiệp", "gpa", "vinuni", "hcmus", "học vấn", "education"]):
+        route.category = "education"
+        route.intent = "category:education"
+        route.confidence = 0.87
+        return route
+
+    if any(word in query_lower for word in ["kinh nghiệm", "experience", "intern", "thực tập", "company", "công ty", "làm việc", "work"]):
+        route.category = "experience"
+        route.intent = "category:experience"
+        route.confidence = 0.86
+        return route
+
+    if boost.best_rule:
+        best_name = boost.best_rule.name
+        if any(token in query_lower for token in ["kỹ năng", "ky nang", "skill", "competency", "năng lực", "nang luc"]):
+            if any(token in query_lower for token in ["ai", "machine learning", "deep learning", "data science", "pandas", "numpy", "backend", "frontend", "mobile", "full-stack"]):
+                route.category = "competencies"
+                route.intent = "category:competencies"
+                route.confidence = 0.92
+                return route
+
+        for project_id, needle in project_priority:
+            if needle in best_name:
+                route.category = "project_detail"
+                route.project_id = project_id
+                route.intent = best_name
+                route.confidence = 0.95
+                return route
+
+        for category, needle in category_priority:
+            if needle == best_name:
+                route.category = category
+                route.intent = best_name
+                route.confidence = 0.9
+                return route
+
+    if any(word in query_lower for word in ["hi", "hello", "xin chào", "chào", "chao", "hey"]):
+        route.category = "greeting"
+        route.intent = "greeting"
+        route.confidence = 0.99
+        return route
+
+    if any(word in query_lower for word in ["project", "dự án", "du an", "đã làm", "da lam", "built"]):
+        route.category = "project"
+        route.intent = "category:project"
+        route.confidence = 0.7
+        return route
+
+    if any(word in query_lower for word in ["kỹ năng", "ky nang", "skill", "competency", "năng lực", "nang luc"]):
+        route.category = "competencies"
+        route.intent = "category:competencies"
+        route.confidence = 0.65
+        return route
+
+    if any(word in query_lower for word in ["quốc", "quoc", "giới thiệu", "gioi thieu", "about", "bio"]):
+        route.category = "personal_info"
+        route.intent = "category:personal_info"
+        route.confidence = 0.6
+        return route
+
+    route.category = "general"
+    route.intent = "general"
+    route.confidence = 0.2
+    return route
 
 
 def merge_parent_child(
@@ -247,3 +362,33 @@ def merge_parent_child(
             merged.append(hit)
 
     return merged[:top_k]
+
+
+def get_dynamic_top_k(query: str, boost: RetrievalBoost) -> int:
+    """Determine dynamic top_k search limit based on matched query intent.
+    
+    1. Greeting queries: returns 0 (skips vector search).
+    2. Contact or Personal Info queries: returns 1 (keeps context highly focused).
+    3. Project specific queries: returns 4 (collects parent + multiple child chunks).
+    4. General/Default queries: returns 3.
+    """
+    import re
+    query_lower = query.lower().strip()
+    words = re.findall(r'\w+', query_lower)
+    
+    # 1. Simple Greetings Check
+    greetings = {"hi", "hello", "xin chào", "chào bạn", "chào", "helo"}
+    if any(w in greetings for w in words) and len(words) <= 3:
+        if not boost.best_rule:
+            return 0
+            
+    # 2. Dynamic top_k based on matched best intent
+    if boost.best_rule:
+        name = boost.best_rule.name
+        if name == "category:contact":
+            return 1
+        elif name.startswith("project:"):
+            return 4
+            
+    # 3. Default top_k
+    return 3

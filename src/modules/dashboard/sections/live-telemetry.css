@@ -15,11 +15,19 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  color: var(--color-primary);
+}
+
+.dark .live-stream-header {
   color: #cebdff;
 }
 
 .live-stream-header .material-symbols-outlined {
   font-size: 16px;
+  color: var(--color-primary);
+}
+
+.dark .live-stream-header .material-symbols-outlined {
   color: #cebdff;
 }
 
@@ -38,8 +46,8 @@
 }
 
 .live-stream {
-  background: #0d1117;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-container);
+  border: 1px solid var(--color-outline-variant);
   border-radius: 8px;
   padding: 16px;
   font-family: 'JetBrains Mono', monospace;
@@ -49,30 +57,47 @@
   scroll-behavior: smooth;
 }
 
+.dark .live-stream {
+  background: #0d1117;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
 /* Custom scrollbar for live stream */
 .live-stream::-webkit-scrollbar {
   width: 6px;
 }
 
 .live-stream::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
+  background: transparent;
 }
 
 .live-stream::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 3px;
 }
 
+.dark .live-stream::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .live-stream::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.dark .live-stream::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
 .log-entry {
   padding: 2px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--color-outline-variant);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.dark .log-entry {
+  border-bottom-color: rgba(255, 255, 255, 0.03);
 }
 
 .log-entry:last-child {
@@ -95,11 +120,16 @@
 /* ── Error Rate Card ────────────────────────────────────── */
 
 .error-rate-card {
-  background: rgba(22, 25, 27, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
   border-radius: 8px;
   padding: 16px;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dark .error-rate-card {
+  background: rgba(22, 25, 27, 0.8);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .error-rate-card.warning {
@@ -120,26 +150,38 @@
   font-size: 32px;
   font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
-  color: #e0e3e5;
+  color: var(--color-on-surface);
   line-height: 1.2;
+}
+
+.dark .error-rate-value {
+  color: #e0e3e5;
 }
 
 .error-rate-label {
   font-size: 11px;
   font-family: 'JetBrains Mono', monospace;
-  color: rgba(224, 227, 229, 0.5);
+  color: var(--color-on-surface-variant);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-top: 4px;
   margin-bottom: 12px;
 }
 
+.dark .error-rate-label {
+  color: rgba(224, 227, 229, 0.5);
+}
+
 .error-rate-bar {
   height: 6px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-surface-container-high);
   border-radius: 3px;
   overflow: hidden;
   margin-bottom: 8px;
+}
+
+.dark .error-rate-bar {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .error-rate-fill {
@@ -158,10 +200,15 @@
 /* ── Rate Limiting Card ─────────────────────────────────── */
 
 .rate-limit-card {
-  background: rgba(22, 25, 27, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
   border-radius: 8px;
   padding: 16px;
+}
+
+.dark .rate-limit-card {
+  background: rgba(22, 25, 27, 0.8);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .rate-limit-total {
@@ -175,11 +222,15 @@
 .rate-limit-label {
   font-size: 11px;
   font-family: 'JetBrains Mono', monospace;
-  color: rgba(224, 227, 229, 0.5);
+  color: var(--color-on-surface-variant);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-top: 4px;
   margin-bottom: 12px;
+}
+
+.dark .rate-limit-label {
+  color: rgba(224, 227, 229, 0.5);
 }
 
 .rate-limit-recent {
@@ -192,9 +243,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 6px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--color-outline-variant);
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
+}
+
+.dark .rate-limit-entry {
+  border-bottom-color: rgba(255, 255, 255, 0.03);
 }
 
 .rate-limit-entry:last-child {
@@ -202,6 +257,10 @@
 }
 
 .rate-limit-endpoint {
+  color: var(--color-on-surface);
+}
+
+.dark .rate-limit-endpoint {
   color: #e0e3e5;
 }
 
@@ -213,7 +272,11 @@
 .rate-limit-placeholder {
   font-size: 12px;
   font-family: 'JetBrains Mono', monospace;
-  color: rgba(224, 227, 229, 0.4);
+  color: var(--color-on-surface-variant);
   font-style: italic;
   padding: 8px 0;
+}
+
+.dark .rate-limit-placeholder {
+  color: rgba(224, 227, 229, 0.4);
 }

@@ -181,9 +181,9 @@ def get_embedding(text: str) -> list:
 
 def run_retrieval_tests():
     print("=" * 80)
-    print(f"RUNNING RAG RETRIEVAL ACCURACY TESTS (Recall@3)")
+    print("RUNNING RAG RETRIEVAL ACCURACY TESTS (Recall@3)")
     print(f"Collection: {COLLECTION_NAME} | Model: {EMBEDDING_MODEL}")
-    print(f"Mode: Parent-Child Hybrid Retrieval")
+    print("Mode: Parent-Child Hybrid Retrieval")
     print("=" * 80)
     
     passed_count = 0

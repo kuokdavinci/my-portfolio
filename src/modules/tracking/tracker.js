@@ -1,4 +1,12 @@
-const TRACK_API_URL = 'http://localhost:8000/api/v1';
+const getBackendUrl = () => {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
+  // Replace this with your production FastAPI backend deployment URL
+  return 'https://kuokdavinci-portfolio-api.onrender.com';
+};
+
+const TRACK_API_URL = `${getBackendUrl()}/api/v1`;
 const FLUSH_INTERVAL = 5000;
 const FLUSH_THRESHOLD = 10;
 const HEARTBEAT_INTERVAL = 30000;
