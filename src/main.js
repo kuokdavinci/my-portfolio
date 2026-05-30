@@ -406,13 +406,37 @@ function handleRoute() {
   const mainSections = document.querySelectorAll('main > section:not(#project-details-view):not(#dashboard)');
 
   if (hash === '#dashboard') {
-    // Show dashboard, hide other main sections
+    // Show dashboard with loading overlay, hide other main sections
     mainSections.forEach(section => section.classList.add('hidden'));
-    if (dashboardSection) dashboardSection.classList.remove('hidden');
+    if (dashboardSection) {
+      dashboardSection.classList.remove('hidden');
+      // Add loading overlay
+      let overlay = dashboardSection.querySelector('.dashboard-loading-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'dashboard-loading-overlay fixed inset-0 z-50 flex items-center justify-center bg-surface/80 dark:bg-background/80 backdrop-blur-sm';
+        overlay.innerHTML = `
+          <div class="text-center">
+            <span class="material-symbols-outlined text-6xl text-primary animate-spin">sync</span>
+            <p class="font-code text-sm text-on-surface-variant mt-4">Loading telemetry data...</p>
+          </div>
+        `;
+        dashboardSection.appendChild(overlay);
+      }
+    }
     if (detailsView) detailsView.classList.add('hidden');
     window.scrollTo({ top: 0, behavior: 'instant' });
     destroyDashboard();
-    initDashboard();
+
+    // Load data in background
+    initDashboard().then(() => {
+      // Remove loading overlay when data is ready
+      const dashSection = document.getElementById('dashboard');
+      if (dashSection) {
+        const ov = dashSection.querySelector('.dashboard-loading-overlay');
+        if (ov) ov.remove();
+      }
+    });
 
     // Bind manual refresh button click
     const refreshBtn = document.getElementById('manual-refresh-btn');

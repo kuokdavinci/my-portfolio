@@ -52,6 +52,12 @@ export async function initDashboard() {
 
   isInitialized = true;
   updateLastRefresh();
+
+  // Auto-refresh every 10 seconds
+  if (refreshInterval) clearInterval(refreshInterval);
+  refreshInterval = setInterval(async () => {
+    await refreshDashboard();
+  }, 10000);
 }
 
 /**
