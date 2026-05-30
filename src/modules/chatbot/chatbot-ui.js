@@ -28,11 +28,10 @@ function updateAgentState(thinkingMessage, activeStepId) {
   let html = '';
   agentStateSteps.forEach((step, i) => {
     if (i < activeIndex) {
-      html += `<div class="agent-state-step is-completed"><span class="state-check">✓</span><span class="state-label">${step.label.replace('Đang ', '')}</span></div>`;
+      html += `<div class="agent-state-step is-completed"><span class="state-check">✓</span><span class="state-label">${step.label}</span></div>`;
     } else if (i === activeIndex) {
       html += `<div class="agent-state-step is-active"><span class="state-label">${step.label}</span></div>`;
     }
-    // future steps: not rendered
   });
   container.innerHTML = html;
 }
@@ -310,6 +309,7 @@ export function setupPortfolioChatbot(portfolioConfig) {
 
       // Step 3: Generating — response received
       updateAgentState(thinkingMessage, 'generating');
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       removeThinking();
 
@@ -326,6 +326,7 @@ export function setupPortfolioChatbot(portfolioConfig) {
       updateAgentState(thinkingMessage, 'retrieving');
       await new Promise(resolve => setTimeout(resolve, MIN_THINKING_TIME));
       updateAgentState(thinkingMessage, 'generating');
+      await new Promise(resolve => setTimeout(resolve, 300));
       removeThinking();
 
       const localResponse = generateChatbotAnswer(trimmedQuestion, knowledgeBase);
