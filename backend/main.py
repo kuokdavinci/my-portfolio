@@ -57,9 +57,22 @@ class Database:
     def get_conn():
         if DATABASE_URL:
             import psycopg2
+            import socket
+            from urllib.parse import urlparse
+
             db_url = DATABASE_URL
             if db_url.startswith("postgres://"):
                 db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+            parsed = urlparse(db_url)
+            hostname = parsed.hostname
+            if hostname:
+                try:
+                    ipv4_addr = socket.getaddrinfo(hostname, None, socket.AF_INET)[0][4][0]
+                    return psycopg2.connect(db_url, hostaddr=ipv4_addr)
+                except Exception:
+                    pass
+
             return psycopg2.connect(db_url)
         else:
             return sqlite3.connect(DB_PATH)
