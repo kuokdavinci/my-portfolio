@@ -1,6 +1,13 @@
 import { buildKnowledgeBase, generateChatbotAnswer } from './chatbot-rag.js';
 
-const CHAT_API_URL = 'http://localhost:8000/api/v1/chat';
+const getBackendUrl = () => {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
+  return 'https://my-portfolio-mgel.onrender.com';
+};
+
+const CHAT_API_URL = `${getBackendUrl()}/api/v1/chat`;
 const MIN_THINKING_TIME = 500; // ms
 
 const agentStateSteps = [

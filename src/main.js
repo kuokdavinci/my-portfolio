@@ -341,7 +341,7 @@ const getBackendUrl = () => {
     return 'http://localhost:8000';
   }
   // Replace this with your production FastAPI backend deployment URL
-  return 'https://kuokdavinci-portfolio-api.onrender.com';
+  return 'https://my-portfolio-mgel.onrender.com';
 };
 
 const BACKEND_URL = getBackendUrl();
