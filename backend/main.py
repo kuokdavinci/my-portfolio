@@ -66,14 +66,19 @@ class Database:
 
             parsed = urlparse(db_url)
             hostname = parsed.hostname
-            if hostname:
-                try:
-                    ipv4_addr = socket.getaddrinfo(hostname, None, socket.AF_INET)[0][4][0]
-                    return psycopg2.connect(db_url, hostaddr=ipv4_addr)
-                except Exception:
-                    pass
+            port = parsed.port or 5432
 
-            return psycopg2.connect(db_url)
+            # Force IPv4 resolution to avoid "Network is unreachable" on IPv6
+            ipv4_addr = socket.getaddrinfo(hostname, port, socket.AF_INET)[0][4][0]
+
+            return psycopg2.connect(
+                dbname=parsed.path.lstrip("/"),
+                user=parsed.username,
+                password=parsed.password,
+                hostaddr=ipv4_addr,
+                port=port,
+                sslmode="require",
+            )
         else:
             return sqlite3.connect(DB_PATH)
 
