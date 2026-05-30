@@ -57,7 +57,6 @@ class Database:
     def get_conn():
         if DATABASE_URL:
             import psycopg2
-            import socket
             from urllib.parse import urlparse, unquote
 
             db_url = DATABASE_URL
@@ -65,30 +64,20 @@ class Database:
                 db_url = db_url.replace("postgres://", "postgresql://", 1)
 
             parsed = urlparse(db_url)
-            hostname = parsed.hostname
-            port = parsed.port or 5432
             dbname = parsed.path.lstrip("/") or "postgres"
             user = parsed.username
-            # Password may be URL-encoded (e.g. %40 -> @)
             password = unquote(parsed.password) if parsed.password else ""
+            hostname = parsed.hostname
+            port = parsed.port or 5432
 
             logger.info(f"Connecting to PostgreSQL at {hostname}:{port}, db={dbname}, user={user}")
-
-            # Force IPv4 resolution
-            try:
-                addr_info = socket.getaddrinfo(hostname, port, socket.AF_INET, socket.SOCK_STREAM)
-                ipv4_addr = addr_info[0][4][0]
-                logger.info(f"Resolved {hostname} to IPv4: {ipv4_addr}")
-            except Exception as e:
-                logger.error(f"Failed to resolve {hostname} to IPv4: {e}")
-                raise
 
             try:
                 conn = psycopg2.connect(
                     dbname=dbname,
                     user=user,
                     password=password,
-                    host=ipv4_addr,
+                    host=hostname,
                     port=port,
                     sslmode="require",
                 )
