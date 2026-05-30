@@ -58,7 +58,7 @@ class Database:
         if DATABASE_URL:
             import psycopg2
             import socket
-            from urllib.parse import urlparse
+            from urllib.parse import urlparse, unquote
 
             db_url = DATABASE_URL
             if db_url.startswith("postgres://"):
@@ -67,18 +67,36 @@ class Database:
             parsed = urlparse(db_url)
             hostname = parsed.hostname
             port = parsed.port or 5432
+            dbname = parsed.path.lstrip("/") or "postgres"
+            user = parsed.username
+            # Password may be URL-encoded (e.g. %40 -> @)
+            password = unquote(parsed.password) if parsed.password else ""
 
-            # Force IPv4 resolution to avoid "Network is unreachable" on IPv6
-            ipv4_addr = socket.getaddrinfo(hostname, port, socket.AF_INET)[0][4][0]
+            logger.info(f"Connecting to PostgreSQL at {hostname}:{port}, db={dbname}, user={user}")
 
-            return psycopg2.connect(
-                dbname=parsed.path.lstrip("/"),
-                user=parsed.username,
-                password=parsed.password,
-                hostaddr=ipv4_addr,
-                port=port,
-                sslmode="require",
-            )
+            # Force IPv4 resolution
+            try:
+                addr_info = socket.getaddrinfo(hostname, port, socket.AF_INET, socket.SOCK_STREAM)
+                ipv4_addr = addr_info[0][4][0]
+                logger.info(f"Resolved {hostname} to IPv4: {ipv4_addr}")
+            except Exception as e:
+                logger.error(f"Failed to resolve {hostname} to IPv4: {e}")
+                raise
+
+            try:
+                conn = psycopg2.connect(
+                    dbname=dbname,
+                    user=user,
+                    password=password,
+                    host=ipv4_addr,
+                    port=port,
+                    sslmode="require",
+                )
+                logger.info("PostgreSQL connection established.")
+                return conn
+            except psycopg2.OperationalError as e:
+                logger.error(f"PostgreSQL connection failed: {e}")
+                raise
         else:
             return sqlite3.connect(DB_PATH)
 
