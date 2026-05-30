@@ -639,6 +639,7 @@ async def chat(request: ChatRequest):
             logger.error(f"Error searching Qdrant collection: {e}")
             
     if not contexts:
+        logger.warning(f"No contexts found for query: '{request.message}', route: {route.category if 'route' in locals() else 'unknown'}, top_k: {top_k}")
         contexts.append(generate_mock_answer(request.message, [], 0, query_category))
  
     # 3. Call LLM (OpenAI Chat Completions API)
