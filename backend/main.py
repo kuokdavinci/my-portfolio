@@ -419,7 +419,9 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
         "kafka_connected": kafka_available,
-        "sqlite_database_path": DB_PATH
+        "sqlite_database_path": DB_PATH,
+        "qdrant_connected": qdrant_client is not None,
+        "openai_connected": openai_client is not None,
     }
 
 @app.get("/metrics")
