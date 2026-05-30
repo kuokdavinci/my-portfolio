@@ -11,9 +11,9 @@ const CHAT_API_URL = `${getBackendUrl()}/api/v1/chat`;
 const MIN_THINKING_TIME = 500; // ms
 
 const agentStateSteps = [
-  { id: 'analyzing', label: 'Đang phân tích câu hỏi' },
-  { id: 'retrieving', label: 'Đang tìm kiếm thông tin' },
-  { id: 'generating', label: 'Đang tạo câu trả lời' },
+  { id: 'analyzing', label: 'Analyzing question' },
+  { id: 'retrieving', label: 'Searching knowledge base' },
+  { id: 'generating', label: 'Generating answer' },
 ];
 
 function updateAgentState(thinkingMessage, activeStepId) {
