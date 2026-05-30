@@ -3,7 +3,7 @@ const getBackendUrl = () => {
     return 'http://localhost:8000';
   }
   // Replace this with your production FastAPI backend deployment URL
-  return 'https://my-portfolio-mgel.onrender.com';
+  return 'https://api.kuokdavinci.me';
 };
 
 const TRACK_API_URL = `${getBackendUrl()}/api/v1`;

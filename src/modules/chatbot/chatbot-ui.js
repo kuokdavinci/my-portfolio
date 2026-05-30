@@ -4,7 +4,7 @@ const getBackendUrl = () => {
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:8000';
   }
-  return 'https://my-portfolio-mgel.onrender.com';
+  return 'https://api.kuokdavinci.me';
 };
 
 const CHAT_API_URL = `${getBackendUrl()}/api/v1/chat`;
