@@ -392,7 +392,9 @@
       <div class="mb-4">
         <span class="font-code text-xs font-bold uppercase tracking-widest text-secondary mb-2 block">// DEMO VIDEO PLAYBACK</span>
         <div class="border border-outline-variant dark:border-outline rounded-md overflow-hidden bg-black aspect-video relative flex items-center justify-center">
-          <video src="${L(t.demoVideo)}" controls autoplay loop muted playsinline class="w-full h-full object-contain"></video>
+          <video preload="none" controls muted playsinline class="w-full h-full object-contain" data-src="${L(t.demoVideo)}">
+            <source data-src="${L(t.demoVideo)}" type="video/mp4">
+          </video>
         </div>
       </div>
     `:`
@@ -404,11 +406,11 @@
       <div>
         <span class="font-code text-xs font-bold uppercase tracking-widest text-secondary mb-3 block">// SCREENSHOT GALLERY</span>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          ${t.demoScreenshots.map((s,o)=>`
+          ${t.demoScreenshots.map((o,r)=>`
             <div class="group relative border border-outline-variant dark:border-outline rounded-md overflow-hidden bg-surface-container-lowest dark:bg-surface-container-lowest/50 shadow-sm hover:border-primary transition-all">
-              <img src="${L(s.url)}" alt="${L(s.label)}" class="demo-screenshot-img w-full aspect-video object-cover cursor-zoom-in hover:scale-105 transition-transform duration-300" data-url="${L(s.url)}">
+              <img src="${L(o.url)}" alt="${L(o.label)}" class="demo-screenshot-img w-full aspect-video object-cover cursor-zoom-in hover:scale-105 transition-transform duration-300" data-url="${L(o.url)}">
               <div class="p-2 border-t border-outline-variant/20 bg-surface-container-low dark:bg-surface-container-lowest">
-                <span class="font-code text-[10px] text-secondary font-bold">SHOT 0${o+1} // ${L(s.label)}</span>
+                <span class="font-code text-[10px] text-secondary font-bold">SHOT 0${r+1} // ${L(o.label)}</span>
               </div>
             </div>
           `).join("")}
@@ -433,7 +435,7 @@
       ${i}
       ${n}
     </div>
-  `,e.querySelector(".close-demo-btn").addEventListener("click",we),e.querySelectorAll(".demo-screenshot-img").forEach(s=>{s.addEventListener("click",()=>{$t(s.getAttribute("data-url"))})}),e.classList.remove("translate-x-full"),a.classList.remove("hidden"),requestAnimationFrame(()=>{a.classList.add("opacity-100")})}function we(){const t=document.querySelector(".demo-media-drawer"),e=document.querySelector(".demo-media-backdrop");if(t){const a=t.querySelector("video");a&&a.pause(),t.classList.add("translate-x-full")}e&&(e.classList.remove("opacity-100"),setTimeout(()=>{e.classList.add("hidden")},300))}function $t(t){let e=document.querySelector(".demo-lightbox");if(!e){e=document.createElement("div"),e.className="demo-lightbox fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center cursor-zoom-out opacity-0 transition-opacity duration-300",e.innerHTML=`
+  `,e.querySelector(".close-demo-btn").addEventListener("click",we);const s=e.querySelector("video[data-src]");s&&s.addEventListener("play",function o(){const r=s.getAttribute("data-src");r&&(s.src=r,s.removeAttribute("data-src"),s.load(),s.removeEventListener("play",o))},{once:!0}),e.querySelectorAll(".demo-screenshot-img").forEach(o=>{o.addEventListener("click",()=>{$t(o.getAttribute("data-url"))})}),e.classList.remove("translate-x-full"),a.classList.remove("hidden"),requestAnimationFrame(()=>{a.classList.add("opacity-100")})}function we(){const t=document.querySelector(".demo-media-drawer"),e=document.querySelector(".demo-media-backdrop");if(t){const a=t.querySelector("video");a&&(a.pause(),a.removeAttribute("src"),a.load()),t.classList.add("translate-x-full")}e&&(e.classList.remove("opacity-100"),setTimeout(()=>{e.classList.add("hidden")},300))}function $t(t){let e=document.querySelector(".demo-lightbox");if(!e){e=document.createElement("div"),e.className="demo-lightbox fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center cursor-zoom-out opacity-0 transition-opacity duration-300",e.innerHTML=`
       <img class="max-w-[90%] max-h-[90%] object-contain border-2 border-primary/50 shadow-2xl transform scale-95 transition-transform duration-300" src="">
       <button class="absolute top-6 right-6 font-code text-xs font-bold bg-primary/20 text-primary px-3 py-1.5 border border-primary/30 cursor-pointer">[ CLOSE ]</button>
     `,document.body.appendChild(e);const a=()=>{e.classList.add("opacity-0"),e.querySelector("img").classList.add("scale-95"),setTimeout(()=>{e.remove()},300)};e.addEventListener("click",a)}e.querySelector("img").src=t,requestAnimationFrame(()=>{e.classList.remove("opacity-0"),e.classList.add("opacity-100"),setTimeout(()=>{e.querySelector("img").classList.remove("scale-95"),e.querySelector("img").classList.add("scale-100")},50)})}
