@@ -1091,9 +1091,7 @@ function openDemoDrawer(project) {
       <div class="mb-4">
         <span class="font-code text-xs font-bold uppercase tracking-widest text-secondary mb-2 block">// DEMO VIDEO PLAYBACK</span>
         <div class="border border-outline-variant dark:border-outline rounded-md overflow-hidden bg-black aspect-video relative flex items-center justify-center">
-          <video preload="none" controls muted playsinline class="w-full h-full object-contain" data-src="${escapeHtml(project.demoVideo)}">
-            <source data-src="${escapeHtml(project.demoVideo)}" type="video/mp4">
-          </video>
+          <video src="${escapeHtml(project.demoVideo)}" controls muted playsinline class="w-full h-full object-contain"></video>
         </div>
       </div>
     `
@@ -1145,20 +1143,6 @@ function openDemoDrawer(project) {
 
   drawer.querySelector('.close-demo-btn').addEventListener('click', closeDemoDrawer);
 
-  // Lazy load video: only fetch source when user clicks play
-  const lazyVideo = drawer.querySelector('video[data-src]');
-  if (lazyVideo) {
-    lazyVideo.addEventListener('play', function loadOnce() {
-      const src = lazyVideo.getAttribute('data-src');
-      if (src) {
-        lazyVideo.src = src;
-        lazyVideo.removeAttribute('data-src');
-        lazyVideo.load();
-        lazyVideo.removeEventListener('play', loadOnce);
-      }
-    }, { once: true });
-  }
-
   // Bind click listener for screenshots to open lightbox overlay
   drawer.querySelectorAll('.demo-screenshot-img').forEach(img => {
     img.addEventListener('click', () => {
@@ -1179,13 +1163,9 @@ function closeDemoDrawer() {
   const backdrop = document.querySelector('.demo-media-backdrop');
 
   if (drawer) {
-    // Pause any playing videos and clear source to stop background loading
+    // Pause any playing videos to stop audio in background
     const video = drawer.querySelector('video');
-    if (video) {
-      video.pause();
-      video.removeAttribute('src');
-      video.load();
-    }
+    if (video) video.pause();
     
     drawer.classList.add('translate-x-full');
   }
