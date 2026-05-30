@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --bg-image: url('./assets/portfolio/l1.png');
+  --bg-image: url('./assets/portfolio/l1.webp');
 }
 
 .dark {
-  --bg-image: url('./assets/portfolio/d2.png');
+  --bg-image: url('./assets/portfolio/d2.webp');
 }
 
 @variant dark (&:where(.dark, .dark *));
