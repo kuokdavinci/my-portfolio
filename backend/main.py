@@ -50,80 +50,32 @@ KAFKA_TOPIC = "user.activity.raw"
 # Kafka disabled
 kafka_available = False
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-
 class Database:
     @staticmethod
     def get_conn():
-        if DATABASE_URL:
-            import psycopg2
-            from urllib.parse import urlparse, unquote
-
-            db_url = DATABASE_URL
-            if db_url.startswith("postgres://"):
-                db_url = db_url.replace("postgres://", "postgresql://", 1)
-
-            parsed = urlparse(db_url)
-            dbname = parsed.path.lstrip("/") or "postgres"
-            user = parsed.username
-            password = unquote(parsed.password) if parsed.password else ""
-            hostname = parsed.hostname
-            port = parsed.port or 5432
-
-            logger.info(f"Connecting to PostgreSQL at {hostname}:{port}, db={dbname}, user={user}")
-
-            try:
-                conn = psycopg2.connect(
-                    dbname=dbname,
-                    user=user,
-                    password=password,
-                    host=hostname,
-                    port=port,
-                    sslmode="require",
-                )
-                logger.info("PostgreSQL connection established.")
-                return conn
-            except psycopg2.OperationalError as e:
-                logger.error(f"PostgreSQL connection failed: {e}")
-                raise
-        else:
-            return sqlite3.connect(DB_PATH)
+        return sqlite3.connect(DB_PATH)
 
     @staticmethod
     def param_placeholder():
-        return "%s" if DATABASE_URL else "?"
+        return "?"
 
 def init_db():
-    """Initializes the database (PostgreSQL if DATABASE_URL is present, otherwise SQLite) and creates events table."""
+    """Initializes the local SQLite database and creates the events table."""
     os.makedirs(DB_DIR, exist_ok=True)
     conn = Database.get_conn()
     cursor = conn.cursor()
-    if DATABASE_URL:
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS tracking_events (
-                id SERIAL PRIMARY KEY,
-                session_id TEXT NOT NULL,
-                timestamp TEXT NOT NULL,
-                event_type TEXT NOT NULL,
-                payload TEXT NOT NULL
-            )
-        """)
-    else:
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS tracking_events (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                session_id TEXT NOT NULL,
-                timestamp TEXT NOT NULL,
-                event_type TEXT NOT NULL,
-                payload TEXT NOT NULL
-            )
-        """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS tracking_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL,
+            timestamp TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            payload TEXT NOT NULL
+        )
+    """)
     conn.commit()
     conn.close()
-    if DATABASE_URL:
-        logger.info("PostgreSQL database initialized successfully.")
-    else:
-        logger.info(f"SQLite database initialized at: {DB_PATH}")
+    logger.info(f"SQLite database initialized at: {DB_PATH}")
 
 # Kafka functionality removed
 
