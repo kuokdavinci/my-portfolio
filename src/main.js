@@ -180,6 +180,51 @@ function setupTypingEffect() {
   });
 }
 
+async function loadGitHubProfile() {
+  const avatarEl = document.getElementById('github-avatar');
+  const repoCountEl = document.getElementById('github-repos-count');
+  const githubProfileUrl = portfolioConfig.personalInfo.githubProfile;
+
+  if (!githubProfileUrl) return;
+
+  const usernameMatch = githubProfileUrl.match(/github\.com\/([^/?#]+)/i);
+  const username = usernameMatch ? usernameMatch[1] : null;
+  if (!username) return;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const response = await fetch(`https://api.github.com/users/${username}?t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: {
+        'Accept': 'application/vnd.github+json'
+      },
+      signal: controller.signal
+    });
+
+    if (!response.ok) return;
+
+    const profile = await response.json();
+
+    if (profile.avatar_url && avatarEl) {
+      avatarEl.src = `${profile.avatar_url}${profile.avatar_url.includes('?') ? '&' : '?'}t=${Date.now()}`;
+    }
+
+    if (typeof profile.public_repos === 'number') {
+      portfolioConfig.personalInfo.publicRepos = profile.public_repos;
+
+      if (repoCountEl) {
+        repoCountEl.dataset.target = String(profile.public_repos);
+      }
+    }
+  } catch (error) {
+    console.warn('GitHub profile fetch failed, using fallback portfolio data.', error);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 function setupContactForm() {
   const form = document.querySelector('form');
   if (!form) return;
@@ -476,6 +521,7 @@ function handleRoute() {
     const boldNumbers = (text) => {
       return text.replace(/(\d+(?:\.\d+)?%|\b\d+-\d+\b|\b\d+(?:\.\d+)?\b)/g, '<strong>$1</strong>');
     };
+    const hasDemoMedia = Boolean(project.demoVideo || (project.demoScreenshots && project.demoScreenshots.length > 0));
 
     if (project && project.details) {
       detailsView.innerHTML = `
@@ -496,9 +542,11 @@ function handleRoute() {
                 ${project.duration ? `<p class="font-code text-sm font-bold uppercase tracking-wider text-primary dark:text-primary inline-flex items-center gap-1.5 bg-primary/10 dark:bg-primary/10 px-3 py-1.5 border border-primary/30 dark:border-primary/30"><span class="material-symbols-outlined text-base text-primary dark:text-primary">event</span> ${escapeHtml(project.duration)}</p>` : ''}
               </div>
               <div class="flex flex-row items-center gap-3 flex-nowrap mt-4 md:mt-0">
+                ${hasDemoMedia ? `
                 <button id="open-demo-btn" class="btn-demo font-code text-sm font-bold bg-primary text-on-primary dark:bg-primary dark:text-on-primary px-6 py-3 border-2 border-primary dark:border-primary hover:bg-transparent hover:text-primary dark:hover:text-primary transition-all rounded-none inline-flex items-center gap-2 cursor-pointer shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_var(--color-primary)] dark:hover:shadow-[6px_6px_0px_0px_var(--color-outline)] active:translate-x-0 active:translate-y-0 active:shadow-[4px_4px_0px_0px_var(--color-primary)] whitespace-nowrap">
                   <span class="material-symbols-outlined text-base !text-inherit">play_circle</span> Watch Demo
                 </button>
+                ` : ''}
                 <a href="${escapeHtml(project.codeLink)}" target="_blank" rel="noopener" class="btn-sourcecode font-code text-sm font-bold bg-primary text-on-primary dark:bg-primary dark:text-on-primary px-6 py-3 border-2 border-primary dark:border-primary hover:bg-transparent hover:text-primary dark:hover:text-primary transition-all rounded-none inline-flex items-center gap-2 cursor-pointer shadow-[4px_4px_0px_0px_var(--color-primary)] dark:shadow-[4px_4px_0px_0px_var(--color-outline)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_var(--color-primary)] dark:hover:shadow-[6px_6px_0px_0px_var(--color-outline)] active:translate-x-0 active:translate-y-0 active:shadow-[4px_4px_0px_0px_var(--color-primary)] whitespace-nowrap">
                   <span class="material-symbols-outlined text-base !text-inherit">code</span> Source Code <span class="material-symbols-outlined text-sm !text-inherit">open_in_new</span>
                 </a>
@@ -814,12 +862,14 @@ document.addEventListener('DOMContentLoaded', () => {
   setupMobileMenu();
   setupScrollReveal();
   setupTypingEffect();
-  animateCounters();
   setupProjectFilters();
   setupPortfolioChatbot(portfolioConfig);
   setupRouter();
   setupTracking();
   getTracker().init();
+  loadGitHubProfile().finally(() => {
+    animateCounters();
+  });
 });
 
 const PROMETHEUS = `${BACKEND_URL}/api/v1/telemetry`;
@@ -1212,4 +1262,3 @@ function openLightbox(src) {
     }, 50);
   });
 }
-

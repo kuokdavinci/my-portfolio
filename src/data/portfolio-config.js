@@ -20,6 +20,95 @@ export const portfolioConfig = {
   },
   projects: [
     {
+      id: "reconciliation-ingestion-platform",
+      title: "Reconciliation Ingestion Platform",
+      description: "A configurable fintech reconciliation system for ingesting partner settlement files, normalizing canonical transactions, and running deterministic matching with approval workflows.",
+      image: "",
+      tags: ["Python", "FastAPI", "Next.js", "PostgreSQL", "MongoDB", "Docker"],
+      badge: "FINTECH",
+      featured: true,
+      codeLink: "https://github.com/kuokdavinci/ReconciliationIngestionPlatform",
+      language: "Python",
+      stars: 0,
+      forks: 0,
+      duration: "June 2026 — July 2026",
+      featureHighlights: [
+        { icon: "account_balance", label: "Partner Ingestion", desc: "Configurable settlement file intake" },
+        { icon: "schema", label: "Canonical Mapping", desc: "Reusable field normalization" },
+        { icon: "verified", label: "Deterministic Matching", desc: "Explainable reconciliation results" },
+        { icon: "approval", label: "Human Approval", desc: "Review packets and audit trail" }
+      ],
+      details: {
+        overview: "Reconciliation Ingestion Platform is a configurable fintech workflow for partner settlement ingestion, canonical transaction normalization, deterministic reconciliation, and operational review. It reduces the need for custom parsers per partner and supports approval-driven configuration changes.",
+        architecture: {
+          pattern: "Layered Reconciliation Pipeline with Human-in-the-Loop Control",
+          layers: [
+            { name: "File Intake Layer", details: "Receives settlement files from uploads, SFTP, APIs, or scheduled jobs. Uses streaming readers and duplicate detection to safely process CSV, Excel, and JSON payloads without loading entire files into memory." },
+            { name: "Normalization Layer", details: "Converts partner-specific schemas into a canonical transaction model through configurable mapping definitions, validation rules, and reusable transformation logic." },
+            { name: "Reconciliation Engine", details: "Matches partner transactions against internal records using deterministic rules, batch processing, and indexed lookups to keep results reproducible and explainable." },
+            { name: "Review & Audit Layer", details: "Captures mapping changes, approvals, and operational actions with audit logs, review packets, and approval workflows before changes are activated." }
+          ]
+        },
+        challenges: [
+          "Each payment partner uses different file formats, field names, and settlement conventions.",
+          "Large reconciliation runs must stay efficient when processing more than 100,000 transactions.",
+          "Configuration changes need explicit approval so production mappings remain controlled.",
+          "Reconciliation outcomes must be deterministic and easy to audit for operations teams."
+        ],
+        solutions: [
+          "Built configurable mapping definitions and reusable ingestion pipelines to avoid custom parser work for every partner.",
+          "Used streaming file readers, batch persistence, and asynchronous processing to keep memory usage and latency under control.",
+          "Introduced human-in-the-loop review packets so mapping changes are approved before activation.",
+          "Kept reconciliation deterministic with canonical transactions, repeatable matching rules, and complete audit logging."
+        ],
+        benchmark: [
+          "Designed to handle daily settlement files as well as reconciliation workloads exceeding 100,000 transactions.",
+          "Supports multiple partner sources including uploaded files, SFTP, and scheduled ingestion jobs.",
+          "Reduces operational dependency on partner-specific parsing code by pushing schema changes into configuration."
+        ],
+        keyModules: [
+          {
+            name: "Partner File Ingestion",
+            icon: "upload_file",
+            details: "Accepts partner settlement files from upload, SFTP, API, or scheduler triggers. Includes duplicate detection, streaming readers, and file type handling for CSV, Excel, and JSON."
+          },
+          {
+            name: "Canonical Mapping",
+            icon: "transform",
+            details: "Transforms heterogeneous partner schemas into a canonical transaction model using configurable mappings, validation rules, and reusable field normalization logic."
+          },
+          {
+            name: "Deterministic Reconciliation",
+            icon: "done_all",
+            details: "Runs rule-based matching against internal transactions with indexed queries and batch persistence so outcomes stay reproducible, explainable, and operationally safe."
+          },
+          {
+            name: "Approval Workflow",
+            icon: "fact_check",
+            details: "Requires human review for mapping changes and keeps an audit trail for approvals, configuration edits, and operational actions before deployment."
+          },
+          {
+            name: "Scheduled Automation",
+            icon: "schedule",
+            details: "Supports automated ingestion jobs for recurring partner files, reducing manual work for daily settlement operations and improving processing consistency."
+          }
+        ],
+        systemSpecs: {
+          "Backend": "Python, FastAPI, APScheduler",
+          "Frontend": "Next.js, React, Tailwind CSS",
+          "Databases": "PostgreSQL, MongoDB",
+          "Infrastructure": "Docker, Docker Compose, SFTP",
+          "Data Processing": "AsyncIO, Streaming Readers, SQLAlchemy, asyncpg",
+          "AI": "OpenAI-compatible REST API"
+        },
+        notes: [
+          "Keep the canonical transaction model consistent across all partner integrations.",
+          "Preserve deterministic reconciliation logic and audit logging when adding new mappings.",
+          "Use configuration-first onboarding for new partners whenever possible."
+        ]
+      }
+    },
+    {
       id: "edurag",
       title: "EduRAG - Vietnamese Education Law RAG",
       description: "A high-fidelity legal retrieval system for Vietnamese Education Law, combining semantic routing, GraphRAG, and cited answers.",

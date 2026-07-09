@@ -28,7 +28,7 @@
         <li><a class="font-medium text-white/80 hover:text-white transition-colors" href="#journey">Journey</a></li>
         <li><a class="font-medium text-white/80 hover:text-white transition-colors" href="#projects">Projects</a></li>
         <li><a class="font-medium text-white/80 hover:text-white transition-colors" href="#skills">Skills</a></li>
-        <li><a class="font-medium text-white/80 hover:text-white transition-colors" href="#dashboard">Dashboard</a></li>
+        <!-- <li><a class="font-medium text-white/80 hover:text-white transition-colors" href="#dashboard">Dashboard</a></li> -->
       </ul>
       <div class="hidden md:flex items-center gap-0 relative w-28 justify-center">
         <button class="ios-toggle relative z-10" id="themeToggle" aria-label="Toggle theme"></button>
@@ -94,7 +94,7 @@
           <div class="hidden md:flex justify-center reveal">
             <div class="relative">
               <div class="w-80 h-80 rounded-2xl overflow-hidden shadow-xl border-4 border-primary/20 animate-float">
-                <img src="https://avatars.githubusercontent.com/u/163934382?v=4" alt="Lê Trung Anh Quốc" class="w-full h-full object-cover">
+                <img id="github-avatar" src="https://avatars.githubusercontent.com/u/163934382?v=4" alt="Lê Trung Anh Quốc" class="w-full h-full object-cover">
               </div>
               <div class="absolute -bottom-6 right-0 bg-secondary-container rounded-xl p-4 shadow-lg">
                 <div class="flex items-center gap-3">
@@ -102,7 +102,7 @@
                     <span class="material-symbols-outlined text-primary text-2xl">code</span>
                   </div>
                   <div>
-                    <div class="text-2xl font-bold text-primary counter" data-target="41">0</div>
+                    <div id="github-repos-count" class="text-2xl font-bold text-primary counter" data-target="41">0</div>
                     <div class="text-sm text-on-secondary-fixed-variant">Repos</div>
                   </div>
                 </div>
@@ -209,7 +209,7 @@
                 <!-- Timeline Dot -->
                 <div class="w-4 h-4 rounded-full bg-green-500 border-4 border-surface dark:border-surface-container shadow-[0_0_0_4px_rgba(34,197,94,0.3)] mt-6 mb-4 z-10"></div>
                 <!-- Date / Time indicator below -->
-                <span class="font-code text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-white text-indigo-900 border border-indigo-100 dark:bg-surface-container dark:text-primary dark:border-outline-variant/30 shadow-sm z-10">Apr 2026 – Present</span>
+                <span class="font-code text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-white text-indigo-900 border border-indigo-100 dark:bg-surface-container dark:text-primary dark:border-outline-variant/30 shadow-sm z-10">Apr 2026 – Jul 2026</span>
               </div>
             </div>
           </div>
@@ -267,7 +267,7 @@
             <!-- Mobile Item 5 -->
             <div class="relative">
               <div class="absolute -left-[41px] top-6 w-4 h-4 rounded-full bg-green-500 border-4 border-surface dark:border-surface-container shadow-[0_0_0_4px_rgba(34,197,94,0.3)]"></div>
-              <span class="font-code text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-white text-indigo-900 border border-indigo-100 dark:bg-surface-container dark:text-primary dark:border-outline-variant/30 shadow-sm inline-block mb-3">Apr 2026 – Present</span>
+              <span class="font-code text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-white text-indigo-900 border border-indigo-100 dark:bg-surface-container dark:text-primary dark:border-outline-variant/30 shadow-sm inline-block mb-3">Apr 2026 – Jul 2026</span>
               <div class="bg-primary rounded-xl p-6 text-on-primary relative">
                 <div class="flex items-center gap-3 mb-2">
                   <span class="material-symbols-outlined text-xl">psychology</span>
@@ -289,23 +289,23 @@
           <p class="section-subtitle">A showcase of my recent work across web, mobile, and AI.</p>
         </div>
         <div class="grid md:grid-cols-2 gap-8 stagger-children">
-          <a href="#/project/edurag" class="project-card block group">
+          <a href="#/project/reconciliation-ingestion-platform" class="project-card block group">
             <div class="p-2 rounded-[2rem] bg-surface-container/30 dark:bg-surface-container-low/20 shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.2)] h-full">
               <article class="bg-primary rounded-[calc(2rem-0.5rem)] overflow-hidden h-full text-on-primary relative flex flex-col">
                 <div class="h-56 flex items-center justify-center relative bg-gradient-to-br from-primary/10 to-secondary/10 flex-shrink-0">
                   <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <span class="material-symbols-outlined text-on-primary/80 text-8xl">gavel</span>
+                    <span class="material-symbols-outlined text-on-primary/80 text-8xl">account_balance</span>
                   </div>
-                  <span class="absolute top-4 right-4 badge bg-secondary-container text-primary">AI/ML</span>
+                  <span class="absolute top-4 right-4 badge bg-secondary-container text-primary">FINTECH</span>
                 </div>
                 <div class="p-8 flex flex-col flex-1">
-                  <h3 class="font-headline text-2xl font-bold text-on-primary mb-3 group-hover:text-primary transition-colors">EduRAG — Vietnamese Education Law RAG</h3>
-                  <p class="text-on-primary/70 text-base mb-5">A high-fidelity RAG system for Vietnamese Education Law, powered by LangChain Agent + Hybrid Search (Vector + Graph) + Qdrant.</p>
+                  <h3 class="font-headline text-2xl font-bold text-on-primary mb-3 group-hover:text-primary transition-colors">Reconciliation Ingestion Platform</h3>
+                  <p class="text-on-primary/70 text-base mb-5">A configurable settlement ingestion and reconciliation workflow for fintech operations. Canonical mapping, deterministic matching, approval packets, and audit logging.</p>
                   <div class="flex flex-wrap gap-2 mb-6">
                     <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Python</span>
-                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">LangChain</span>
-                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Qdrant</span>
-                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Neo4j</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">FastAPI</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Next.js</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">PostgreSQL</span>
                   </div>
                   <div class="flex items-center justify-between mt-auto pt-5 border-t border-white/10 font-code text-sm font-bold uppercase tracking-wider">
                     <span class="inline-flex items-center gap-2 text-on-primary/70 font-normal normal-case"><span class="material-symbols-outlined text-sm">circle</span> Python</span>
@@ -321,26 +321,26 @@
             </div>
           </a>
 
-          <a href="#/project/movie-ticket" class="project-card block group">
+          <a href="#/project/edurag" class="project-card block group">
             <div class="p-2 rounded-[2rem] bg-surface-container/30 dark:bg-surface-container-low/20 shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.2)] h-full">
               <article class="bg-primary rounded-[calc(2rem-0.5rem)] overflow-hidden h-full text-on-primary relative flex flex-col">
                 <div class="h-56 flex items-center justify-center relative bg-gradient-to-br from-primary/10 to-secondary/10 flex-shrink-0">
                   <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <span class="material-symbols-outlined text-on-primary/80 text-8xl">local_movies</span>
+                    <span class="material-symbols-outlined text-on-primary/80 text-8xl">gavel</span>
                   </div>
-                  <span class="absolute top-4 right-4 badge bg-secondary-container text-primary">FULL-STACK</span>
+                  <span class="absolute top-4 right-4 badge bg-secondary-container text-primary">AI/ML</span>
                 </div>
                 <div class="p-8 flex flex-col flex-1">
-                  <h3 class="font-headline text-2xl font-bold text-on-primary mb-3 group-hover:text-primary transition-colors">Movie Ticket Booking System</h3>
-                  <p class="text-on-primary/70 text-base mb-5">A full-stack cinema reservation platform with Spring Boot REST API backend and Flutter mobile frontend. Authentication, seat selection, payment, and real-time booking management.</p>
+                  <h3 class="font-headline text-2xl font-bold text-on-primary mb-3 group-hover:text-primary transition-colors">EduRAG - Vietnamese Education Law RAG</h3>
+                  <p class="text-on-primary/70 text-base mb-5">A high-fidelity RAG system for Vietnamese Education Law, powered by LangChain Agent + Hybrid Search (Vector + Graph) + Qdrant.</p>
                   <div class="flex flex-wrap gap-2 mb-6">
-                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Java</span>
-                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Spring Boot</span>
-                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">PostgreSQL</span>
-                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Flutter</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Python</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">LangChain</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Qdrant</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Neo4j</span>
                   </div>
                   <div class="flex items-center justify-between mt-auto pt-5 border-t border-white/10 font-code text-sm font-bold uppercase tracking-wider">
-                    <span class="inline-flex items-center gap-2 text-on-primary/70 font-normal normal-case"><span class="material-symbols-outlined text-sm">circle</span> Java</span>
+                    <span class="inline-flex items-center gap-2 text-on-primary/70 font-normal normal-case"><span class="material-symbols-outlined text-sm">circle</span> Python</span>
                     <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors">
                       Read Details
                       <div class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center group-hover:translate-x-1 group-hover:-translate-y-[1px] transition-transform duration-300">
@@ -373,6 +373,38 @@
                   </div>
                   <div class="flex items-center justify-between mt-auto pt-5 border-t border-white/10 font-code text-sm font-bold uppercase tracking-wider">
                     <span class="inline-flex items-center gap-2 text-on-primary/70 font-normal normal-case"><span class="material-symbols-outlined text-sm">circle</span> Dart</span>
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors">
+                      Read Details
+                      <div class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center group-hover:translate-x-1 group-hover:-translate-y-[1px] transition-transform duration-300">
+                        <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </a>
+
+          <a href="#/project/movie-ticket" class="project-card block group">
+            <div class="p-2 rounded-[2rem] bg-surface-container/30 dark:bg-surface-container-low/20 shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.2)] h-full">
+              <article class="bg-primary rounded-[calc(2rem-0.5rem)] overflow-hidden h-full text-on-primary relative flex flex-col">
+                <div class="h-56 flex items-center justify-center relative bg-gradient-to-br from-primary/10 to-secondary/10 flex-shrink-0">
+                  <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-on-primary/80 text-8xl">local_movies</span>
+                  </div>
+                  <span class="absolute top-4 right-4 badge bg-secondary-container text-primary">FULL-STACK</span>
+                </div>
+                <div class="p-8 flex flex-col flex-1">
+                  <h3 class="font-headline text-2xl font-bold text-on-primary mb-3 group-hover:text-primary transition-colors">Movie Ticket Booking System</h3>
+                  <p class="text-on-primary/70 text-base mb-5">A full-stack cinema reservation platform with Spring Boot REST API backend and Flutter mobile frontend. Authentication, seat selection, payment, and real-time booking management.</p>
+                  <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Java</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Spring Boot</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">PostgreSQL</span>
+                    <span class="px-3 py-1.5 bg-white/20 text-on-primary rounded-full text-xs font-medium">Flutter</span>
+                  </div>
+                  <div class="flex items-center justify-between mt-auto pt-5 border-t border-white/10 font-code text-sm font-bold uppercase tracking-wider">
+                    <span class="inline-flex items-center gap-2 text-on-primary/70 font-normal normal-case"><span class="material-symbols-outlined text-sm">circle</span> Java</span>
                     <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors">
                       Read Details
                       <div class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center group-hover:translate-x-1 group-hover:-translate-y-[1px] transition-transform duration-300">
